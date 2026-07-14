@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Ariadne: Phase 2 checks",
+      "type": "shell",
+      "command": "make phase2-check",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ariadne: Core tests",
+      "type": "shell",
+      "command": "make core-test",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Ariadne: Desktop dev",
+      "type": "shell",
+      "command": "corepack pnpm dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Ariadne: Tauri dev",
+      "type": "shell",
+      "command": "PATH=/opt/homebrew/opt/rustup/bin:$PATH corepack pnpm --filter @ariadne/desktop exec tauri dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Ariadne: Privacy check",
+      "type": "shell",
+      "command": "make privacy-check",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}
+

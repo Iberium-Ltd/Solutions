@@ -1,0 +1,110 @@
+.getting-started-page {
+  max-inline-size: 1180px;
+  margin-inline: auto;
+}
+
+.getting-started__notice {
+  padding: 12px 14px;
+  border: 1px solid rgb(244 184 96 / 24%);
+  border-radius: var(--radius-md);
+  background: rgb(244 184 96 / 6%);
+  color: var(--color-warning);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.getting-started__notice > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.getting-started__notice strong { font-size: calc(12px * var(--font-scale)); }
+.getting-started__notice span { max-inline-size: 760px; color: var(--color-text-muted); font-size: calc(11px * var(--font-scale)); line-height: 1.5; }
+
+.getting-started__workflow {
+  padding: 17px 18px 18px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, rgb(19 26 37 / 92%), rgb(13 18 26 / 92%));
+}
+
+.getting-started__section-heading h2 { margin: 4px 0 0; font-size: calc(16px * var(--font-scale)); }
+
+.getting-started__steps {
+  margin: 17px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+}
+
+.getting-started__steps > li {
+  position: relative;
+  min-inline-size: 0;
+  min-block-size: 210px;
+  padding: 13px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(9 12 18 / 42%);
+  display: flex;
+  flex-direction: column;
+}
+
+.getting-started__number {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
+  color: var(--color-text-disabled);
+  font: calc(10px * var(--font-scale))/1 var(--font-data);
+}
+
+.getting-started__icon {
+  inline-size: 34px;
+  block-size: 34px;
+  margin-block-end: 12px;
+  border: 1px solid rgb(88 223 245 / 22%);
+  border-radius: 9px;
+  background: rgb(88 223 245 / 7%);
+  color: var(--color-accent);
+  display: grid;
+  place-items: center;
+}
+
+.getting-started__steps > li > div { display: flex; flex: 1; flex-direction: column; }
+.getting-started__steps h3 { margin: 0; font-size: calc(12px * var(--font-scale)); line-height: 1.35; }
+.getting-started__steps p { margin: 7px 0 12px; color: var(--color-text-muted); font-size: calc(10.5px * var(--font-scale)); line-height: 1.5; }
+.getting-started__steps a { margin-block-start: auto; color: var(--color-accent-strong); display: inline-flex; align-items: center; gap: 4px; font-size: calc(10.5px * var(--font-scale)); font-weight: 600; }
+
+.getting-started__links { margin-block-start: auto; display: flex; flex-wrap: wrap; gap: 5px 9px; }
+.getting-started__links a { margin: 0; }
+
+.getting-started__screen-map { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.getting-started__screen-panel > ul { margin: 0; padding: 12px 14px 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; list-style: none; }
+.getting-started__screen-panel li { min-inline-size: 0; color: var(--color-text-muted); display: flex; align-items: center; gap: 7px; font-size: calc(10.5px * var(--font-scale)); }
+.getting-started__screen-panel--native .panel__action,
+.getting-started__screen-panel--native li > svg { color: var(--color-success); }
+.getting-started__screen-panel--synthetic .panel__action,
+.getting-started__screen-panel--synthetic li > svg { color: var(--color-warning); }
+
+.getting-started__next {
+  padding: 13px 14px;
+  border: 1px solid rgb(185 156 255 / 20%);
+  border-radius: var(--radius-md);
+  background: rgb(185 156 255 / 5%);
+  color: var(--color-review);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.getting-started__next h2 { margin: 0; font-size: calc(12px * var(--font-scale)); }
+.getting-started__next p { margin: 3px 0 0; color: var(--color-text-muted); font-size: calc(10.5px * var(--font-scale)); }
+
+@media (max-width: 1220px) {
+  .getting-started__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .getting-started__steps > li { min-block-size: 190px; }
+}

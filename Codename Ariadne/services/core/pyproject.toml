@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling==1.31.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ariadne-core"
+version = "0.1.0"
+description = "Authenticated local sidecar boundary for Codename Ariadne"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "alembic==1.18.5",
+  "anyio==4.14.1",
+  "cryptography==49.0.0",
+  "fastapi==0.139.0",
+  "packaging==26.2",
+  "platformdirs==4.10.0",
+  "pydantic==2.13.4",
+  "pysqlcipher3==1.2.0",
+  "sqlalchemy==2.0.51",
+  "structlog==26.1.0",
+  "uvicorn==0.51.0",
+  "uuid6==2025.0.1",
+]
+
+[project.scripts]
+ariadne-core = "ariadne_core.cli:main"
+
+[dependency-groups]
+dev = [
+  "httpx==0.28.1",
+  "hypothesis==6.156.6",
+  "mypy==2.2.0",
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "pytest-timeout==2.4.0",
+  "ruff==0.15.21",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ariadne_core"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "RUF", "SIM", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+pretty = true
+packages = ["ariadne_core"]
+mypy_path = "src"

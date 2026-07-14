@@ -1,0 +1,24 @@
+.reports-builder { margin-block-end: 14px; }
+.reports-form { padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.reports-form__options { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.reports-full-approval,
+.reports-redaction-note { grid-column: 1 / -1; min-block-size: 54px; padding: 10px 12px; border: 1px solid rgb(239 183 86 / 24%); border-radius: var(--radius-sm); background: rgb(239 183 86 / 6%); color: var(--color-text-secondary); display: flex; align-items: center; gap: 10px; font-size: calc(10.5px * var(--font-scale)); }
+.reports-full-approval input { accent-color: var(--color-accent); }
+.reports-full-approval span { display: flex; flex-direction: column; gap: 2px; }
+.reports-full-approval small { color: var(--color-text-muted); line-height: 1.4; }
+.reports-redaction-note { border-color: rgb(88 223 245 / 20%); background: rgb(88 223 245 / 5%); }
+.reports-form > .callout { grid-column: 1 / -1; margin: 0; padding: 8px 10px; font-size: calc(10px * var(--font-scale)); }
+.reports-form__actions { grid-column: 1 / -1; padding-block-start: 10px; border-block-start: 1px solid var(--color-border-subtle); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.reports-form__actions > span { color: var(--color-text-muted); font-size: calc(10px * var(--font-scale)); }
+.reports-preview { margin-block-start: 14px; }
+.reports-preview__meta { padding: 9px 13px; border-block-end: 1px solid var(--color-border-subtle); color: var(--color-text-muted); display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: calc(10px * var(--font-scale)); }
+.reports-preview__meta .mono { overflow-wrap: anywhere; }
+.reports-preview pre { max-block-size: 460px; margin: 0; padding: 14px; overflow: auto; background: rgb(5 7 11 / 72%); color: var(--color-text-secondary); font: calc(10px * var(--font-scale))/1.55 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.reports-preview__actions { padding: 11px 13px; border-block-start: 1px solid var(--color-border-subtle); display: flex; justify-content: flex-end; gap: 8px; }
+
+@media (max-width: 760px) {
+  .reports-form,
+  .reports-form__options { grid-template-columns: minmax(0, 1fr); }
+  .reports-form__actions { align-items: stretch; flex-direction: column; }
+  .reports-preview__actions { flex-direction: column; }
+}

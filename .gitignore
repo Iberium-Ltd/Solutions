@@ -1,0 +1,64 @@
+# Confidential source material: these rules must precede repository initialization.
+/Instructions/private_reference/
+/private_reference/
+**/private_reference/**
+/docs/input_files/
+**/digital_footprint_audit_findings_*.md
+**/digital_footprint_audit_methodology_*.md
+
+# Local privacy scanner inputs and quarantines.
+/.privacy/
+**/.private-denylist*
+**/*.quarantine
+
+# Runtime personal data and secrets.
+/.env
+/.env.*
+!/.env.example
+**/.env
+**/.env.*
+!**/.env.example
+/data/
+/evidence/
+/imports/private/
+/exports/private/
+/reports/private/
+/models/local/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.key
+*.pem
+*.p12
+
+# Generated UI review artifacts (the written review remains tracked).
+/artifacts/
+/playwright-report/
+/test-results/
+/coverage/
+
+# Tooling and builds.
+node_modules/
+dist/
+build/
+target/
+.turbo/
+.vite/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Generated, inspected native sidecar staged only for a local Tauri release build.
+/apps/desktop/src-tauri/binaries/ariadne-core-*
+
+# Editors and operating-system metadata.
+.DS_Store
+**/.DS_Store
+.idea/
+*.swp

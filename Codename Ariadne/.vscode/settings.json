@@ -1,0 +1,25 @@
+{
+  "files.exclude": {
+    "**/.mypy_cache": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+    "**/__pycache__": true,
+    "Instructions/private_reference": true
+  },
+  "search.exclude": {
+    "**/artifacts": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/target": true,
+    "Instructions/private_reference": true
+  },
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.testing.pytestArgs": ["services/core/tests"],
+  "python.testing.pytestEnabled": true,
+  "ruff.nativeServer": "on",
+  "rust-analyzer.linkedProjects": [
+    "apps/desktop/src-tauri/Cargo.toml"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
+

@@ -1,0 +1,106 @@
+--- a/src/python3/connection.c
++++ b/src/python3/connection.c
+@@ -517,7 +517,7 @@
+     } else if (PyFloat_Check(py_val)) {
+         sqlite3_result_double(context, PyFloat_AsDouble(py_val));
+     } else if (PyUnicode_Check(py_val)) {
+-        const char *str = _PyUnicode_AsString(py_val);
++        const char *str = PyUnicode_AsUTF8(py_val);
+         if (str == NULL)
+             return -1;
+         sqlite3_result_text(context, str, -1, SQLITE_TRANSIENT);
+@@ -1543,7 +1543,7 @@
+         }
+     }
+ 
+-    uppercase_name_str = _PyUnicode_AsString(uppercase_name);
++    uppercase_name_str = PyUnicode_AsUTF8(uppercase_name);
+     if (!uppercase_name_str)
+         goto finally;
+ 
+--- a/src/python3/cursor.c
++++ b/src/python3/cursor.c
+@@ -778,7 +778,7 @@
+     self->reset = 0;
+ 
+     if (PyUnicode_Check(script_obj)) {
+-        script_cstr = _PyUnicode_AsString(script_obj);
++        script_cstr = PyUnicode_AsUTF8(script_obj);
+         if (!script_cstr) {
+             return NULL;
+         }
+--- a/src/python3/row.c
++++ b/src/python3/row.c
+@@ -98,7 +98,7 @@
+         Py_XINCREF(item);
+         return item;
+     } else if (PyUnicode_Check(idx)) {
+-        key = _PyUnicode_AsString(idx);
++        key = PyUnicode_AsUTF8(idx);
+         if (key == NULL)
+             return NULL;
+ 
+@@ -108,7 +108,7 @@
+             PyObject *obj;
+             obj = PyTuple_GET_ITEM(self->description, i);
+             obj = PyTuple_GET_ITEM(obj, 0);
+-            compare_key = _PyUnicode_AsString(obj);
++            compare_key = PyUnicode_AsUTF8(obj);
+             if (!compare_key) {
+                 return NULL;
+             }
+--- a/src/python3/connection.c
++++ b/src/python3/connection.c
+@@ -1451,7 +1451,44 @@
+ finally:
+     return retval;
+ }
+ 
++/* Ariadne extension: apply a 256-bit raw SQLCipher key from any object that
++ * exposes the buffer protocol. This avoids Python bytes/hex/string copies. */
++static PyObject *
++pysqlite_connection_set_raw_key(pysqlite_Connection* self, PyObject* args)
++{
++    Py_buffer key = {0};
++    const char* database_name = NULL;
++    int rc;
++
++    if (!pysqlite_check_thread(self) || !pysqlite_check_connection(self)) {
++        return NULL;
++    }
++
++    if (!PyArg_ParseTuple(args, "y*|s:set_raw_key", &key, &database_name)) {
++        return NULL;
++    }
++    if (key.len != 32) {
++        PyBuffer_Release(&key);
++        PyErr_SetString(PyExc_ValueError, "raw key must contain exactly 32 bytes");
++        return NULL;
++    }
++
++    if (database_name == NULL) {
++        rc = sqlite3_key(self->db, key.buf, (int)key.len);
++    } else {
++        rc = sqlite3_key_v2(self->db, database_name, key.buf, (int)key.len);
++    }
++    PyBuffer_Release(&key);
++
++    if (rc != SQLITE_OK) {
++        PyErr_SetString(self->DatabaseError, sqlite3_errmsg(self->db));
++        return NULL;
++    }
++
++    Py_RETURN_NONE;
++}
++
+ /* Function author: Paul Kippes <kippesp@gmail.com>
+  * Class method of Connection to call the Python function _iterdump
+  * of the sqlite3 module.
+@@ -1640,6 +1677,8 @@
+         PyDoc_STR("Commit the current transaction.")},
+     {"rollback", (PyCFunction)pysqlite_connection_rollback, METH_NOARGS,
+         PyDoc_STR("Roll back the current transaction.")},
++    {"set_raw_key", (PyCFunction)pysqlite_connection_set_raw_key, METH_VARARGS,
++        PyDoc_STR("Apply an exact 256-bit SQLCipher key from a buffer.")},
+     {"create_function", (PyCFunction)pysqlite_connection_create_function, METH_VARARGS|METH_KEYWORDS,
+         PyDoc_STR("Creates a new function. Non-standard.")},
