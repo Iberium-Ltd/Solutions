@@ -15,8 +15,10 @@
   position: relative;
   z-index: 4;
   min-inline-size: 0;
-  border-inline-end: 1px solid var(--color-border);
-  background: linear-gradient(180deg, rgb(15 20 29 / 98%), rgb(11 15 22 / 98%));
+  border-inline-end: 1px solid var(--color-border-subtle);
+  background: linear-gradient(180deg, var(--color-shell) 0%, var(--color-surface-raised) 100%);
+  backdrop-filter: blur(18px);
+  box-shadow: inset -1px 0 0 rgb(255 255 255 / 3%), 10px 0 35px rgb(2 6 14 / 24%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -24,11 +26,11 @@
 
 .sidebar::after {
   position: absolute;
-  inset: 60px 0 auto;
+  inset: 56px 0 auto;
   block-size: 1px;
   content: "";
-  background: linear-gradient(90deg, transparent 2%, var(--color-accent) 38%, transparent 88%);
-  opacity: .28;
+  background: linear-gradient(90deg, transparent 0%, var(--color-accent) 40%, transparent 100%);
+  opacity: .34;
 }
 
 .brand {
@@ -41,7 +43,12 @@
 
 .brand__mark {
   flex: 0 0 auto;
-  inline-size: 34px;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 7px;
+  border: 1px solid rgb(74 231 255 / 24%);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgb(74 231 255 / 16%), rgb(178 147 255 / 12%));
   color: var(--color-accent);
 }
 
@@ -91,12 +98,12 @@
 }
 
 .new-audit-button {
-  min-block-size: 40px;
+  min-block-size: 42px;
   margin: 13px 12px 10px;
   padding: 0 11px;
-  border: 1px solid rgb(88 223 245 / 35%);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, rgb(88 223 245 / 14%), rgb(185 156 255 / 8%));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
+  border-radius: 12px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 14%, transparent), color-mix(in srgb, var(--color-review) 10%, transparent));
   color: var(--color-accent-strong);
   display: flex;
   align-items: center;
@@ -104,11 +111,16 @@
   font-size: calc(13px * var(--font-scale));
   font-weight: 620;
   text-decoration: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 8px 22px rgb(15 23 42 / 8%);
 }
 
 .new-audit-button kbd {
   margin-inline-start: auto;
-  color: var(--color-text-muted);
+  padding: 3px 6px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   font-family: var(--font-data);
   font-size: calc(11px * var(--font-scale));
   font-weight: 450;
@@ -139,26 +151,27 @@
 
 .nav-item {
   position: relative;
-  min-block-size: 34px;
+  min-block-size: 36px;
   padding: 0 9px;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   color: var(--color-text-muted);
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: calc(12.5px * var(--font-scale));
   text-decoration: none;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
 .nav-item:hover {
-  background: rgb(32 43 58 / 55%);
+  background: var(--color-surface-raised);
   color: var(--color-text-secondary);
 }
 
 .nav-item.is-active {
-  border-color: rgb(88 223 245 / 18%);
-  background: linear-gradient(90deg, rgb(88 223 245 / 14%), rgb(88 223 245 / 3%));
+  border-color: rgb(74 231 255 / 18%);
+  background: linear-gradient(90deg, rgb(74 231 255 / 14%), rgb(178 147 255 / 8%));
   color: var(--color-accent-strong);
 }
 
@@ -201,7 +214,7 @@
   padding: 10px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  background: rgb(19 26 37 / 75%);
+  background: var(--color-surface);
   display: flex;
   align-items: center;
   gap: 9px;
@@ -211,7 +224,7 @@
 }
 
 button.vault-card { cursor: pointer; }
-button.vault-card:hover { border-color: rgb(88 223 245 / 32%); background: rgb(24 34 48 / 88%); }
+button.vault-card:hover { border-color: rgb(88 223 245 / 32%); background: var(--color-surface-raised); }
 button.vault-card:disabled { cursor: wait; opacity: .68; }
 
 .vault-card-error {
@@ -266,9 +279,9 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
 .topbar {
   z-index: 3;
   padding-inline: 22px 16px;
-  border-block-end: 1px solid var(--color-border);
-  background: rgb(9 12 18 / 88%);
-  backdrop-filter: blur(14px);
+  border-block-end: 1px solid var(--color-border-subtle);
+  background: var(--color-shell);
+  backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -302,15 +315,16 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
   inline-size: clamp(160px, 18vw, 235px);
   block-size: 34px;
   padding-inline: 10px 6px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  background: rgb(24 34 48 / 55%);
+  background: var(--color-surface);
   color: var(--color-text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   font-size: calc(11.5px * var(--font-scale));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
 }
 
 .command-search kbd {
@@ -318,7 +332,8 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
   padding: 3px 6px;
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -430,7 +445,7 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
 .contextbar {
   padding-inline: 22px 17px;
   border-block-end: 1px solid var(--color-border-subtle);
-  background: rgb(15 20 29 / 78%);
+  background: var(--color-surface-raised);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -528,7 +543,7 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
   z-index: 3;
   padding-inline: 18px;
   border-block-start: 1px solid var(--color-border);
-  background: rgb(10 14 21 / 96%);
+  background: var(--color-shell);
   display: grid;
   grid-template-columns: minmax(190px, .9fr) minmax(120px, 1.2fr) 42px auto;
   align-items: center;

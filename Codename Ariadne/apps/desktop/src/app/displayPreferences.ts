@@ -11,14 +11,18 @@ export const DISPLAY_PRESET_OPTIONS = [
 export type FontScale = (typeof FONT_SCALE_OPTIONS)[number]
 export type DisplayPreset = (typeof DISPLAY_PRESET_OPTIONS)[number]
 
+export type ThemePreference = 'dark' | 'light'
+
 export interface DisplayPreferences {
   readonly fontScale: FontScale
   readonly displayPreset: DisplayPreset
+  readonly theme: ThemePreference
 }
 
 interface DisplayPreferencesState extends DisplayPreferences {
   setFontScale: (fontScale: FontScale) => void
   setDisplayPreset: (displayPreset: DisplayPreset) => void
+  setTheme: (theme: ThemePreference) => void
   reloadFromStorage: () => void
 }
 
@@ -28,6 +32,7 @@ export const DISPLAY_PREFERENCES_STORAGE_KEY =
 export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
   fontScale: 100,
   displayPreset: 'auto',
+  theme: 'dark',
 }
 
 function isFontScale(value: unknown): value is FontScale {
@@ -36,6 +41,10 @@ function isFontScale(value: unknown): value is FontScale {
 
 function isDisplayPreset(value: unknown): value is DisplayPreset {
   return DISPLAY_PRESET_OPTIONS.some((option) => option === value)
+}
+
+function isThemePreference(value: unknown): value is ThemePreference {
+  return value === 'dark' || value === 'light'
 }
 
 export function readDisplayPreferences(
@@ -62,6 +71,9 @@ export function readDisplayPreferences(
       displayPreset: isDisplayPreset(candidate.displayPreset)
         ? candidate.displayPreset
         : DEFAULT_DISPLAY_PREFERENCES.displayPreset,
+      theme: isThemePreference(candidate.theme)
+        ? candidate.theme
+        : DEFAULT_DISPLAY_PREFERENCES.theme,
     }
   } catch {
     return DEFAULT_DISPLAY_PREFERENCES
@@ -86,6 +98,7 @@ export function applyDisplayPreferences(
 ) {
   root.dataset.fontScale = String(preferences.fontScale)
   root.dataset.displayPreset = preferences.displayPreset
+  root.dataset.theme = preferences.theme
   root.style.setProperty('--font-scale', String(preferences.fontScale / 100))
 }
 
@@ -95,14 +108,33 @@ export const useDisplayPreferences = create<DisplayPreferencesState>((set) => ({
   ...initialPreferences,
   setFontScale: (fontScale) => {
     set((state) => {
-      const preferences = { fontScale, displayPreset: state.displayPreset }
+      const preferences = {
+        fontScale,
+        displayPreset: state.displayPreset,
+        theme: state.theme,
+      }
       persistDisplayPreferences(preferences)
       return preferences
     })
   },
   setDisplayPreset: (displayPreset) => {
     set((state) => {
-      const preferences = { fontScale: state.fontScale, displayPreset }
+      const preferences = {
+        fontScale: state.fontScale,
+        displayPreset,
+        theme: state.theme,
+      }
+      persistDisplayPreferences(preferences)
+      return preferences
+    })
+  },
+  setTheme: (theme) => {
+    set((state) => {
+      const preferences = {
+        fontScale: state.fontScale,
+        displayPreset: state.displayPreset,
+        theme,
+      }
       persistDisplayPreferences(preferences)
       return preferences
     })
@@ -111,6 +143,6 @@ export const useDisplayPreferences = create<DisplayPreferencesState>((set) => ({
 }))
 
 export function initializeDisplayPreferences() {
-  const { fontScale, displayPreset } = useDisplayPreferences.getState()
-  applyDisplayPreferences({ fontScale, displayPreset })
+  const { fontScale, displayPreset, theme } = useDisplayPreferences.getState()
+  applyDisplayPreferences({ fontScale, displayPreset, theme })
 }
