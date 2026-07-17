@@ -6,6 +6,7 @@ import {
   Bell,
   Binary,
   BrainCircuit,
+  Moon,
   BriefcaseBusiness,
   ChevronRight,
   Command,
@@ -27,6 +28,7 @@ import {
   Search,
   Settings2,
   ShieldCheck,
+  Sun,
   Wrench,
 } from 'lucide-react'
 import * as Tooltip from '@radix-ui/react-tooltip'
@@ -141,6 +143,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const activeProfileId = usePhase3WorkflowStore((state) => state.profileId)
   const fontScale = useDisplayPreferences((state) => state.fontScale)
   const displayPreset = useDisplayPreferences((state) => state.displayPreset)
+  const theme = useDisplayPreferences((state) => state.theme)
+  const setTheme = useDisplayPreferences((state) => state.setTheme)
   const reloadDisplayPreferences = useDisplayPreferences(
     (state) => state.reloadFromStorage,
   )
@@ -271,8 +275,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [liveSession, navigate])
 
   useEffect(() => {
-    applyDisplayPreferences({ fontScale, displayPreset })
-  }, [displayPreset, fontScale])
+    applyDisplayPreferences({ fontScale, displayPreset, theme })
+  }, [displayPreset, fontScale, theme])
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -354,6 +358,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         data-display-preset={displayPreset}
         data-font-scale={fontScale}
+        data-theme={theme}
         data-app-ready="true"
       >
         <aside className="sidebar" aria-label="Primary navigation">
@@ -487,6 +492,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Badge tone="green" dot>
                 Local only
               </Badge>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-pressed={theme === 'light'}
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              >
+                {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
               <button
                 className="icon-button"
                 type="button"

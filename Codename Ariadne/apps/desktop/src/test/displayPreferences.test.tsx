@@ -36,6 +36,7 @@ describe('display preferences', () => {
     document.documentElement.style.removeProperty('--font-scale')
     delete document.documentElement.dataset.displayPreset
     delete document.documentElement.dataset.fontScale
+    delete document.documentElement.dataset.theme
   })
 
   it('falls back safely when persisted data is missing, malformed, or unsupported', () => {
@@ -54,7 +55,7 @@ describe('display preferences', () => {
 
   it('applies only non-sensitive display values to root CSS state', () => {
     applyDisplayPreferences(
-      { fontScale: 125, displayPreset: 'ultrawide' },
+      { fontScale: 125, displayPreset: 'ultrawide', theme: 'dark' },
       document.documentElement,
     )
 
@@ -100,7 +101,31 @@ describe('display preferences', () => {
       JSON.parse(
         window.localStorage.getItem(DISPLAY_PREFERENCES_STORAGE_KEY) ?? '{}',
       ),
-    ).toEqual({ fontScale: 125, displayPreset: 'ultrawide' })
+    ).toEqual({ fontScale: 125, displayPreset: 'ultrawide', theme: 'dark' })
+  })
+
+  it('switches the UI between dark and light themes from the shell', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'Private by default, explicit by design',
+    }, { timeout: 5_000 })
+
+    const toggle = screen.getByRole('button', {
+      name: /switch to light mode/i,
+    })
+    await user.click(toggle)
+
+    await waitFor(() => {
+      expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+    })
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(DISPLAY_PREFERENCES_STORAGE_KEY) ?? '{}',
+      ),
+    ).toMatchObject({ theme: 'light' })
   })
 
   it('routes every explicit stylesheet font size through the scale variable', () => {

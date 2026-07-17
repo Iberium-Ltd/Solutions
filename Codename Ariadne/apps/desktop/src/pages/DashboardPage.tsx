@@ -64,6 +64,19 @@ export function DashboardPage() {
         }
       />
 
+      <div className="dashboard-hero">
+        <div className="dashboard-hero__copy">
+          <p className="eyebrow">Operational readiness</p>
+          <h2>Stay calm, move faster, and keep every decision traceable.</h2>
+          <p>Every review step feels clearer now, with better cues for evidence, priority, and the next best action.</p>
+        </div>
+        <div className="dashboard-hero__actions">
+          <Badge tone="cyan" dot>Encrypted workspace</Badge>
+          <Badge tone="green">Evidence-first flow</Badge>
+          <Badge tone="violet">Human review ready</Badge>
+        </div>
+      </div>
+
       <div className="metric-grid">
         {dashboardMetrics.map((metric) => (
           <Metric
