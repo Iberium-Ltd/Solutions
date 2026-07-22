@@ -1,7 +1,56 @@
 # Codename Ariadne — Delivery Plan
 
-Last updated: 2026-07-14  
-Current focus: preserve the closed 48-operation local candidate gate, then finish retention, scheduling, authorised connectors, broader providers, and production release validation
+Last updated: 2026-07-22  
+Current focus: refocus the product around persistent people and a durable recursive identity-discovery audit
+
+## 2026-07 product refocus — implementation plan
+
+The existing encrypted `profiles` boundary becomes the persistent **Person**
+aggregate instead of introducing a second competing identity root. Existing
+entities, exact origins, graph relationships, findings, evidence, checkpoints,
+reports, and remediation records remain attached to that stable ID.
+
+The minimum new persistence layer is one forward-only migration containing:
+
+- editable person metadata (notes and tags) and a canonical source/link library;
+- named, dated audit runs with mode, budgets, real counters, stage, state, and
+  explicit stop reason;
+- a durable search frontier whose tasks retain parent lead, depth, priority,
+  expected information gain, retries, receipts, and terminal coverage state;
+- canonical discovery results and leads with complete parent/discovery paths;
+- reviewable knowledge proposals with supporting signals, contradictions,
+  confidence, temporal/ownership/review state, and exact provenance; and
+- structured LLM tool invocations that retain approved arguments/result
+  receipts but never hidden reasoning or unbounded command text.
+
+Execution sequence:
+
+1. Add and migration-test the schema and repository invariants without changing
+   current Phase 3–6 records.
+2. Add bounded People, knowledge, source-library, audit, frontier, proposal, and
+   review contracts through Python, generated TypeScript/Rust, and Tauri.
+3. Deliver the People UI with create/select/edit, manual knowledge, pasted URL
+   seeds, previous audits, unresolved leads, and source actions.
+4. Convert confirmed eligible entities and reusable sources into incremental or
+   full-rescan frontier tasks without returning unrelated raw values.
+5. Execute supported providers concurrently with retries, cancellation, resume,
+   pagination metadata, exact receipts, honest empty/blocked/failed states, and
+   persisted progress.
+6. Add bounded public-page exploration, HTML/link/identifier extraction,
+   forum-aware ranking, deduplication, proposals, and configured stop conditions.
+7. Add the allowlisted LLM tool broker. The selected local model may rank and
+   propose the next tool, but only typed broker commands execute and every call
+   remains budget-, authority-, and policy-bound.
+8. Replace the mandatory manual preflight journey with **Run full audit** while
+   retaining Transmission and individual discovery controls under Advanced.
+9. Feed reviewed discoveries into evidence, graph, checkpoints, comparison,
+   reporting, and remediation; preserve exact discovery chains throughout.
+10. Run privacy, migration, contract, Python, Rust, frontend, packaging, launch,
+    and concise changed-screen checks before updating completion status.
+
+Required recovery tests cover person separation, restart-safe audit/frontier
+state, pause/resume/cancel, duplicate suppression, recursive depth/budget stops,
+tool authorization, proposal review, and restoration after focus/navigation.
 
 ## Delivery principles
 
