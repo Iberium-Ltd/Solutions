@@ -33,6 +33,8 @@ const TASK_STATES = new Set([
   'FAILED_RETRYABLE', 'FAILED_TERMINAL', 'SKIPPED', 'CANCELLED',
   'REVIEW_REQUIRED', 'REVIEWED', 'SAVED',
 ])
+const AI_ANALYSIS_STATES = new Set(['SUCCEEDED', 'FALLBACK', 'FAILED', 'EMPTY'])
+const AI_INSIGHT_KINDS = new Set(['FACT', 'CONNECTION', 'NEXT_STEP'])
 
 interface CommandResponse<T> {
   readonly requestId: string
@@ -128,6 +130,7 @@ function parseAuditDetail(value: unknown): AuditDetail {
       !Array.isArray(data.leads) || data.leads.length > 500 ||
       !Array.isArray(data.proposals) || data.proposals.length > 250 ||
       !Array.isArray(data.receipts) || data.receipts.length > 500 ||
+      !(data.aiAnalysis === null || isRecord(data.aiAnalysis)) ||
       typeof data.hasMoreTasks !== 'boolean' || typeof data.hasMoreResults !== 'boolean' ||
       typeof data.hasMoreLeads !== 'boolean' || typeof data.hasMoreProposals !== 'boolean' ||
       typeof data.hasMoreReceipts !== 'boolean') {
@@ -175,10 +178,35 @@ function parseAuditDetail(value: unknown): AuditDetail {
     isSafeInteger(receipt.resultCount) && isNullableString(receipt.modelProvider) &&
     isNullableString(receipt.modelId) && isSafeInteger(receipt.startedAtUs, 1) &&
     isSafeInteger(receipt.finishedAtUs, 1))
-  if (!tasksValid || !resultsValid || !leadsValid || !proposalsValid || !receiptsValid) {
+  const analysisValid = data.aiAnalysis === null || validAiAnalysis(data.aiAnalysis)
+  if (!tasksValid || !resultsValid || !leadsValid || !proposalsValid || !receiptsValid || !analysisValid) {
     throw new Error('Identity audit collections are invalid')
   }
   return data as unknown as AuditDetail
+}
+
+function validAiAnalysis(value: Record<string, unknown>): boolean {
+  if (!UUID_PATTERN.test(String(value.analysisId)) ||
+      !AI_ANALYSIS_STATES.has(String(value.status)) || typeof value.resultCode !== 'string' ||
+      !isNullableString(value.provider) || !isNullableString(value.modelId) ||
+      !isNullableString(value.engineVersion) || typeof value.title !== 'string' ||
+      typeof value.summary !== 'string' || !Array.isArray(value.insights) ||
+      value.insights.length > 100 || !Array.isArray(value.citations) ||
+      value.citations.length > 200 || !isStringArray(value.limitations, 32) ||
+      !isSafeInteger(value.createdAtUs, 1)) return false
+  const references = new Set<string>()
+  if (!value.citations.every((citation) => {
+    if (!isRecord(citation) || typeof citation.referenceId !== 'string' ||
+        !UUID_PATTERN.test(String(citation.resultId)) || typeof citation.url !== 'string' ||
+        typeof citation.title !== 'string') return false
+    references.add(citation.referenceId)
+    return true
+  })) return false
+  return value.insights.every((insight) => isRecord(insight) &&
+    AI_INSIGHT_KINDS.has(String(insight.kind)) && typeof insight.statement === 'string' &&
+    typeof insight.rationale === 'string' && isNullableString(insight.confidence) &&
+    isStringArray(insight.evidenceRefs, 32) &&
+    insight.evidenceRefs.every((reference) => references.has(reference)))
 }
 
 async function invokeIdentity(command: string, request: object): Promise<unknown> {

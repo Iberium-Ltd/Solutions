@@ -12,6 +12,7 @@ import {
   Play,
   RefreshCw,
   Search,
+  Sparkles,
   Square,
 } from 'lucide-react'
 import type {
@@ -28,7 +29,7 @@ import {
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { Badge, Button, Metric, PageHeader, Panel, Progress } from '../components/Primitives'
 
-type AuditView = 'RESULTS' | 'LEADS' | 'REVIEW' | 'TASKS' | 'RECEIPTS'
+type AuditView = 'RESULTS' | 'ANALYSIS' | 'LEADS' | 'REVIEW' | 'TASKS' | 'RECEIPTS'
 const RUNNING_STATES = new Set(['READY', 'RUNNING'])
 const TERMINAL_GOOD = new Set(['COMPLETED', 'PARTIAL'])
 
@@ -197,6 +198,7 @@ export function IdentityAuditPage() {
       <div className="identity-audit-tabs" role="tablist" aria-label="Audit evidence views">
         {([
           ['RESULTS', `Sources & results (${detail.results.length})`],
+          ['ANALYSIS', `AI analysis (${detail.aiAnalysis?.insights.length ?? 0})`],
           ['LEADS', `Leads (${detail.leads.length})`],
           ['REVIEW', `Review (${detail.proposals.length})`],
           ['TASKS', `Task frontier (${detail.tasks.length})`],
@@ -215,6 +217,18 @@ export function IdentityAuditPage() {
               </article>
             ))}
           </div>
+        </Panel>
+      ) : null}
+
+      {view === 'ANALYSIS' ? (
+        <Panel eyebrow="Cited reasoning" title={detail.aiAnalysis?.title ?? 'No analysis produced'} action={detail.aiAnalysis ? <Badge tone={detail.aiAnalysis.status === 'SUCCEEDED' ? 'violet' : 'amber'}>{detail.aiAnalysis.status.toLocaleLowerCase()}</Badge> : undefined}>
+          {detail.aiAnalysis === null ? <div className="empty-state"><Sparkles size={28} /><h2>No AI analysis for this run</h2><p>Enable a selected local model before starting an audit. Deterministic discovery remains fully available without it.</p></div> : <div className="identity-ai-analysis">
+            <p className="identity-ai-analysis__summary">{detail.aiAnalysis.summary}</p>
+            <div className="identity-card-grid">{detail.aiAnalysis.insights.map((insight, index) => <article className="identity-knowledge-card" key={`${insight.kind}-${index}`}><header><Badge tone="violet">{insight.kind.replaceAll('_', ' ').toLocaleLowerCase()}</Badge>{insight.confidence ? <span>{insight.confidence.toLocaleLowerCase()} confidence</span> : null}</header><strong>{insight.statement}</strong><p>{insight.rationale}</p><div className="chip-wrap">{insight.evidenceRefs.map((reference) => <Badge key={reference}>{reference}</Badge>)}</div></article>)}</div>
+            <div className="identity-ai-citations">{detail.aiAnalysis.citations.map((citation) => <article className="identity-result-row" key={citation.referenceId}><Sparkles size={15} /><div><strong>{citation.title || citation.url}</strong><code>{citation.url}</code><small>{citation.referenceId}</small></div><Button size="compact" variant="secondary" onClick={() => void copy(citation.url, citation.referenceId)}><Clipboard size={13} />{copied === citation.referenceId ? 'Copied' : 'Copy URL'}</Button></article>)}</div>
+            {detail.aiAnalysis.limitations.length ? <div className="callout callout--warning"><AlertTriangle size={16} /><div><strong>Analysis limits</strong><p>{detail.aiAnalysis.limitations.join(' · ')}</p></div></div> : null}
+            <small>{detail.aiAnalysis.provider && detail.aiAnalysis.modelId ? `${detail.aiAnalysis.provider} · ${detail.aiAnalysis.modelId} · ` : 'Deterministic fallback · '}{detail.aiAnalysis.resultCode.replaceAll('_', ' ').toLocaleLowerCase()}</small>
+          </div>}
         </Panel>
       ) : null}
 

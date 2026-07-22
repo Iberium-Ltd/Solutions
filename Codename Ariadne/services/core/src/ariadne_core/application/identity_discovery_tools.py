@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import ipaddress
+import json
 import socket
 import urllib.error
 import urllib.request
@@ -19,7 +20,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from http.client import HTTPMessage
 from typing import IO, Protocol
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import quote, urlencode, urljoin, urlsplit
 
 from ariadne_core.application.public_discovery import PublicDiscoveryService
 from ariadne_core.domain.identity_compiler import ExtractionLimits, compile_text
@@ -72,7 +73,17 @@ REGISTERED_TOOLS = frozenset(
         "COMPARE_SOURCES",
     }
 )
-IMPLEMENTED_TOOLS = frozenset({"SEARCH_WEB", "QUERY_GITHUB", "FETCH_URL"})
+IMPLEMENTED_TOOLS = frozenset(
+    {
+        "SEARCH_WEB",
+        "SEARCH_USERNAME",
+        "QUERY_GITHUB",
+        "QUERY_REGISTRY",
+        "QUERY_ARCHIVE",
+        "QUERY_CERTIFICATE_TRANSPARENCY",
+        "FETCH_URL",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,6 +209,13 @@ class InvestigationToolBroker:
             return ToolExecution(state="REVIEW_REQUIRED", reason="TOOL_NOT_IMPLEMENTED")
         if task.task_type in {"SEARCH_WEB", "QUERY_GITHUB"}:
             return self._search(task)
+        if task.task_type in {
+            "SEARCH_USERNAME",
+            "QUERY_REGISTRY",
+            "QUERY_ARCHIVE",
+            "QUERY_CERTIFICATE_TRANSPARENCY",
+        }:
+            return self._query_public_json(task)
         return self._fetch(task)
 
     def _search(self, task: FrontierTaskRecord) -> ToolExecution:
@@ -278,6 +296,191 @@ class InvestigationToolBroker:
             return ToolExecution(state="FAILED_TERMINAL", reason="INVALID_ENCODING")
         page = parse_public_page(url, text, response.status_code)
         return ToolExecution(state="SUCCEEDED_RESULTS", reason="COMPLETE", page=page)
+
+    def _query_public_json(self, task: FrontierTaskRecord) -> ToolExecution:
+        """Query one credential-free documented public endpoint and retain exact URLs."""
+
+        try:
+            request_url = _provider_request_url(task)
+            response = self._page_transport.fetch(
+                request_url, timeout_seconds=12.0, max_bytes=MAX_PAGE_BYTES
+            )
+        except PageFetchError as error:
+            return ToolExecution(
+                state="FAILED_RETRYABLE"
+                if error.code in {"TIMEOUT", "NETWORK_UNAVAILABLE"}
+                else "BLOCKED",
+                reason=error.code,
+            )
+        except (OSError, TimeoutError, urllib.error.URLError):
+            return ToolExecution(state="FAILED_RETRYABLE", reason="NETWORK_UNAVAILABLE")
+        except ValueError:
+            return ToolExecution(state="BLOCKED", reason="UNSAFE_OR_INVALID_URL")
+        if response.status_code == 429:
+            return ToolExecution(state="RATE_LIMITED", reason="UPSTREAM_RATE_LIMITED")
+        if response.status_code in {401, 403}:
+            return ToolExecution(state="AUTH_REQUIRED", reason="AUTH_REQUIRED")
+        if response.status_code < 200 or response.status_code >= 300:
+            return ToolExecution(state="FAILED_RETRYABLE", reason="UPSTREAM_REJECTED")
+        try:
+            payload = json.loads(response.body)
+            results = _provider_results(task, request_url, payload)
+        except (UnicodeError, json.JSONDecodeError, TypeError, ValueError):
+            return ToolExecution(state="FAILED_TERMINAL", reason="INVALID_PROVIDER_RESPONSE")
+        return ToolExecution(
+            state="SUCCEEDED_RESULTS" if results else "SUCCEEDED_EMPTY",
+            reason="COMPLETE",
+            search_results=results,
+        )
+
+
+def _provider_request_url(task: FrontierTaskRecord) -> str:
+    value = task.payload.strip()
+    if not value or len(value) > 2_048:
+        raise ValueError("provider argument is invalid")
+    if task.provider_id == "GITLAB_USERS":
+        return f"https://gitlab.com/api/v4/users?{urlencode({'username': value, 'per_page': 10})}"
+    if task.provider_id == "NPM_REGISTRY":
+        return "https://registry.npmjs.org/-/v1/search?" + urlencode(
+            {"text": f"maintainer:{value}", "size": 10}
+        )
+    if task.provider_id == "RDAP_DOMAIN":
+        return f"https://rdap.org/domain/{quote(value, safe='')}"
+    if task.provider_id == "WAYBACK_CDX":
+        return "https://web.archive.org/cdx/search/cdx?" + urlencode(
+            {
+                "url": value,
+                "output": "json",
+                "filter": "statuscode:200",
+                "fl": "timestamp,original,statuscode,digest",
+                "collapse": "urlkey",
+                "limit": 10,
+            }
+        )
+    if task.provider_id == "CERTIFICATE_TRANSPARENCY":
+        return "https://crt.sh/?" + urlencode({"q": f"%.{value}", "output": "json"})
+    raise ValueError("provider is not implemented")
+
+
+def _provider_results(
+    task: FrontierTaskRecord, request_url: str, payload: object
+) -> tuple[SearchResultDraft, ...]:
+    drafts: list[SearchResultDraft] = []
+    if task.provider_id == "GITLAB_USERS" and isinstance(payload, list):
+        for item in payload[:10]:
+            if not isinstance(item, dict):
+                continue
+            username = _json_text(item.get("username"), 120)
+            url = _json_url(item.get("web_url"))
+            if username and url:
+                drafts.append(
+                    SearchResultDraft(
+                        provider_id=task.provider_id,
+                        rank=len(drafts) + 1,
+                        category="CODE",
+                        url=url,
+                        title=_json_text(item.get("name"), 240) or username,
+                        snippet=f"GitLab public user @{username}.",
+                    )
+                )
+    elif task.provider_id == "NPM_REGISTRY" and isinstance(payload, dict):
+        objects = payload.get("objects")
+        if isinstance(objects, list):
+            for wrapper in objects[:10]:
+                package = wrapper.get("package") if isinstance(wrapper, dict) else None
+                if not isinstance(package, dict):
+                    continue
+                links = package.get("links")
+                url = _json_url(links.get("npm")) if isinstance(links, dict) else None
+                name = _json_text(package.get("name"), 214)
+                if url and name:
+                    drafts.append(
+                        SearchResultDraft(
+                            provider_id=task.provider_id,
+                            rank=len(drafts) + 1,
+                            category="CODE",
+                            url=url,
+                            title=name,
+                            snippet=_json_text(package.get("description"), 500)
+                            or "Public npm package linked to this maintainer query.",
+                        )
+                    )
+    elif task.provider_id == "RDAP_DOMAIN" and isinstance(payload, dict):
+        handle = _json_text(payload.get("handle"), 200)
+        domain = _json_text(payload.get("ldhName"), 253) or task.payload
+        drafts.append(
+            SearchResultDraft(
+                provider_id=task.provider_id,
+                rank=1,
+                category="PUBLIC_RECORD",
+                url=normalise_public_result_url(request_url),
+                title=f"RDAP record for {domain}",
+                snippet=f"Public registration record{f' · handle {handle}' if handle else ''}.",
+            )
+        )
+    elif task.provider_id == "WAYBACK_CDX" and isinstance(payload, list):
+        rows = payload[1:] if payload and isinstance(payload[0], list) else payload
+        for row in rows[:10]:
+            if not isinstance(row, list) or len(row) < 2:
+                continue
+            timestamp = _json_text(row[0], 20)
+            original = _json_url(row[1])
+            if timestamp and original:
+                archived = normalise_public_result_url(
+                    f"https://web.archive.org/web/{timestamp}/{original}"
+                )
+                drafts.append(
+                    SearchResultDraft(
+                        provider_id=task.provider_id,
+                        rank=len(drafts) + 1,
+                        category="ARCHIVE",
+                        url=archived,
+                        title=f"Archived snapshot · {timestamp}",
+                        snippet=f"Wayback Machine snapshot of {original}.",
+                    )
+                )
+    elif task.provider_id == "CERTIFICATE_TRANSPARENCY" and isinstance(payload, list):
+        seen: set[str] = set()
+        for item in payload[:30]:
+            if not isinstance(item, dict):
+                continue
+            certificate_id = item.get("id")
+            names = _json_text(item.get("name_value"), 500)
+            if isinstance(certificate_id, bool) or not isinstance(certificate_id, int) or not names:
+                continue
+            url = normalise_public_result_url(f"https://crt.sh/?id={certificate_id}")
+            if url in seen:
+                continue
+            seen.add(url)
+            drafts.append(
+                SearchResultDraft(
+                    provider_id=task.provider_id,
+                    rank=len(drafts) + 1,
+                    category="PUBLIC_RECORD",
+                    url=url,
+                    title=_json_text(item.get("common_name"), 240) or names.splitlines()[0],
+                    snippet=f"Certificate transparency names: {names}",
+                )
+            )
+            if len(drafts) == 10:
+                break
+    else:
+        raise ValueError("provider response shape is invalid")
+    return tuple(drafts)
+
+
+def _json_text(value: object, maximum: int) -> str:
+    if not isinstance(value, str):
+        return ""
+    return normalise_result_text(value, maximum=maximum, required=False) or ""
+
+
+def _json_url(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    with suppress(ValueError):
+        return normalise_public_result_url(value)
+    return None
 
 
 class _PageParser(HTMLParser):

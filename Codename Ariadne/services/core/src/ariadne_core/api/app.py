@@ -139,6 +139,7 @@ def create_app(runtime: ApiRuntime) -> FastAPI:
         IdentityDiscoveryCoordinator(
             runtime.vault_manager,
             public_discovery=public_discovery_service,
+            local_ai_transport=runtime.local_ai_transport,
         )
         if phase3_available and runtime.vault_manager is not None
         else None

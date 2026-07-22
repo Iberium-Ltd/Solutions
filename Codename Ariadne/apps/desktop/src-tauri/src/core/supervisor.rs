@@ -44,56 +44,56 @@ use super::contract::{
     CoreGraphSnapshot, CoreGraphSnapshotRequest, CoreHibpAccountMode, CoreHibpAccountRequest,
     CoreHibpAccountResult, CoreHibpBreachReference, CoreHibpDomainRequest, CoreHibpDomainResult,
     CoreHibpIdentifierDisclosure, CoreHibpOperation, CoreHibpProvider, CoreHibpReason,
-    CoreHibpRequestMetadata, CoreHibpState, CoreIdentityAuditControlRequest,
-    CoreIdentityAuditCreateRequest, CoreIdentityAuditDetail, CoreIdentityAuditExecuteRequest,
-    CoreIdentityAuditSummary, CoreIdentityDiscoveryLead, CoreIdentityDiscoveryResult,
-    CoreIdentityFrontierTask, CoreIdentityKnowledgeProposal, CoreIdentityPersonUpdateRequest,
-    CoreIdentityProposalDecisionRequest, CoreIdentitySource, CoreIdentitySourceCreateRequest,
-    CoreIdentityTaskState, CoreIdentityToolReceipt, CoreIdentityWorkspace,
-    CoreIdentityWorkspaceRequest, CoreIntakeReceipt, CoreInvestigationIdentifierKind,
-    CoreInvestigationNotice, CoreInvestigationOperation, CoreInvestigationPlanRequest,
-    CoreInvestigationPlanResult, CoreInvestigationPlanStep, CoreInvestigationPrerequisite,
-    CoreInvestigationProvider, CoreInvestigationTransmission, CoreLocalAiConnectionResult,
-    CoreLocalAiConnectionStatus, CoreLocalAiEndpointRequest, CoreLocalAiIntakeStatus,
-    CoreLocalAiModelDiscoveryResult, CoreLocalAiProvider, CoreLocalAiSettings,
-    CoreLocalAiSettingsUpdateRequest, CoreLocalAiWorkspaceConnection, CoreLocalAiWorkspaceDocument,
-    CoreLocalAiWorkspaceDocumentKind, CoreLocalAiWorkspaceExecution, CoreLocalAiWorkspaceFact,
-    CoreLocalAiWorkspaceNextStep, CoreLocalAiWorkspaceRequest, CoreLocalAiWorkspaceResult,
-    CoreLocalAiWorkspaceScope, CoreLocalAiWorkspaceSection, CoreLocalAiWorkspaceSource,
-    CoreLocalAiWorkspaceSourceCounts, CoreLocalAiWorkspaceTask, CoreLocalCorpusAiConnection,
-    CoreLocalCorpusAiContentOrigin, CoreLocalCorpusAiCounts, CoreLocalCorpusAiExecution,
-    CoreLocalCorpusAiFact, CoreLocalCorpusAiNextStep, CoreLocalCorpusAiReferenceKind,
-    CoreLocalCorpusAiRequest, CoreLocalCorpusAiResult, CoreLocalCorpusAiReviewNote,
-    CoreLocalCorpusAiSection, CoreLocalCorpusAiSourceCatalogEntry, CoreLocalCorpusAiSourcePointer,
-    CoreLocalCorpusAiTask, CoreLocalCorpusAiTextLabel, CoreLocalCorpusDocumentRequest,
-    CoreLocalCorpusMediaType, CoreLocalReportArtifact, CoreLocalReportArtifactDescriptor,
-    CoreLocalReportGenerateRequest, CoreLocalReportGenerateResult, CoreLocalReportSchema,
-    CorePasteIntakeRequest, CorePhase5ArtifactKind, CorePhase5AttributionAssessment,
-    CorePhase5AttributionDecisionRequest, CorePhase5AttributionDecisionResult,
-    CorePhase5CaptureMethod, CorePhase5CheckOutcome, CorePhase5ConfidenceBand,
-    CorePhase5EvidenceArtifact, CorePhase5EvidenceViewport, CorePhase5FindingDetailRequest,
-    CorePhase5FindingDetailResult, CorePhase5FindingListRequest, CorePhase5FindingListResult,
-    CorePhase5FindingSummary, CorePhase5ManualArtifactKind, CorePhase5ManualEvidenceImportRequest,
-    CorePhase5ManualEvidenceImportResult, CorePhase5ManualFindingCreateRequest,
-    CorePhase5PositiveSignal, CorePhase5RedactedDerivativeRequest,
-    CorePhase5RedactedDerivativeResult, CorePhase5Severity, CorePhase5Visibility,
-    CorePhase6ActionDisposition, CorePhase6AuditRunListRequest, CorePhase6AuditRunListResult,
-    CorePhase6AuditRunSummary, CorePhase6CompareRunsRequest, CorePhase6ComparisonResult,
-    CorePhase6FindingDiff, CorePhase6FindingDiffState, CorePhase6FindingLifecycle,
-    CorePhase6LifecycleEvent, CorePhase6LocalCheckpointRequest, CorePhase6LocalCheckpointResult,
-    CorePhase6ProviderCoverageComparison, CorePhase6ProviderResponse, CorePhase6RemediationAction,
-    CorePhase6RemediationCase, CorePhase6RemediationCaseSummary,
-    CorePhase6RemediationCreateRequest, CorePhase6RemediationDeadlineUpdateRequest,
-    CorePhase6RemediationDetailRequest, CorePhase6RemediationDetailResult,
-    CorePhase6RemediationDraftUpdateRequest, CorePhase6RemediationEventType,
-    CorePhase6RemediationEvidenceLinkRequest, CorePhase6RemediationHistoryEntry,
-    CorePhase6RemediationListRequest, CorePhase6RemediationListResult,
-    CorePhase6RemediationProviderResponseRequest, CorePhase6RemediationReappearanceRequest,
-    CorePhase6RemediationRequireApprovalRequest, CorePhase6RemediationStatus,
-    CorePhase6RemediationStatusTransitionRequest, CorePhase6SnapshotRunState,
-    CorePhase6UnresolvedAbsence, CoreProfileCreateRequest, CoreProfileListResult,
-    CoreProfileSummary, CoreProviderCatalogRequest, CoreProviderCatalogResult,
-    CorePublicDiscoveryCaptureRequest, CorePublicDiscoveryCaptureResult,
+    CoreHibpRequestMetadata, CoreHibpState, CoreIdentityAiAnalysis,
+    CoreIdentityAuditControlRequest, CoreIdentityAuditCreateRequest, CoreIdentityAuditDetail,
+    CoreIdentityAuditExecuteRequest, CoreIdentityAuditSummary, CoreIdentityDiscoveryLead,
+    CoreIdentityDiscoveryResult, CoreIdentityFrontierTask, CoreIdentityKnowledgeProposal,
+    CoreIdentityPersonUpdateRequest, CoreIdentityProposalDecisionRequest, CoreIdentitySource,
+    CoreIdentitySourceCreateRequest, CoreIdentityTaskState, CoreIdentityToolReceipt,
+    CoreIdentityWorkspace, CoreIdentityWorkspaceRequest, CoreIntakeReceipt,
+    CoreInvestigationIdentifierKind, CoreInvestigationNotice, CoreInvestigationOperation,
+    CoreInvestigationPlanRequest, CoreInvestigationPlanResult, CoreInvestigationPlanStep,
+    CoreInvestigationPrerequisite, CoreInvestigationProvider, CoreInvestigationTransmission,
+    CoreLocalAiConnectionResult, CoreLocalAiConnectionStatus, CoreLocalAiEndpointRequest,
+    CoreLocalAiIntakeStatus, CoreLocalAiModelDiscoveryResult, CoreLocalAiProvider,
+    CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest, CoreLocalAiWorkspaceConnection,
+    CoreLocalAiWorkspaceDocument, CoreLocalAiWorkspaceDocumentKind, CoreLocalAiWorkspaceExecution,
+    CoreLocalAiWorkspaceFact, CoreLocalAiWorkspaceNextStep, CoreLocalAiWorkspaceRequest,
+    CoreLocalAiWorkspaceResult, CoreLocalAiWorkspaceScope, CoreLocalAiWorkspaceSection,
+    CoreLocalAiWorkspaceSource, CoreLocalAiWorkspaceSourceCounts, CoreLocalAiWorkspaceTask,
+    CoreLocalCorpusAiConnection, CoreLocalCorpusAiContentOrigin, CoreLocalCorpusAiCounts,
+    CoreLocalCorpusAiExecution, CoreLocalCorpusAiFact, CoreLocalCorpusAiNextStep,
+    CoreLocalCorpusAiReferenceKind, CoreLocalCorpusAiRequest, CoreLocalCorpusAiResult,
+    CoreLocalCorpusAiReviewNote, CoreLocalCorpusAiSection, CoreLocalCorpusAiSourceCatalogEntry,
+    CoreLocalCorpusAiSourcePointer, CoreLocalCorpusAiTask, CoreLocalCorpusAiTextLabel,
+    CoreLocalCorpusDocumentRequest, CoreLocalCorpusMediaType, CoreLocalReportArtifact,
+    CoreLocalReportArtifactDescriptor, CoreLocalReportGenerateRequest,
+    CoreLocalReportGenerateResult, CoreLocalReportSchema, CorePasteIntakeRequest,
+    CorePhase5ArtifactKind, CorePhase5AttributionAssessment, CorePhase5AttributionDecisionRequest,
+    CorePhase5AttributionDecisionResult, CorePhase5CaptureMethod, CorePhase5CheckOutcome,
+    CorePhase5ConfidenceBand, CorePhase5EvidenceArtifact, CorePhase5EvidenceViewport,
+    CorePhase5FindingDetailRequest, CorePhase5FindingDetailResult, CorePhase5FindingListRequest,
+    CorePhase5FindingListResult, CorePhase5FindingSummary, CorePhase5ManualArtifactKind,
+    CorePhase5ManualEvidenceImportRequest, CorePhase5ManualEvidenceImportResult,
+    CorePhase5ManualFindingCreateRequest, CorePhase5PositiveSignal,
+    CorePhase5RedactedDerivativeRequest, CorePhase5RedactedDerivativeResult, CorePhase5Severity,
+    CorePhase5Visibility, CorePhase6ActionDisposition, CorePhase6AuditRunListRequest,
+    CorePhase6AuditRunListResult, CorePhase6AuditRunSummary, CorePhase6CompareRunsRequest,
+    CorePhase6ComparisonResult, CorePhase6FindingDiff, CorePhase6FindingDiffState,
+    CorePhase6FindingLifecycle, CorePhase6LifecycleEvent, CorePhase6LocalCheckpointRequest,
+    CorePhase6LocalCheckpointResult, CorePhase6ProviderCoverageComparison,
+    CorePhase6ProviderResponse, CorePhase6RemediationAction, CorePhase6RemediationCase,
+    CorePhase6RemediationCaseSummary, CorePhase6RemediationCreateRequest,
+    CorePhase6RemediationDeadlineUpdateRequest, CorePhase6RemediationDetailRequest,
+    CorePhase6RemediationDetailResult, CorePhase6RemediationDraftUpdateRequest,
+    CorePhase6RemediationEventType, CorePhase6RemediationEvidenceLinkRequest,
+    CorePhase6RemediationHistoryEntry, CorePhase6RemediationListRequest,
+    CorePhase6RemediationListResult, CorePhase6RemediationProviderResponseRequest,
+    CorePhase6RemediationReappearanceRequest, CorePhase6RemediationRequireApprovalRequest,
+    CorePhase6RemediationStatus, CorePhase6RemediationStatusTransitionRequest,
+    CorePhase6SnapshotRunState, CorePhase6UnresolvedAbsence, CoreProfileCreateRequest,
+    CoreProfileListResult, CoreProfileSummary, CoreProviderCatalogRequest,
+    CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest, CorePublicDiscoveryCaptureResult,
     CorePublicDiscoveryProvider, CorePublicDiscoveryReason, CorePublicDiscoverySearchRequest,
     CorePublicDiscoverySearchResult, CorePublicDiscoveryState, CoreQueryCheckState,
     CoreQueryCoverageOutcome, CoreQueryDryRunRequest, CoreQueryPlanCell, CoreQueryPlanRequest,
@@ -199,6 +199,8 @@ const MAX_IDENTITY_RESULTS: usize = 500;
 const MAX_IDENTITY_LEADS: usize = 500;
 const MAX_IDENTITY_PROPOSALS: usize = 250;
 const MAX_IDENTITY_RECEIPTS: usize = 500;
+const MAX_IDENTITY_AI_INSIGHTS: usize = 100;
+const MAX_IDENTITY_AI_CITATIONS: usize = 200;
 const IDENTITY_REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
 const MAX_SAFE_JAVASCRIPT_INTEGER: u64 = 9_007_199_254_740_991;
 
@@ -2659,6 +2661,16 @@ fn validate_identity_audit_detail(
             return Err(CoreError::InvalidIdentityResponse);
         }
     }
+    if let Some(analysis) = &result.ai_analysis {
+        let result_by_id: HashMap<Uuid, &CoreIdentityDiscoveryResult> = result
+            .results
+            .iter()
+            .map(|item| (item.result_id, item))
+            .collect();
+        if !validate_identity_ai_analysis(analysis, &result_by_id) {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
     Ok(())
 }
 
@@ -2852,6 +2864,67 @@ fn validate_identity_receipt(receipt: &CoreIdentityToolReceipt) -> bool {
         && receipt.finished_at_us >= receipt.started_at_us
 }
 
+fn validate_identity_ai_analysis(
+    analysis: &CoreIdentityAiAnalysis,
+    results: &HashMap<Uuid, &CoreIdentityDiscoveryResult>,
+) -> bool {
+    if !is_rfc4122_uuid(analysis.analysis_id)
+        || !is_bounded_event_label(&analysis.result_code, 96)
+        || analysis
+            .provider
+            .as_deref()
+            .is_none_or(|value| is_safe_bounded_text(value, 1, 64))
+        || analysis
+            .model_id
+            .as_deref()
+            .is_none_or(|value| is_safe_bounded_text(value, 1, 256))
+        || analysis
+            .engine_version
+            .as_deref()
+            .is_none_or(|value| is_safe_bounded_text(value, 1, 64))
+        || (analysis.title.is_empty() || !is_safe_multiline_text(&analysis.title, 1, 500))
+        || (analysis.summary.is_empty() || !is_safe_multiline_text(&analysis.summary, 1, 4_000))
+        || analysis.insights.len() > MAX_IDENTITY_AI_INSIGHTS
+        || analysis.citations.len() > MAX_IDENTITY_AI_CITATIONS
+        || analysis.limitations.len() > 32
+        || !analysis
+            .limitations
+            .iter()
+            .all(|value| is_safe_multiline_text(value, 1, 2_000))
+        || !is_valid_timestamp_us(analysis.created_at_us)
+    {
+        return false;
+    }
+    let mut references = HashSet::with_capacity(analysis.citations.len());
+    for citation in &analysis.citations {
+        let expected_reference = format!("result:{}", citation.result_id);
+        let Some(result) = results.get(&citation.result_id) else {
+            return false;
+        };
+        if citation.reference_id != expected_reference
+            || !references.insert(citation.reference_id.as_str())
+            || citation.url != result.url
+            || citation.title != result.title
+        {
+            return false;
+        }
+    }
+    analysis.insights.iter().all(|insight| {
+        is_safe_multiline_text(&insight.statement, 1, 2_000)
+            && (insight.rationale.is_empty()
+                || is_safe_multiline_text(&insight.rationale, 1, 2_000))
+            && insight
+                .confidence
+                .as_deref()
+                .is_none_or(|value| matches!(value, "HIGH" | "MEDIUM" | "LOW"))
+            && insight.evidence_refs.len() <= 32
+            && insight
+                .evidence_refs
+                .iter()
+                .all(|reference| references.contains(reference.as_str()))
+    })
+}
+
 fn is_identity_url(value: &str) -> bool {
     if !is_safe_bounded_text(value, 8, 2_048) {
         return false;
@@ -2868,7 +2941,15 @@ fn is_identity_url(value: &str) -> bool {
 fn is_identity_audit_provider(value: &str) -> bool {
     matches!(
         value,
-        "DUCKDUCKGO_HTML" | "GITHUB_USERS" | "HAVE_I_BEEN_PWNED_V3" | "MANUAL_BROWSER_HANDOFFS"
+        "DUCKDUCKGO_HTML"
+            | "GITHUB_USERS"
+            | "GITLAB_USERS"
+            | "NPM_REGISTRY"
+            | "RDAP_DOMAIN"
+            | "WAYBACK_CDX"
+            | "CERTIFICATE_TRANSPARENCY"
+            | "HAVE_I_BEEN_PWNED_V3"
+            | "MANUAL_BROWSER_HANDOFFS"
     )
 }
 

@@ -2841,6 +2841,63 @@ pub struct CoreIdentityToolReceipt {
     pub finished_at_us: u64,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityAiAnalysisStatus {
+    Succeeded,
+    Fallback,
+    Failed,
+    Empty,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityAiInsightKind {
+    Fact,
+    Connection,
+    NextStep,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAiCitation {
+    pub reference_id: String,
+    pub result_id: Uuid,
+    pub url: String,
+    pub title: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAiInsight {
+    pub kind: CoreIdentityAiInsightKind,
+    pub statement: String,
+    pub rationale: String,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub confidence: Option<String>,
+    pub evidence_refs: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAiAnalysis {
+    pub analysis_id: Uuid,
+    pub status: CoreIdentityAiAnalysisStatus,
+    pub result_code: String,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub provider: Option<String>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub model_id: Option<String>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub engine_version: Option<String>,
+    pub title: String,
+    pub summary: String,
+    pub insights: Vec<CoreIdentityAiInsight>,
+    pub citations: Vec<CoreIdentityAiCitation>,
+    pub limitations: Vec<String>,
+    pub created_at_us: u64,
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CoreIdentityAuditDetail {
@@ -2851,6 +2908,8 @@ pub struct CoreIdentityAuditDetail {
     pub leads: Vec<CoreIdentityDiscoveryLead>,
     pub proposals: Vec<CoreIdentityKnowledgeProposal>,
     pub receipts: Vec<CoreIdentityToolReceipt>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub ai_analysis: Option<CoreIdentityAiAnalysis>,
     pub has_more_tasks: bool,
     pub has_more_results: bool,
     pub has_more_leads: bool,

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import base64
+import json
+import re
 from collections.abc import Iterable
 from pathlib import Path
 from typing import cast
@@ -10,6 +12,7 @@ from uuid import uuid4
 import httpx
 import pytest
 from fastapi import FastAPI
+from sqlalchemy import MetaData, Table, insert, select
 
 from ariadne_core.api.app import ApiRuntime, create_app
 from ariadne_core.api.schemas import RuntimeTransport
@@ -19,6 +22,7 @@ from ariadne_core.application.public_discovery import (
 )
 from ariadne_core.application.vault import VaultManager
 from ariadne_core.infrastructure.db.engine import CipherRuntime
+from ariadne_core.local_ai import LocalAIHttpRequest, LocalAIHttpResponse
 from ariadne_core.security.key_custody import MemoryKeyCustodian
 from ariadne_core.security.key_lease import KeyLeaseClient
 from ariadne_core.security.sessions import LaunchSession
@@ -46,7 +50,58 @@ class ScriptedTransport:
         return self.responses.pop(0)
 
 
-def _app(manager: VaultManager, transport: ScriptedTransport) -> FastAPI:
+class CitedLocalAITransport:
+    def __init__(self) -> None:
+        self.requests: list[LocalAIHttpRequest] = []
+
+    def send(self, request: LocalAIHttpRequest) -> LocalAIHttpResponse:
+        self.requests.append(request)
+        body = request.body.decode() if request.body is not None else ""
+        match = re.search(r"result:[0-9a-f-]{36}", body)
+        if match is None:
+            raise AssertionError("identity AI projection omitted its result reference")
+        reference = match.group(0)
+        output = {
+            "title": "Synthetic identity connections",
+            "summary": "One exact public source is ready for human review.",
+            "sections": [
+                {
+                    "heading": "Sources",
+                    "items": [{"text": "One public result.", "evidence_refs": [reference]}],
+                }
+            ],
+            "facts": [
+                {
+                    "statement": "A public profile result was returned.",
+                    "evidence_refs": [reference],
+                    "confidence": "HIGH",
+                }
+            ],
+            "connections": [],
+            "next_steps": [
+                {
+                    "priority": 1,
+                    "suggestion": "Review the exact profile source.",
+                    "rationale": "Ownership still requires human confirmation.",
+                    "supporting_refs": [reference],
+                }
+            ],
+            "unanswered": None,
+            "limitations": ["Synthetic model output requires human review."],
+        }
+        return LocalAIHttpResponse(
+            200,
+            json.dumps(
+                {"model": "qwen-local:7b", "message": {"content": json.dumps(output)}}
+            ).encode(),
+        )
+
+
+def _app(
+    manager: VaultManager,
+    transport: ScriptedTransport,
+    local_ai_transport: CitedLocalAITransport | None = None,
+) -> FastAPI:
     return create_app(
         ApiRuntime(
             transport=RuntimeTransport.DEV_LOOPBACK,
@@ -65,6 +120,7 @@ def _app(manager: VaultManager, transport: ScriptedTransport) -> FastAPI:
                 json=True,
             ),
             public_discovery_transport=transport,
+            local_ai_transport=local_ai_transport,
         )
     )
 
@@ -95,12 +151,25 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
     manager = VaultManager(tmp_path / "vault", MemoryKeyCustodian())
     manager.create(display_name="Synthetic identity discovery vault")
     transport = ScriptedTransport([_search_response()])
-    app = _app(manager, transport)
+    local_ai_transport = CitedLocalAITransport()
+    app = _app(manager, transport, local_ai_transport)
 
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url=f"http://{HOST}",
     ) as client:
+        settings_response = await client.post(
+            "/v1/local-ai/settings",
+            json={
+                "enabled": True,
+                "provider": "OLLAMA",
+                "endpoint": "http://127.0.0.1:11434",
+                "selectedModel": "qwen-local:7b",
+                "expectedRevision": 1,
+            },
+            headers=_headers(),
+        )
+        assert settings_response.status_code == 200
         profile_response = await client.post(
             "/v1/profiles",
             json={
@@ -177,11 +246,11 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
                 "name": "Synthetic full audit",
                 "mode": "FULL_RESCAN",
                 "providerIds": ["DUCKDUCKGO_HTML"],
-                "maxDepth": 1,
+                "maxDepth": 0,
                 "requestBudget": 8,
                 "timeBudgetSeconds": 60,
                 "costBudgetMicros": 0,
-                "useLocalAi": False,
+                "useLocalAi": True,
                 "authorizedSelfAudit": True,
             },
             headers=_headers(),
@@ -203,9 +272,75 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
         )
         assert executed["results"][0]["url"].endswith("/synthetic-orbit")
         assert executed["tasks"][0]["state"] == "SUCCEEDED_RESULTS"
+        assert executed["aiAnalysis"]["status"] == "SUCCEEDED"
+        assert executed["aiAnalysis"]["provider"] == "OLLAMA"
+        assert executed["aiAnalysis"]["modelId"] == "qwen-local:7b"
+        assert executed["aiAnalysis"]["citations"][0]["url"].endswith("/synthetic-orbit")
+        assert executed["aiAnalysis"]["insights"][0]["evidenceRefs"] == [
+            executed["aiAnalysis"]["citations"][0]["referenceId"]
+        ]
         request_body = transport.requests[0].body
         assert request_body is not None
         assert parse_qs(request_body.decode())["q"] == ["synthetic_orbit_742"]
+
+        metadata = MetaData()
+        proposals = Table("identity_proposals", metadata, autoload_with=manager.engine)
+        proposal_origins = Table("identity_entity_origins", metadata, autoload_with=manager.engine)
+        proposal_id = str(uuid4())
+        source_url = executed["results"][0]["url"]
+        with manager.engine.begin() as connection:
+            connection.execute(
+                insert(proposals).values(
+                    id=proposal_id,
+                    vault_id=manager.manifest.vault_id,
+                    profile_id=profile_id,
+                    audit_id=audit_id,
+                    lead_id=executed["leads"][0]["leadId"],
+                    entity_type="USERNAME",
+                    canonical_value="synthetic_new_alias_901",
+                    display_value="s•••1",
+                    value_hmac="a" * 64,
+                    source_url=source_url,
+                    source_span_start=None,
+                    source_span_end=None,
+                    supporting_signals_json='["SYNTHETIC_TEST_SOURCE"]',
+                    contradictions_json="[]",
+                    confidence_micros=700_000,
+                    temporal_state="UNKNOWN",
+                    review_state="UNREVIEWED",
+                    recommended_actions_json='["CONFIRM","REJECT"]',
+                    model_provider=None,
+                    model_id=None,
+                    created_at_us=executed["audit"]["updatedAtUs"] + 1,
+                    reviewed_at_us=None,
+                    revision=1,
+                )
+            )
+        decision = await client.post(
+            "/v1/identity/proposals/decision",
+            json={
+                "profileId": profile_id,
+                "auditId": audit_id,
+                "proposalId": proposal_id,
+                "expectedRevision": 1,
+                "decision": "CONFIRM",
+            },
+            headers=_headers(),
+        )
+        assert decision.status_code == 200, decision.text
+        assert (
+            next(
+                item for item in decision.json()["proposals"] if item["proposalId"] == proposal_id
+            )["reviewState"]
+            == "CONFIRMED"
+        )
+        with manager.engine.connect() as connection:
+            origin_url = connection.execute(
+                select(proposal_origins.c.source_url).where(
+                    proposal_origins.c.proposal_id == proposal_id
+                )
+            ).scalar_one()
+        assert origin_url == source_url
 
         reopened_response = await client.post(
             "/v1/identity/audits/detail",
@@ -224,7 +359,10 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
         workspace = workspace_response.json()
         assert workspace["person"]["displayName"] == "Synthetic person workspace"
         assert workspace["person"]["tags"] == ["synthetic", "test"]
+        assert workspace["person"]["identityCount"] == 2
         assert workspace["audits"][0]["auditId"] == audit_id
         assert workspace["audits"][0]["taskStates"]
+
+    assert len(local_ai_transport.requests) == 1
 
     manager.lock()

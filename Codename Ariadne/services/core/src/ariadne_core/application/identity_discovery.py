@@ -19,6 +19,8 @@ from typing import cast
 from sqlalchemy.engine import RowMapping
 
 from ariadne_core.api.identity_discovery_schemas import (
+    MAX_AI_CITATIONS,
+    MAX_AI_INSIGHTS,
     MAX_AUDITS,
     MAX_LEADS,
     MAX_PROPOSALS,
@@ -26,6 +28,11 @@ from ariadne_core.api.identity_discovery_schemas import (
     MAX_RESULTS,
     MAX_SOURCES,
     MAX_TASKS,
+    AIAnalysisCitation,
+    AIAnalysisInsight,
+    AIAnalysisStatus,
+    AIInsightKind,
+    AuditAIAnalysis,
     AuditControlRequest,
     AuditCreateRequest,
     AuditDetail,
@@ -64,6 +71,14 @@ from ariadne_core.infrastructure.db.identity_discovery_repository import (
     IdentityDiscoveryRepository,
 )
 from ariadne_core.infrastructure.db.repositories import RevisionConflict, SettingsRepository
+from ariadne_core.local_ai import (
+    LocalAIClient,
+    LocalAIConfig,
+    LocalAIError,
+    LocalAIHttpTransport,
+    LocalAIWorkspaceTask,
+    WorkspaceAnalysisRequest,
+)
 
 
 class IdentityDiscoveryUnavailable(RuntimeError):
@@ -92,10 +107,12 @@ class IdentityDiscoveryCoordinator:
         *,
         public_discovery: PublicDiscoveryService,
         page_transport: PageHttpTransport | None = None,
+        local_ai_transport: LocalAIHttpTransport | None = None,
     ) -> None:
         self._vault = vault
         self._public_discovery = public_discovery
         self._page_transport = page_transport
+        self._local_ai_transport = local_ai_transport
         self._execution_lock = RLock()
 
     def workspace(self, body: PersonWorkspaceRequest) -> PersonWorkspace:
@@ -230,7 +247,14 @@ class IdentityDiscoveryCoordinator:
                     )
                     executions = self._execute_tools(broker, tasks)
                     for task, execution in zip(tasks, executions, strict=True):
-                        if task.task_type in {"SEARCH_WEB", "QUERY_GITHUB"}:
+                        if task.task_type in {
+                            "SEARCH_WEB",
+                            "SEARCH_USERNAME",
+                            "QUERY_GITHUB",
+                            "QUERY_REGISTRY",
+                            "QUERY_ARCHIVE",
+                            "QUERY_CERTIFICATE_TRANSPARENCY",
+                        }:
                             repository.record_search_outcome(
                                 task,
                                 state=execution.state,
@@ -244,6 +268,7 @@ class IdentityDiscoveryCoordinator:
                                 reason=execution.reason,
                                 page=execution.page,
                             )
+                    self._run_local_ai_if_ready(repository, body)
                     repository.refresh_audit(self._vault_id, body.profile_id, body.audit_id)
                     return _audit_detail(
                         body.profile_id,
@@ -334,6 +359,138 @@ class IdentityDiscoveryCoordinator:
         with ThreadPoolExecutor(max_workers=min(4, len(tasks))) as executor:
             return tuple(executor.map(broker.execute, tasks))
 
+    def _run_local_ai_if_ready(
+        self,
+        repository: IdentityDiscoveryRepository,
+        body: AuditExecuteRequest,
+    ) -> None:
+        """Run one selected loopback model after the deterministic frontier is exhausted."""
+
+        projection = repository.prepare_ai_projection(
+            self._vault_id, body.profile_id, body.audit_id
+        )
+        if projection is None:
+            return
+        citations = cast(tuple[dict[str, str], ...], projection["citations"])
+        references = cast(tuple[str, ...], projection["references"])
+        selected_model = str(projection["selected_model"])
+        if not references:
+            repository.record_ai_analysis(
+                vault_id=self._vault_id,
+                profile_id=body.profile_id,
+                audit_id=body.audit_id,
+                status="EMPTY",
+                result_code="NO_PUBLIC_RESULTS",
+                provider=None,
+                model_id=None,
+                engine_version=None,
+                analysis=_fallback_ai_analysis(
+                    citations, "No public results were available to analyse."
+                ),
+            )
+            return
+        settings = SettingsRepository(self._vault.engine).get(self._vault_id).values
+        if not settings.local_ai_enabled or settings.local_ai_selected_model != selected_model:
+            repository.record_ai_analysis(
+                vault_id=self._vault_id,
+                profile_id=body.profile_id,
+                audit_id=body.audit_id,
+                status="FALLBACK",
+                result_code="LOCAL_AI_CONFIGURATION_CHANGED",
+                provider=None,
+                model_id=None,
+                engine_version=None,
+                analysis=_fallback_ai_analysis(
+                    citations,
+                    "The selected local model was unavailable or changed after this audit started.",
+                ),
+            )
+            return
+        try:
+            result = LocalAIClient(
+                LocalAIConfig(
+                    enabled=True,
+                    provider=settings.local_ai_provider,
+                    endpoint=settings.local_ai_endpoint,
+                    timeout_seconds=60,
+                    max_output_tokens=2_048,
+                ),
+                transport=self._local_ai_transport,
+            ).analyze_workspace(
+                WorkspaceAnalysisRequest(
+                    task=LocalAIWorkspaceTask.CONNECTIONS,
+                    profile_data_json=str(projection["canonical_json"]),
+                    allowed_reference_ids=references,
+                ),
+                model_id=selected_model,
+            )
+        except (LocalAIError, ValueError) as error:
+            code = error.code.value if isinstance(error, LocalAIError) else "INVALID_RESPONSE"
+            repository.record_ai_analysis(
+                vault_id=self._vault_id,
+                profile_id=body.profile_id,
+                audit_id=body.audit_id,
+                status="FALLBACK",
+                result_code=code,
+                provider=None,
+                model_id=None,
+                engine_version=None,
+                analysis=_fallback_ai_analysis(
+                    citations,
+                    "Local model analysis did not complete; deterministic source "
+                    "organization remains available.",
+                ),
+            )
+            return
+        insights: list[dict[str, object]] = []
+        for fact in result.facts:
+            insights.append(
+                {
+                    "kind": "FACT",
+                    "statement": fact.statement,
+                    "rationale": "Source-grounded model observation; human review required.",
+                    "confidence": fact.confidence.value,
+                    "evidenceRefs": fact.evidence_refs,
+                }
+            )
+        for connection in result.connections:
+            insights.append(
+                {
+                    "kind": "CONNECTION",
+                    "statement": connection.relationship,
+                    "rationale": connection.rationale,
+                    "confidence": connection.confidence.value,
+                    "evidenceRefs": connection.supporting_refs,
+                }
+            )
+        for step in result.next_steps:
+            insights.append(
+                {
+                    "kind": "NEXT_STEP",
+                    "statement": step.suggestion,
+                    "rationale": step.rationale,
+                    "confidence": None,
+                    "evidenceRefs": step.supporting_refs,
+                }
+            )
+        repository.record_ai_analysis(
+            vault_id=self._vault_id,
+            profile_id=body.profile_id,
+            audit_id=body.audit_id,
+            status="SUCCEEDED",
+            result_code="MODEL_ANALYSIS_SUCCEEDED",
+            provider=result.provider.value,
+            model_id=result.model_id,
+            engine_version=result.engine_version,
+            analysis={
+                "title": result.title,
+                "summary": result.summary,
+                "insights": insights[:MAX_AI_INSIGHTS],
+                "citations": citations[:MAX_AI_CITATIONS],
+                "limitations": result.limitations[:32],
+            },
+        )
+
 
 def _workspace(raw: dict[str, object]) -> PersonWorkspace:
     """Validate repository rows into the capped public workspace contract."""
@@ -379,6 +536,8 @@ def _audit_detail(profile_id: str, raw: dict[str, object]) -> AuditDetail:
     lead_rows = cast(tuple[RowMapping, ...], raw["leads"])
     proposal_rows = cast(tuple[RowMapping, ...], raw["proposals"])
     receipt_rows = cast(tuple[RowMapping, ...], raw["receipts"])
+    ai_row_value = raw["ai_analysis"]
+    ai_row = None if ai_row_value is None else _row(ai_row_value)
     state_counts = cast(dict[str, int], raw["state_counts"])
     return AuditDetail(
         profile_id=profile_id,
@@ -388,11 +547,77 @@ def _audit_detail(profile_id: str, raw: dict[str, object]) -> AuditDetail:
         leads=tuple(_lead(row) for row in lead_rows[:MAX_LEADS]),
         proposals=tuple(_proposal(row) for row in proposal_rows[:MAX_PROPOSALS]),
         receipts=tuple(_receipt(row) for row in receipt_rows[:MAX_RECEIPTS]),
+        ai_analysis=None if ai_row is None else _ai_analysis(ai_row),
         has_more_tasks=len(task_rows) > MAX_TASKS,
         has_more_results=len(result_rows) > MAX_RESULTS,
         has_more_leads=len(lead_rows) > MAX_LEADS,
         has_more_proposals=len(proposal_rows) > MAX_PROPOSALS,
         has_more_receipts=len(receipt_rows) > MAX_RECEIPTS,
+    )
+
+
+def _fallback_ai_analysis(
+    citations: tuple[dict[str, str], ...], limitation: str
+) -> dict[str, object]:
+    """Return honest deterministic organization when the selected model cannot run."""
+
+    cited = tuple(item["referenceId"] for item in citations[:8])
+    insights: tuple[dict[str, object], ...] = ()
+    if cited:
+        insights = (
+            {
+                "kind": "NEXT_STEP",
+                "statement": (
+                    "Review the highest-ranked exact sources and confirm ownership manually."
+                ),
+                "rationale": (
+                    "Deterministic fallback cannot infer identity ownership or relationships."
+                ),
+                "confidence": None,
+                "evidenceRefs": cited,
+            },
+        )
+    return {
+        "title": "Deterministic source review",
+        "summary": f"Ariadne retained {len(citations)} exact public result sources for review.",
+        "insights": insights,
+        "citations": citations[:MAX_AI_CITATIONS],
+        "limitations": (limitation,),
+    }
+
+
+def _ai_analysis(row: RowMapping) -> AuditAIAnalysis:
+    content = json.loads(str(row["analysis_json"]))
+    return AuditAIAnalysis(
+        analysis_id=str(row["id"]),
+        status=AIAnalysisStatus(str(row["status"])),
+        result_code=str(row["result_code"]),
+        provider=None if row["provider"] is None else str(row["provider"]),
+        model_id=None if row["model_id"] is None else str(row["model_id"]),
+        engine_version=(None if row["engine_version"] is None else str(row["engine_version"])),
+        title=str(content["title"]),
+        summary=str(content["summary"]),
+        insights=tuple(
+            AIAnalysisInsight(
+                kind=AIInsightKind(str(item["kind"])),
+                statement=str(item["statement"]),
+                rationale=str(item["rationale"]),
+                confidence=None if item["confidence"] is None else str(item["confidence"]),
+                evidence_refs=tuple(str(value) for value in item["evidenceRefs"]),
+            )
+            for item in content["insights"][:MAX_AI_INSIGHTS]
+        ),
+        citations=tuple(
+            AIAnalysisCitation(
+                reference_id=str(item["referenceId"]),
+                result_id=str(item["resultId"]),
+                url=str(item["url"]),
+                title=str(item["title"]),
+            )
+            for item in content["citations"][:MAX_AI_CITATIONS]
+        ),
+        limitations=tuple(str(value) for value in content["limitations"][:32]),
+        created_at_us=int(row["created_at_us"]),
     )
 
 

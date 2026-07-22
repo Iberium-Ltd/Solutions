@@ -22,6 +22,8 @@ MAX_RESULTS = 500
 MAX_LEADS = 500
 MAX_PROPOSALS = 250
 MAX_RECEIPTS = 500
+MAX_AI_INSIGHTS = 100
+MAX_AI_CITATIONS = 200
 
 
 def _uuid(value: str, label: str) -> str:
@@ -166,6 +168,19 @@ class ProposalDecision(StrEnum):
     MERGE = "MERGE"
 
 
+class AIAnalysisStatus(StrEnum):
+    SUCCEEDED = "SUCCEEDED"
+    FALLBACK = "FALLBACK"
+    FAILED = "FAILED"
+    EMPTY = "EMPTY"
+
+
+class AIInsightKind(StrEnum):
+    FACT = "FACT"
+    CONNECTION = "CONNECTION"
+    NEXT_STEP = "NEXT_STEP"
+
+
 class PersonWorkspaceRequest(ApiModel):
     """Base scope shared by every person and audit operation."""
 
@@ -251,7 +266,15 @@ class AuditCreateRequest(PersonWorkspaceRequest):
     name: str = Field(min_length=1, max_length=120)
     mode: AuditMode = Field(default=AuditMode.INCREMENTAL, strict=False)
     provider_ids: tuple[str, ...] = Field(
-        default=("DUCKDUCKGO_HTML", "GITHUB_USERS"),
+        default=(
+            "DUCKDUCKGO_HTML",
+            "GITHUB_USERS",
+            "GITLAB_USERS",
+            "NPM_REGISTRY",
+            "RDAP_DOMAIN",
+            "WAYBACK_CDX",
+            "CERTIFICATE_TRANSPARENCY",
+        ),
         min_length=1,
         max_length=8,
         strict=False,
@@ -274,6 +297,11 @@ class AuditCreateRequest(PersonWorkspaceRequest):
         allowed = {
             "DUCKDUCKGO_HTML",
             "GITHUB_USERS",
+            "GITLAB_USERS",
+            "NPM_REGISTRY",
+            "RDAP_DOMAIN",
+            "WAYBACK_CDX",
+            "CERTIFICATE_TRANSPARENCY",
             "HAVE_I_BEEN_PWNED_V3",
             "MANUAL_BROWSER_HANDOFFS",
         }
@@ -426,6 +454,38 @@ class ToolReceipt(ApiModel):
     finished_at_us: int = Field(ge=1, le=9_007_199_254_740_991)
 
 
+class AIAnalysisCitation(ApiModel):
+    reference_id: str = Field(min_length=3, max_length=183)
+    result_id: str
+    url: str = Field(min_length=8, max_length=2_048)
+    title: str = Field(max_length=500)
+
+
+class AIAnalysisInsight(ApiModel):
+    kind: AIInsightKind
+    statement: str = Field(min_length=1, max_length=2_000)
+    rationale: str = Field(max_length=2_000)
+    confidence: str | None = Field(default=None, max_length=16)
+    evidence_refs: tuple[str, ...] = Field(max_length=32)
+
+
+class AuditAIAnalysis(ApiModel):
+    """Persisted model or deterministic result with exact public-result citations."""
+
+    analysis_id: str
+    status: AIAnalysisStatus
+    result_code: str
+    provider: str | None
+    model_id: str | None
+    engine_version: str | None
+    title: str = Field(max_length=500)
+    summary: str = Field(max_length=4_000)
+    insights: tuple[AIAnalysisInsight, ...] = Field(max_length=MAX_AI_INSIGHTS)
+    citations: tuple[AIAnalysisCitation, ...] = Field(max_length=MAX_AI_CITATIONS)
+    limitations: tuple[str, ...] = Field(max_length=32)
+    created_at_us: int = Field(ge=1, le=9_007_199_254_740_991)
+
+
 class PersonWorkspace(ApiModel):
     person: PersonDetails
     sources: tuple[PersonSource, ...] = Field(max_length=MAX_SOURCES)
@@ -444,6 +504,7 @@ class AuditDetail(ApiModel):
     leads: tuple[DiscoveryLead, ...] = Field(max_length=MAX_LEADS)
     proposals: tuple[KnowledgeProposal, ...] = Field(max_length=MAX_PROPOSALS)
     receipts: tuple[ToolReceipt, ...] = Field(max_length=MAX_RECEIPTS)
+    ai_analysis: AuditAIAnalysis | None
     has_more_tasks: bool
     has_more_results: bool
     has_more_leads: bool

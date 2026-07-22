@@ -149,6 +149,8 @@ class IdentityDiscoveryRepository:
             "identity_results",
             "identity_proposals",
             "identity_tool_receipts",
+            "identity_ai_analyses",
+            "identity_entity_origins",
         )
         tables = {name: Table(name, metadata, autoload_with=engine) for name in names}
         self.profiles = tables["profiles"]
@@ -162,6 +164,8 @@ class IdentityDiscoveryRepository:
         self.results = tables["identity_results"]
         self.proposals = tables["identity_proposals"]
         self.receipts = tables["identity_tool_receipts"]
+        self.ai_analyses = tables["identity_ai_analyses"]
+        self.entity_origins = tables["identity_entity_origins"]
 
     def close(self) -> None:
         """Drop the repository's immutable key copy when its scoped lease ends."""
@@ -566,6 +570,77 @@ class IdentityDiscoveryRepository:
                         information_gain_micros=820_000,
                     )
                 )
+            if entity_type == "USERNAME" and "GITLAB_USERS" in provider_ids:
+                seeds.append(
+                    SeedTask(
+                        task_type="SEARCH_USERNAME",
+                        provider_id="GITLAB_USERS",
+                        payload=value,
+                        masked_payload=masked,
+                        lead_type=entity_type,
+                        lead_display=masked,
+                        lead_value_hmac=lead_hmac,
+                        priority=86,
+                        information_gain_micros=800_000,
+                    )
+                )
+            if entity_type == "USERNAME" and "NPM_REGISTRY" in provider_ids:
+                seeds.append(
+                    SeedTask(
+                        task_type="QUERY_REGISTRY",
+                        provider_id="NPM_REGISTRY",
+                        payload=value,
+                        masked_payload=masked,
+                        lead_type=entity_type,
+                        lead_display=masked,
+                        lead_value_hmac=lead_hmac,
+                        priority=78,
+                        information_gain_micros=720_000,
+                    )
+                )
+            if entity_type == "DOMAIN":
+                if "RDAP_DOMAIN" in provider_ids:
+                    seeds.append(
+                        SeedTask(
+                            task_type="QUERY_REGISTRY",
+                            provider_id="RDAP_DOMAIN",
+                            payload=value,
+                            masked_payload=masked,
+                            lead_type=entity_type,
+                            lead_display=masked,
+                            lead_value_hmac=lead_hmac,
+                            priority=84,
+                            information_gain_micros=780_000,
+                        )
+                    )
+                if "WAYBACK_CDX" in provider_ids:
+                    seeds.append(
+                        SeedTask(
+                            task_type="QUERY_ARCHIVE",
+                            provider_id="WAYBACK_CDX",
+                            payload=value,
+                            masked_payload=masked,
+                            lead_type=entity_type,
+                            lead_display=masked,
+                            lead_value_hmac=lead_hmac,
+                            priority=76,
+                            information_gain_micros=700_000,
+                        )
+                    )
+                if "CERTIFICATE_TRANSPARENCY" in provider_ids:
+                    seeds.append(
+                        SeedTask(
+                            task_type="QUERY_CERTIFICATE_TRANSPARENCY",
+                            provider_id="CERTIFICATE_TRANSPARENCY",
+                            payload=value,
+                            masked_payload=masked,
+                            lead_type=entity_type,
+                            lead_display=masked,
+                            lead_value_hmac=lead_hmac,
+                            priority=74,
+                            information_gain_micros=680_000,
+                        )
+                    )
             if entity_type == "EMAIL" and "HAVE_I_BEEN_PWNED_V3" in provider_ids:
                 seeds.append(
                     SeedTask(
@@ -597,6 +672,21 @@ class IdentityDiscoveryRepository:
                     information_gain_micros=900_000,
                 )
             )
+            if "WAYBACK_CDX" in provider_ids:
+                seeds.append(
+                    SeedTask(
+                        task_type="QUERY_ARCHIVE",
+                        provider_id="WAYBACK_CDX",
+                        payload=value,
+                        masked_payload=value,
+                        lead_type="URL",
+                        lead_display=value,
+                        lead_value_hmac=str(source["url_hmac"]),
+                        source_id=str(source["id"]),
+                        priority=72,
+                        information_gain_micros=650_000,
+                    )
+                )
         deduplicated: list[SeedTask] = []
         seen: set[tuple[str, str, str]] = set()
         for seed in seeds:
@@ -1117,7 +1207,7 @@ class IdentityDiscoveryRepository:
         expected_revision: int,
         decision: str,
     ) -> None:
-        """Persist review state without silently promoting a proposal to an entity."""
+        """Persist review state and promote only explicit positive human decisions."""
 
         states = {
             "CONFIRM": "CONFIRMED",
@@ -1162,6 +1252,13 @@ class IdentityDiscoveryRepository:
             )
             if changed.rowcount != 1:
                 raise RevisionConflict("proposal revision conflict")
+            if decision in {"CONFIRM", "CONFIRM_HISTORICAL", "PROBABLE"}:
+                self._promote_proposal_entity(
+                    connection,
+                    row=row,
+                    decision=decision,
+                    timestamp=timestamp,
+                )
             if decision == "SEARCH_DEEPER":
                 self._insert_task(
                     connection,
@@ -1180,6 +1277,68 @@ class IdentityDiscoveryRepository:
                     state="READY",
                 )
         self.refresh_audit(vault_id, profile_id, audit_id)
+
+    def _promote_proposal_entity(
+        self,
+        connection: Any,
+        *,
+        row: RowMapping,
+        decision: str,
+        timestamp: int,
+    ) -> None:
+        """Add explicitly accepted knowledge while retaining its exact proposal URL."""
+
+        existing = connection.execute(
+            select(self.entities.c.id).where(
+                and_(
+                    self.entities.c.vault_id == row["vault_id"],
+                    self.entities.c.profile_id == row["profile_id"],
+                    self.entities.c.entity_type == row["entity_type"],
+                    self.entities.c.value_hmac == row["value_hmac"],
+                    self.entities.c.deleted_at_us.is_(None),
+                )
+            )
+        ).scalar_one_or_none()
+        entity_id = str(existing) if existing is not None else str(uuid7())
+        if existing is None:
+            sensitive = str(row["entity_type"]) in {"EMAIL", "TELEPHONE", "ADDRESS"}
+            connection.execute(
+                insert(self.entities).values(
+                    id=entity_id,
+                    vault_id=row["vault_id"],
+                    profile_id=row["profile_id"],
+                    entity_type=row["entity_type"],
+                    canonical_value=row["canonical_value"],
+                    display_mask=row["display_value"],
+                    value_hmac=row["value_hmac"],
+                    sensitivity="SENSITIVE" if sensitive else "PUBLIC",
+                    review_state="PROBABLE" if decision == "PROBABLE" else "CONFIRMED",
+                    temporal_state=(
+                        "HISTORICAL" if decision == "CONFIRM_HISTORICAL" else "UNKNOWN"
+                    ),
+                    valid_from_us=None,
+                    valid_to_us=None,
+                    search_policy="SEARCH_ALLOWED",
+                    transmission_policy="PROVIDER_ALLOWLIST",
+                    current_decision_id=None,
+                    created_at_us=timestamp,
+                    updated_at_us=timestamp,
+                    revision=1,
+                    deleted_at_us=None,
+                )
+            )
+        connection.execute(
+            insert(self.entity_origins).values(
+                id=str(uuid7()),
+                vault_id=row["vault_id"],
+                profile_id=row["profile_id"],
+                audit_id=row["audit_id"],
+                proposal_id=row["id"],
+                entity_id=entity_id,
+                source_url=row["source_url"],
+                created_at_us=timestamp,
+            )
+        )
 
     def audit_detail(self, vault_id: str, profile_id: str, audit_id: str) -> dict[str, object]:
         """Return bounded collections with one extra row for truncation detection."""
@@ -1226,6 +1385,19 @@ class IdentityDiscoveryRepository:
                     .limit(501)
                 ).mappings()
             )
+            ai_analysis = (
+                connection.execute(
+                    select(self.ai_analyses).where(
+                        and_(
+                            self.ai_analyses.c.vault_id == vault_id,
+                            self.ai_analyses.c.profile_id == profile_id,
+                            self.ai_analyses.c.audit_id == audit_id,
+                        )
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
             state_counts = self._state_counts(connection, vault_id, profile_id, audit_id)
         return {
             "audit": audit,
@@ -1234,8 +1406,136 @@ class IdentityDiscoveryRepository:
             "leads": leads,
             "proposals": proposals,
             "receipts": receipts,
+            "ai_analysis": ai_analysis,
             "state_counts": state_counts,
         }
+
+    def prepare_ai_projection(
+        self, vault_id: str, profile_id: str, audit_id: str
+    ) -> dict[str, object] | None:
+        """Claim the one-shot AI stage and build a bounded exact-source projection."""
+
+        with self.engine.begin() as connection:
+            audit = self._audit_row(connection, vault_id, profile_id, audit_id)
+            if (
+                not bool(audit["use_local_ai"])
+                or audit["selected_model"] is None
+                or str(audit["state"]) in {"PAUSED", "CANCELLED", "FAILED"}
+            ):
+                return None
+            existing = connection.execute(
+                select(self.ai_analyses.c.id).where(
+                    and_(
+                        self.ai_analyses.c.vault_id == vault_id,
+                        self.ai_analyses.c.profile_id == profile_id,
+                        self.ai_analyses.c.audit_id == audit_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            active = int(
+                connection.execute(
+                    select(func.count())
+                    .select_from(self.tasks)
+                    .where(
+                        and_(
+                            self.tasks.c.audit_id == audit_id,
+                            self.tasks.c.state.in_(
+                                ("PLANNED", "READY", "QUEUED", "RUNNING", "FAILED_RETRYABLE")
+                            ),
+                        )
+                    )
+                ).scalar_one()
+            )
+            if existing is not None or active:
+                return None
+            result_rows = tuple(
+                connection.execute(
+                    select(self.results)
+                    .where(self.results.c.audit_id == audit_id)
+                    .order_by(self.results.c.observed_at_us.desc())
+                    .limit(120)
+                ).mappings()
+            )
+            timestamp = now_us()
+            connection.execute(
+                update(self.audits)
+                .where(self.audits.c.id == audit_id)
+                .values(
+                    state="RUNNING",
+                    stage="AI_ANALYSIS",
+                    stop_reason=None,
+                    finished_at_us=None,
+                    updated_at_us=timestamp,
+                    revision=int(audit["revision"]) + 1,
+                )
+            )
+
+        records: list[dict[str, object]] = []
+        citations: list[dict[str, str]] = []
+        for row in result_rows:
+            reference_id = f"result:{row['id']}"
+            record: dict[str, object] = {
+                "category": str(row["category"]),
+                "provider": str(row["provider_id"]),
+                "ref": reference_id,
+                "snippet": str(row["snippet"])[:800],
+                "title": str(row["title"])[:300],
+                "url": str(row["canonical_url"]),
+            }
+            candidate = _json({"records": (*records, record)})
+            if len(candidate.encode("utf-8")) > 56 * 1024:
+                break
+            records.append(record)
+            citations.append(
+                {
+                    "referenceId": reference_id,
+                    "resultId": str(row["id"]),
+                    "url": str(row["canonical_url"]),
+                    "title": str(row["title"])[:500],
+                }
+            )
+        return {
+            "canonical_json": _json({"records": records}),
+            "references": tuple(str(item["ref"]) for item in records),
+            "citations": tuple(citations),
+            "selected_model": str(audit["selected_model"]),
+        }
+
+    def record_ai_analysis(
+        self,
+        *,
+        vault_id: str,
+        profile_id: str,
+        audit_id: str,
+        status: str,
+        result_code: str,
+        provider: str | None,
+        model_id: str | None,
+        engine_version: str | None,
+        analysis: dict[str, object],
+    ) -> None:
+        """Persist the grounded model result or explicit deterministic fallback once."""
+
+        with self.engine.begin() as connection:
+            self._audit_row(connection, vault_id, profile_id, audit_id)
+            try:
+                connection.execute(
+                    insert(self.ai_analyses).values(
+                        id=str(uuid7()),
+                        vault_id=vault_id,
+                        profile_id=profile_id,
+                        audit_id=audit_id,
+                        status=status,
+                        result_code=result_code,
+                        provider=provider,
+                        model_id=model_id,
+                        engine_version=engine_version,
+                        analysis_json=_json(analysis),
+                        created_at_us=now_us(),
+                    )
+                )
+            except IntegrityError:
+                return
 
     def refresh_audit(self, vault_id: str, profile_id: str, audit_id: str) -> None:
         """Materialize truthful progress and completion from durable frontier counts."""

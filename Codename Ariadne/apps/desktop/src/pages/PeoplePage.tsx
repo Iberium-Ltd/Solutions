@@ -26,6 +26,15 @@ import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { Badge, Button, Metric, PageHeader, Panel, Progress } from '../components/Primitives'
 
 const ACTIVE_AUDIT_STATES = new Set(['READY', 'RUNNING', 'PAUSED'])
+const AUTOMATIC_PROVIDER_IDS = [
+  'DUCKDUCKGO_HTML',
+  'GITHUB_USERS',
+  'GITLAB_USERS',
+  'NPM_REGISTRY',
+  'RDAP_DOMAIN',
+  'WAYBACK_CDX',
+  'CERTIFICATE_TRANSPARENCY',
+]
 
 function formatDate(value: number): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -169,7 +178,7 @@ export function PeoplePage() {
     setPending('audit')
     setError(null)
     try {
-      const providerIds = ['DUCKDUCKGO_HTML', 'GITHUB_USERS']
+      const providerIds = [...AUTOMATIC_PROVIDER_IDS]
       if (auditForm.includeHibp) providerIds.push('HAVE_I_BEEN_PWNED_V3')
       const detail = await createIdentityAudit({
         profileId: workspace.person.profileId,
@@ -290,7 +299,7 @@ export function PeoplePage() {
             </div>
             <label className="identity-check"><input type="checkbox" checked={auditForm.useLocalAi} onChange={(event) => setAuditForm((current) => ({ ...current, useLocalAi: event.target.checked }))} /><BrainCircuit size={15} /><span><strong>Use the selected local model when available</strong><small>The model choice is snapshotted with this run; deterministic discovery remains available.</small></span></label>
             <label className="identity-check"><input type="checkbox" checked={auditForm.includeHibp} onChange={(event) => setAuditForm((current) => ({ ...current, includeHibp: event.target.checked }))} /><FileSearch size={15} /><span><strong>Include Have I Been Pwned checks</strong><small>Tasks will report “authentication required” until an API key is configured.</small></span></label>
-            <div className="callout">Ariadne will seed the run from every reviewed, search-allowed identifier and exact source in this profile. Progress is persisted after every task and survives navigation or restart.</div>
+            <div className="callout"><div><strong>Seven automatic public surfaces</strong><p>DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback Machine, and certificate-transparency records run from every compatible reviewed identifier. Progress is persisted after every task and survives navigation or restart.</p></div></div>
             <Button variant="primary" disabled={pending !== null || !auditForm.name.trim()} onClick={() => void startAudit()}>{pending === 'audit' ? <LoaderCircle className="spin" size={14} /> : <FileSearch size={14} />}{pending === 'audit' ? 'Creating durable run…' : 'Start full audit'} <ArrowRight size={14} /></Button>
           </div>
         </Panel>
