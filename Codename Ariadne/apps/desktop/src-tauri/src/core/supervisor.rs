@@ -44,7 +44,13 @@ use super::contract::{
     CoreGraphSnapshot, CoreGraphSnapshotRequest, CoreHibpAccountMode, CoreHibpAccountRequest,
     CoreHibpAccountResult, CoreHibpBreachReference, CoreHibpDomainRequest, CoreHibpDomainResult,
     CoreHibpIdentifierDisclosure, CoreHibpOperation, CoreHibpProvider, CoreHibpReason,
-    CoreHibpRequestMetadata, CoreHibpState, CoreIntakeReceipt, CoreInvestigationIdentifierKind,
+    CoreHibpRequestMetadata, CoreHibpState, CoreIdentityAuditControlRequest,
+    CoreIdentityAuditCreateRequest, CoreIdentityAuditDetail, CoreIdentityAuditExecuteRequest,
+    CoreIdentityAuditSummary, CoreIdentityDiscoveryLead, CoreIdentityDiscoveryResult,
+    CoreIdentityFrontierTask, CoreIdentityKnowledgeProposal, CoreIdentityPersonUpdateRequest,
+    CoreIdentityProposalDecisionRequest, CoreIdentitySource, CoreIdentitySourceCreateRequest,
+    CoreIdentityTaskState, CoreIdentityToolReceipt, CoreIdentityWorkspace,
+    CoreIdentityWorkspaceRequest, CoreIntakeReceipt, CoreInvestigationIdentifierKind,
     CoreInvestigationNotice, CoreInvestigationOperation, CoreInvestigationPlanRequest,
     CoreInvestigationPlanResult, CoreInvestigationPlanStep, CoreInvestigationPrerequisite,
     CoreInvestigationProvider, CoreInvestigationTransmission, CoreLocalAiConnectionResult,
@@ -186,6 +192,14 @@ const MAX_PHASE6_PROVIDER_RESPONSES: usize = 32;
 const MAX_PHASE6_HISTORY_ENTRIES: usize = 256;
 const MAX_LOCAL_REPORT_ARTIFACT_BYTES: usize = 1_024 * 1_024;
 const MAX_LOCAL_REPORT_RESPONSE_BYTES: usize = 1_000_000;
+const MAX_IDENTITY_SOURCES: usize = 200;
+const MAX_IDENTITY_AUDITS: usize = 64;
+const MAX_IDENTITY_TASKS: usize = 500;
+const MAX_IDENTITY_RESULTS: usize = 500;
+const MAX_IDENTITY_LEADS: usize = 500;
+const MAX_IDENTITY_PROPOSALS: usize = 250;
+const MAX_IDENTITY_RECEIPTS: usize = 500;
+const IDENTITY_REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
 const MAX_SAFE_JAVASCRIPT_INTEGER: u64 = 9_007_199_254_740_991;
 
 #[derive(Clone)]
@@ -1545,6 +1559,167 @@ impl CoreSupervisor {
         .await
     }
 
+    pub async fn identity_workspace(
+        &self,
+        request: CoreIdentityWorkspaceRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityWorkspace>, CoreCommandError> {
+        validate_identity_workspace_request(&request)?;
+        let profile_id = request.profile_id;
+        self.execute_unlocked_with_json(CoreRoute::GetIdentityWorkspace, &request, move |result| {
+            validate_identity_workspace(result, profile_id)
+        })
+        .await
+    }
+
+    pub async fn update_identity_person(
+        &self,
+        request: CoreIdentityPersonUpdateRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityWorkspace>, CoreCommandError> {
+        validate_identity_person_update_request(&request)?;
+        let profile_id = request.profile_id;
+        let expected_profile_revision = request.expected_profile_revision;
+        let expected_details_revision = request.expected_details_revision;
+        let display_name = request.display_name.clone();
+        let purpose = request.purpose.clone();
+        let notes = request.notes.clone();
+        let tags = request.tags.clone();
+        self.execute_unlocked_with_json(CoreRoute::UpdateIdentityPerson, &request, move |result| {
+            validate_identity_workspace(result, profile_id)?;
+            if result.person.profile_revision != expected_profile_revision + 1
+                || result.person.details_revision != expected_details_revision + 1
+                || result.person.display_name != display_name
+                || result.person.purpose != purpose
+                || result.person.notes != notes
+                || result.person.tags != tags
+            {
+                return Err(CoreError::InvalidIdentityResponse);
+            }
+            Ok(())
+        })
+        .await
+    }
+
+    pub async fn create_identity_source(
+        &self,
+        request: CoreIdentitySourceCreateRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityWorkspace>, CoreCommandError> {
+        validate_identity_source_request(&request)?;
+        let profile_id = request.profile_id;
+        let requested_url = request.url.clone();
+        self.execute_unlocked_with_json(CoreRoute::CreateIdentitySource, &request, move |result| {
+            validate_identity_workspace(result, profile_id)?;
+            let requested = reqwest::Url::parse(&requested_url)
+                .map_err(|_| CoreError::InvalidIdentityRequest)?;
+            if !result.sources.iter().any(|source| {
+                reqwest::Url::parse(&source.url).is_ok_and(|returned| returned == requested)
+            }) {
+                return Err(CoreError::InvalidIdentityResponse);
+            }
+            Ok(())
+        })
+        .await
+    }
+
+    pub async fn create_identity_audit(
+        &self,
+        request: CoreIdentityAuditCreateRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+        validate_identity_audit_create_request(&request)?;
+        let profile_id = request.profile_id;
+        let name = request.name.clone();
+        let mode = request.mode;
+        let provider_ids = request.provider_ids.clone();
+        let max_depth = request.max_depth;
+        let request_budget = request.request_budget;
+        self.execute_unlocked_with_json(CoreRoute::CreateIdentityAudit, &request, move |result| {
+            validate_identity_audit_detail(result, profile_id, None)?;
+            if result.audit.name != name
+                || result.audit.mode != mode
+                || result.audit.provider_ids != provider_ids
+                || result.audit.max_depth != max_depth
+                || result.audit.request_budget != request_budget
+            {
+                return Err(CoreError::InvalidIdentityResponse);
+            }
+            Ok(())
+        })
+        .await
+    }
+
+    pub async fn get_identity_audit(
+        &self,
+        request: CoreIdentityAuditExecuteRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+        validate_identity_audit_execute_request(&request)?;
+        let profile_id = request.profile_id;
+        let audit_id = request.audit_id;
+        self.execute_unlocked_with_json(CoreRoute::GetIdentityAudit, &request, move |result| {
+            validate_identity_audit_detail(result, profile_id, Some(audit_id))
+        })
+        .await
+    }
+
+    pub async fn execute_identity_audit_batch(
+        &self,
+        request: CoreIdentityAuditExecuteRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+        validate_identity_audit_execute_request(&request)?;
+        let profile_id = request.profile_id;
+        let audit_id = request.audit_id;
+        self.execute_unlocked_with_json(
+            CoreRoute::ExecuteIdentityAuditBatch,
+            &request,
+            move |result| validate_identity_audit_detail(result, profile_id, Some(audit_id)),
+        )
+        .await
+    }
+
+    pub async fn control_identity_audit(
+        &self,
+        request: CoreIdentityAuditControlRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+        validate_identity_audit_control_request(&request)?;
+        let profile_id = request.profile_id;
+        let audit_id = request.audit_id;
+        let expected_revision = request.expected_revision;
+        self.execute_unlocked_with_json(CoreRoute::ControlIdentityAudit, &request, move |result| {
+            validate_identity_audit_detail(result, profile_id, Some(audit_id))?;
+            if result.audit.revision <= expected_revision {
+                return Err(CoreError::InvalidIdentityResponse);
+            }
+            Ok(())
+        })
+        .await
+    }
+
+    pub async fn decide_identity_proposal(
+        &self,
+        request: CoreIdentityProposalDecisionRequest,
+    ) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+        validate_identity_proposal_decision_request(&request)?;
+        let profile_id = request.profile_id;
+        let audit_id = request.audit_id;
+        let proposal_id = request.proposal_id;
+        let expected_revision = request.expected_revision;
+        self.execute_unlocked_with_json(
+            CoreRoute::DecideIdentityProposal,
+            &request,
+            move |result| {
+                validate_identity_audit_detail(result, profile_id, Some(audit_id))?;
+                let proposal = result
+                    .proposals
+                    .iter()
+                    .find(|proposal| proposal.proposal_id == proposal_id)
+                    .ok_or(CoreError::InvalidIdentityResponse)?;
+                if proposal.revision != expected_revision + 1 {
+                    return Err(CoreError::InvalidIdentityResponse);
+                }
+                Ok(())
+            },
+        )
+        .await
+    }
+
     async fn execute_ready_with_json<T, B, V>(
         &self,
         route: CoreRoute,
@@ -2255,8 +2430,467 @@ fn unlocked_route_metadata_is_valid(route: CoreRoute) -> bool {
                 && capability.max_request_bytes == 1_024
                 && capability.max_response_bytes == MAX_LOCAL_REPORT_RESPONSE_BYTES
         }
+        CoreRoute::GetIdentityWorkspace
+        | CoreRoute::UpdateIdentityPerson
+        | CoreRoute::CreateIdentitySource
+        | CoreRoute::CreateIdentityAudit
+        | CoreRoute::GetIdentityAudit
+        | CoreRoute::ExecuteIdentityAuditBatch
+        | CoreRoute::ControlIdentityAudit
+        | CoreRoute::DecideIdentityProposal => {
+            capability.scope_class == "PROFILE"
+                && capability.authorization_class == "USER_GESTURE"
+                && capability.max_request_bytes == 32_768
+                && capability.max_response_bytes == MAX_RESPONSE_BYTES
+        }
         _ => false,
     }
+}
+
+fn validate_identity_workspace_request(
+    request: &CoreIdentityWorkspaceRequest,
+) -> Result<(), CoreError> {
+    if !is_rfc4122_uuid(request.profile_id) {
+        return Err(CoreError::InvalidIdentityRequest);
+    }
+    Ok(())
+}
+
+fn validate_identity_person_update_request(
+    request: &CoreIdentityPersonUpdateRequest,
+) -> Result<(), CoreError> {
+    validate_identity_workspace_request(&CoreIdentityWorkspaceRequest {
+        profile_id: request.profile_id,
+    })?;
+    let mut tags = HashSet::with_capacity(request.tags.len());
+    if request.expected_profile_revision == 0
+        || request.expected_profile_revision > MAX_SAFE_JAVASCRIPT_INTEGER
+        || request.expected_details_revision > MAX_SAFE_JAVASCRIPT_INTEGER
+        || !is_safe_bounded_text(&request.display_name, 1, 80)
+        || !is_safe_multiline_text(&request.purpose, 1, 240)
+        || !(request.notes.is_empty() || is_safe_multiline_text(&request.notes, 1, 20_000))
+        || request.tags.len() > 32
+        || request
+            .tags
+            .iter()
+            .any(|tag| !is_safe_bounded_text(tag, 1, 48) || !tags.insert(tag.as_str()))
+    {
+        return Err(CoreError::InvalidIdentityRequest);
+    }
+    Ok(())
+}
+
+fn validate_identity_source_request(
+    request: &CoreIdentitySourceCreateRequest,
+) -> Result<(), CoreError> {
+    validate_identity_workspace_request(&CoreIdentityWorkspaceRequest {
+        profile_id: request.profile_id,
+    })?;
+    if !request.authorized_self_audit
+        || !is_identity_url(&request.url)
+        || request
+            .title
+            .as_deref()
+            .is_some_and(|title| !is_safe_multiline_text(title, 1, 240))
+        || !(request.notes.is_empty() || is_safe_multiline_text(&request.notes, 1, 4_000))
+    {
+        return Err(CoreError::InvalidIdentityRequest);
+    }
+    Ok(())
+}
+
+fn validate_identity_audit_create_request(
+    request: &CoreIdentityAuditCreateRequest,
+) -> Result<(), CoreError> {
+    validate_identity_workspace_request(&CoreIdentityWorkspaceRequest {
+        profile_id: request.profile_id,
+    })?;
+    let providers: HashSet<&str> = request.provider_ids.iter().map(String::as_str).collect();
+    if !request.authorized_self_audit
+        || !is_safe_bounded_text(&request.name, 1, 120)
+        || request.provider_ids.is_empty()
+        || request.provider_ids.len() > 8
+        || providers.len() != request.provider_ids.len()
+        || request
+            .provider_ids
+            .iter()
+            .any(|provider| !is_identity_audit_provider(provider))
+        || request.max_depth > 8
+        || request.request_budget == 0
+        || request.request_budget > 2_000
+        || !(10..=86_400).contains(&request.time_budget_seconds)
+        || request.cost_budget_micros > 1_000_000_000_000
+    {
+        return Err(CoreError::InvalidIdentityRequest);
+    }
+    Ok(())
+}
+
+fn validate_identity_audit_execute_request(
+    request: &CoreIdentityAuditExecuteRequest,
+) -> Result<(), CoreError> {
+    if !is_rfc4122_uuid(request.profile_id)
+        || !is_rfc4122_uuid(request.audit_id)
+        || !(1..=8).contains(&request.maximum_tasks)
+    {
+        return Err(CoreError::InvalidIdentityRequest);
+    }
+    Ok(())
+}
+
+fn validate_identity_audit_control_request(
+    request: &CoreIdentityAuditControlRequest,
+) -> Result<(), CoreError> {
+    if !is_rfc4122_uuid(request.profile_id)
+        || !is_rfc4122_uuid(request.audit_id)
+        || request.expected_revision == 0
+        || request.expected_revision > MAX_SAFE_JAVASCRIPT_INTEGER
+    {
+        return Err(CoreError::InvalidIdentityRequest);
+    }
+    Ok(())
+}
+
+fn validate_identity_proposal_decision_request(
+    request: &CoreIdentityProposalDecisionRequest,
+) -> Result<(), CoreError> {
+    if !is_rfc4122_uuid(request.profile_id)
+        || !is_rfc4122_uuid(request.audit_id)
+        || !is_rfc4122_uuid(request.proposal_id)
+        || request.expected_revision == 0
+        || request.expected_revision > MAX_SAFE_JAVASCRIPT_INTEGER
+    {
+        return Err(CoreError::InvalidIdentityRequest);
+    }
+    Ok(())
+}
+
+fn validate_identity_workspace(
+    result: &CoreIdentityWorkspace,
+    profile_id: Uuid,
+) -> Result<(), CoreError> {
+    if result.person.profile_id != profile_id
+        || !is_rfc4122_uuid(result.person.profile_id)
+        || !is_safe_bounded_text(&result.person.display_name, 1, 80)
+        || !is_safe_multiline_text(&result.person.purpose, 1, 240)
+        || !is_bounded_event_label(&result.person.status, 32)
+        || !(result.person.notes.is_empty()
+            || is_safe_multiline_text(&result.person.notes, 1, 20_000))
+        || result.person.tags.len() > 32
+        || result.person.profile_revision == 0
+        || result.person.profile_revision > MAX_SAFE_JAVASCRIPT_INTEGER
+        || result.person.details_revision > MAX_SAFE_JAVASCRIPT_INTEGER
+        || result.sources.len() > MAX_IDENTITY_SOURCES
+        || result.audits.len() > MAX_IDENTITY_AUDITS
+    {
+        return Err(CoreError::InvalidIdentityResponse);
+    }
+    let mut tags = HashSet::with_capacity(result.person.tags.len());
+    if result
+        .person
+        .tags
+        .iter()
+        .any(|tag| !is_safe_bounded_text(tag, 1, 48) || !tags.insert(tag.as_str()))
+    {
+        return Err(CoreError::InvalidIdentityResponse);
+    }
+    let mut source_ids = HashSet::with_capacity(result.sources.len());
+    for source in &result.sources {
+        if !source_ids.insert(source.source_id) || !validate_identity_source(source) {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
+    let mut audit_ids = HashSet::with_capacity(result.audits.len());
+    for audit in &result.audits {
+        if !audit_ids.insert(audit.audit_id) || !validate_identity_audit_summary(audit) {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
+    Ok(())
+}
+
+fn validate_identity_audit_detail(
+    result: &CoreIdentityAuditDetail,
+    profile_id: Uuid,
+    audit_id: Option<Uuid>,
+) -> Result<(), CoreError> {
+    if result.profile_id != profile_id
+        || !is_rfc4122_uuid(result.profile_id)
+        || audit_id.is_some_and(|expected| result.audit.audit_id != expected)
+        || !validate_identity_audit_summary(&result.audit)
+        || result.tasks.len() > MAX_IDENTITY_TASKS
+        || result.results.len() > MAX_IDENTITY_RESULTS
+        || result.leads.len() > MAX_IDENTITY_LEADS
+        || result.proposals.len() > MAX_IDENTITY_PROPOSALS
+        || result.receipts.len() > MAX_IDENTITY_RECEIPTS
+    {
+        return Err(CoreError::InvalidIdentityResponse);
+    }
+
+    let mut task_ids = HashSet::with_capacity(result.tasks.len());
+    for task in &result.tasks {
+        if !task_ids.insert(task.task_id) || !validate_identity_task(task) {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
+    let mut result_ids = HashSet::with_capacity(result.results.len());
+    for discovery_result in &result.results {
+        if !result_ids.insert(discovery_result.result_id)
+            || !validate_identity_result(discovery_result)
+        {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
+    let mut lead_ids = HashSet::with_capacity(result.leads.len());
+    for lead in &result.leads {
+        if !lead_ids.insert(lead.lead_id) || !validate_identity_lead(lead) {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
+    let mut proposal_ids = HashSet::with_capacity(result.proposals.len());
+    for proposal in &result.proposals {
+        if !proposal_ids.insert(proposal.proposal_id) || !validate_identity_proposal(proposal) {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
+    let mut receipt_ids = HashSet::with_capacity(result.receipts.len());
+    for receipt in &result.receipts {
+        if !receipt_ids.insert(receipt.receipt_id) || !validate_identity_receipt(receipt) {
+            return Err(CoreError::InvalidIdentityResponse);
+        }
+    }
+    Ok(())
+}
+
+fn validate_identity_source(source: &CoreIdentitySource) -> bool {
+    is_rfc4122_uuid(source.source_id)
+        && source.parent_source_id.is_none_or(is_rfc4122_uuid)
+        && is_identity_url(&source.url)
+        && source
+            .title
+            .as_deref()
+            .is_none_or(|title| title.is_empty() || is_safe_multiline_text(title, 1, 240))
+        && (source.notes.is_empty() || is_safe_multiline_text(&source.notes, 1, 4_000))
+        && is_bounded_event_label(&source.relationship_state, 32)
+        && is_valid_timestamp_us(source.first_seen_at_us)
+        && source.last_checked_at_us.is_none_or(is_valid_timestamp_us)
+        && source
+            .http_status
+            .is_none_or(|status| (100..=599).contains(&status))
+        && source.revision > 0
+        && source.revision <= MAX_SAFE_JAVASCRIPT_INTEGER
+}
+
+fn validate_identity_audit_summary(audit: &CoreIdentityAuditSummary) -> bool {
+    let providers: HashSet<&str> = audit.provider_ids.iter().map(String::as_str).collect();
+    let mut states = HashSet::with_capacity(audit.task_states.len());
+    let state_total = audit.task_states.iter().fold(0_u64, |total, state| {
+        total.saturating_add(u64::from(state.count))
+    });
+    let terminal_total = audit
+        .task_states
+        .iter()
+        .filter(|state| is_terminal_identity_task_state(state.state))
+        .fold(0_u64, |total, state| {
+            total.saturating_add(u64::from(state.count))
+        });
+    let expected_progress = if audit.total_tasks == 0 {
+        1_000_000
+    } else {
+        audit
+            .terminal_tasks
+            .saturating_mul(1_000_000)
+            .checked_div(audit.total_tasks)
+            .unwrap_or_default()
+    };
+    is_rfc4122_uuid(audit.audit_id)
+        && is_safe_bounded_text(&audit.name, 1, 120)
+        && !audit.provider_ids.is_empty()
+        && audit.provider_ids.len() <= 8
+        && providers.len() == audit.provider_ids.len()
+        && audit
+            .provider_ids
+            .iter()
+            .all(|provider| is_identity_audit_provider(provider))
+        && audit
+            .selected_model
+            .as_deref()
+            .is_none_or(|model| is_safe_bounded_text(model, 1, 256))
+        && audit.max_depth <= 8
+        && (1..=2_000).contains(&audit.request_budget)
+        && audit.terminal_tasks <= audit.total_tasks
+        && audit.progress_micros == expected_progress
+        && state_total == u64::from(audit.total_tasks)
+        && terminal_total == u64::from(audit.terminal_tasks)
+        && audit
+            .task_states
+            .iter()
+            .all(|state| states.insert(state.state))
+        && audit.progress_micros <= 1_000_000
+        && audit
+            .stop_reason
+            .as_deref()
+            .is_none_or(|reason| is_bounded_event_label(reason, 64))
+        && audit.started_at_us.is_none_or(is_valid_timestamp_us)
+        && audit.finished_at_us.is_none_or(is_valid_timestamp_us)
+        && is_valid_timestamp_us(audit.created_at_us)
+        && is_valid_timestamp_us(audit.updated_at_us)
+        && audit.updated_at_us >= audit.created_at_us
+        && audit.revision > 0
+        && audit.revision <= MAX_SAFE_JAVASCRIPT_INTEGER
+}
+
+fn validate_identity_task(task: &CoreIdentityFrontierTask) -> bool {
+    is_rfc4122_uuid(task.task_id)
+        && task.lead_id.is_none_or(is_rfc4122_uuid)
+        && task.parent_task_id.is_none_or(is_rfc4122_uuid)
+        && is_identity_provider_label(&task.provider_id)
+        && is_safe_multiline_text(&task.masked_payload, 1, 512)
+        && task.priority <= 100
+        && task.information_gain_micros <= 1_000_000
+        && task.depth <= 8
+        && task.retry_limit <= 10
+        && task
+            .stop_reason
+            .as_deref()
+            .is_none_or(|reason| is_bounded_event_label(reason, 96))
+        && task.revision > 0
+        && task.revision <= MAX_SAFE_JAVASCRIPT_INTEGER
+}
+
+fn validate_identity_result(result: &CoreIdentityDiscoveryResult) -> bool {
+    is_rfc4122_uuid(result.result_id)
+        && is_rfc4122_uuid(result.task_id)
+        && is_identity_provider_label(&result.provider_id)
+        && result.rank > 0
+        && is_safe_bounded_text(&result.category, 1, 64)
+        && is_identity_url(&result.url)
+        && (result.title.is_empty() || is_safe_multiline_text(&result.title, 1, 512))
+        && (result.snippet.is_empty() || is_safe_multiline_text(&result.snippet, 1, 4_000))
+        && is_valid_timestamp_us(result.observed_at_us)
+        && is_bounded_event_label(&result.review_state, 32)
+}
+
+fn validate_identity_lead(lead: &CoreIdentityDiscoveryLead) -> bool {
+    is_rfc4122_uuid(lead.lead_id)
+        && lead.parent_lead_id.is_none_or(is_rfc4122_uuid)
+        && lead.source_id.is_none_or(is_rfc4122_uuid)
+        && is_safe_bounded_text(&lead.lead_type, 1, 48)
+        && is_safe_multiline_text(&lead.display_value, 1, 512)
+        && lead.source_url.as_deref().is_none_or(is_identity_url)
+        && is_identity_provider_label(&lead.provider_id)
+        && lead.depth <= 8
+        && lead.supporting_signals.len() <= 32
+        && lead.contradictions.len() <= 32
+        && lead
+            .supporting_signals
+            .iter()
+            .chain(&lead.contradictions)
+            .all(|signal| is_safe_multiline_text(signal, 1, 512))
+        && lead.confidence_micros <= 1_000_000
+        && is_bounded_event_label(&lead.ownership_state, 32)
+        && is_bounded_event_label(&lead.temporal_state, 32)
+        && is_bounded_event_label(&lead.review_state, 32)
+        && is_bounded_event_label(&lead.expansion_state, 32)
+}
+
+fn validate_identity_proposal(proposal: &CoreIdentityKnowledgeProposal) -> bool {
+    let spans_valid = match (proposal.source_span_start, proposal.source_span_end) {
+        (None, None) => true,
+        (Some(start), Some(end)) => start < end,
+        _ => false,
+    };
+    is_rfc4122_uuid(proposal.proposal_id)
+        && is_rfc4122_uuid(proposal.lead_id)
+        && is_safe_bounded_text(&proposal.entity_type, 1, 48)
+        && is_safe_multiline_text(&proposal.display_value, 1, 512)
+        && is_identity_url(&proposal.source_url)
+        && spans_valid
+        && proposal.supporting_signals.len() <= 32
+        && proposal.contradictions.len() <= 32
+        && proposal
+            .supporting_signals
+            .iter()
+            .chain(&proposal.contradictions)
+            .all(|signal| is_safe_multiline_text(signal, 1, 512))
+        && proposal.confidence_micros <= 1_000_000
+        && is_bounded_event_label(&proposal.temporal_state, 32)
+        && is_bounded_event_label(&proposal.review_state, 32)
+        && proposal.recommended_actions.len() <= 16
+        && proposal
+            .recommended_actions
+            .iter()
+            .all(|action| is_bounded_event_label(action, 64))
+        && proposal
+            .model_provider
+            .as_deref()
+            .is_none_or(|provider| is_safe_bounded_text(provider, 1, 64))
+        && proposal
+            .model_id
+            .as_deref()
+            .is_none_or(|model| is_safe_bounded_text(model, 1, 256))
+        && proposal.revision > 0
+        && proposal.revision <= MAX_SAFE_JAVASCRIPT_INTEGER
+}
+
+fn validate_identity_receipt(receipt: &CoreIdentityToolReceipt) -> bool {
+    is_rfc4122_uuid(receipt.receipt_id)
+        && receipt.task_id.is_none_or(is_rfc4122_uuid)
+        && is_bounded_event_label(&receipt.authorization_state, 32)
+        && is_bounded_event_label(&receipt.execution_state, 32)
+        && is_bounded_event_label(&receipt.result_code, 96)
+        && receipt
+            .model_provider
+            .as_deref()
+            .is_none_or(|provider| is_safe_bounded_text(provider, 1, 64))
+        && receipt
+            .model_id
+            .as_deref()
+            .is_none_or(|model| is_safe_bounded_text(model, 1, 256))
+        && is_valid_timestamp_us(receipt.started_at_us)
+        && is_valid_timestamp_us(receipt.finished_at_us)
+        && receipt.finished_at_us >= receipt.started_at_us
+}
+
+fn is_identity_url(value: &str) -> bool {
+    if !is_safe_bounded_text(value, 8, 2_048) {
+        return false;
+    }
+    let Ok(url) = reqwest::Url::parse(value) else {
+        return false;
+    };
+    matches!(url.scheme(), "http" | "https")
+        && url.host_str().is_some()
+        && url.username().is_empty()
+        && url.password().is_none()
+}
+
+fn is_identity_audit_provider(value: &str) -> bool {
+    matches!(
+        value,
+        "DUCKDUCKGO_HTML" | "GITHUB_USERS" | "HAVE_I_BEEN_PWNED_V3" | "MANUAL_BROWSER_HANDOFFS"
+    )
+}
+
+fn is_identity_provider_label(value: &str) -> bool {
+    is_bounded_event_label(value, 64)
+}
+
+const fn is_terminal_identity_task_state(state: CoreIdentityTaskState) -> bool {
+    matches!(
+        state,
+        CoreIdentityTaskState::SucceededEmpty
+            | CoreIdentityTaskState::SucceededResults
+            | CoreIdentityTaskState::Blocked
+            | CoreIdentityTaskState::RateLimited
+            | CoreIdentityTaskState::AuthRequired
+            | CoreIdentityTaskState::FailedTerminal
+            | CoreIdentityTaskState::Skipped
+            | CoreIdentityTaskState::Cancelled
+            | CoreIdentityTaskState::ReviewRequired
+            | CoreIdentityTaskState::Reviewed
+            | CoreIdentityTaskState::Saved
+    )
 }
 
 fn validate_query_provider_catalog(
@@ -7041,6 +7675,18 @@ where
         HIBP_REQUEST_TIMEOUT
     } else if route == CoreRoute::ListPhase5Findings {
         PHASE5_LIST_REQUEST_TIMEOUT
+    } else if matches!(
+        route,
+        CoreRoute::GetIdentityWorkspace
+            | CoreRoute::UpdateIdentityPerson
+            | CoreRoute::CreateIdentitySource
+            | CoreRoute::CreateIdentityAudit
+            | CoreRoute::GetIdentityAudit
+            | CoreRoute::ExecuteIdentityAuditBatch
+            | CoreRoute::ControlIdentityAudit
+            | CoreRoute::DecideIdentityProposal
+    ) {
+        IDENTITY_REQUEST_TIMEOUT
     } else if capability.authorization_class == "USER_GESTURE_KEYCHAIN" {
         KEYCHAIN_REQUEST_TIMEOUT
     } else {
@@ -7432,6 +8078,10 @@ pub(crate) enum CoreError {
     InvalidLocalReportRequest,
     #[error("the local core returned an invalid local report response")]
     InvalidLocalReportResponse,
+    #[error("the identity-discovery command input is invalid")]
+    InvalidIdentityRequest,
+    #[error("the local core returned an invalid identity-discovery response")]
+    InvalidIdentityResponse,
     #[error("timed out waiting for local core readiness")]
     ReadinessTimeout,
     #[error("the local core exited before reporting readiness")]
@@ -7496,7 +8146,8 @@ impl CoreError {
             | Self::InvalidQueryRequest
             | Self::InvalidPhase5Request
             | Self::InvalidPhase6Request
-            | Self::InvalidLocalReportRequest => "CORE_INPUT_INVALID",
+            | Self::InvalidLocalReportRequest
+            | Self::InvalidIdentityRequest => "CORE_INPUT_INVALID",
             Self::InvalidPhase3File => "CORE_FILE_INPUT_INVALID",
             Self::ReadinessTimeout
             | Self::ReadinessEof
@@ -7523,7 +8174,8 @@ impl CoreError {
             | Self::InvalidQueryResponse
             | Self::InvalidPhase5Response
             | Self::InvalidPhase6Response
-            | Self::InvalidLocalReportResponse => "CORE_REQUEST_FAILED",
+            | Self::InvalidLocalReportResponse
+            | Self::InvalidIdentityResponse => "CORE_REQUEST_FAILED",
             Self::InternalState(_) => "CORE_INTERNAL_STATE",
         }
     }

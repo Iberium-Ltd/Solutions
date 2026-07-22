@@ -18,19 +18,22 @@ use core::{
     CoreEntityDecisionRequest, CoreEntityOriginPageRequest, CoreEntityOriginPageResult,
     CoreEntityReviewRequest, CoreEntityReviewResult, CoreEntitySummary, CoreFileIntakeRequest,
     CoreGraphSnapshot, CoreGraphSnapshotRequest, CoreHibpAccountRequest, CoreHibpAccountResult,
-    CoreHibpDomainRequest, CoreHibpDomainResult, CoreIntakeReceipt, CoreInvestigationPlanRequest,
-    CoreInvestigationPlanResult, CoreLocalAiConnectionResult, CoreLocalAiEndpointRequest,
-    CoreLocalAiModelDiscoveryResult, CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest,
-    CoreLocalAiWorkspaceRequest, CoreLocalAiWorkspaceResult, CoreLocalCorpusAiRequest,
-    CoreLocalCorpusAiResult, CoreLocalReportGenerateRequest, CoreLocalReportGenerateResult,
-    CorePasteIntakeRequest, CorePhase5AttributionDecisionRequest,
-    CorePhase5AttributionDecisionResult, CorePhase5FindingDetailRequest,
-    CorePhase5FindingDetailResult, CorePhase5FindingListRequest, CorePhase5FindingListResult,
-    CorePhase5ManualEvidenceImportRequest, CorePhase5ManualEvidenceImportResult,
-    CorePhase5ManualFindingCreateRequest, CorePhase5RedactedDerivativeRequest,
-    CorePhase5RedactedDerivativeResult, CorePhase6AuditRunListRequest,
-    CorePhase6AuditRunListResult, CorePhase6CompareRunsRequest, CorePhase6ComparisonResult,
-    CorePhase6LocalCheckpointRequest, CorePhase6LocalCheckpointResult,
+    CoreHibpDomainRequest, CoreHibpDomainResult, CoreIdentityAuditControlRequest,
+    CoreIdentityAuditCreateRequest, CoreIdentityAuditDetail, CoreIdentityAuditExecuteRequest,
+    CoreIdentityPersonUpdateRequest, CoreIdentityProposalDecisionRequest,
+    CoreIdentitySourceCreateRequest, CoreIdentityWorkspace, CoreIdentityWorkspaceRequest,
+    CoreIntakeReceipt, CoreInvestigationPlanRequest, CoreInvestigationPlanResult,
+    CoreLocalAiConnectionResult, CoreLocalAiEndpointRequest, CoreLocalAiModelDiscoveryResult,
+    CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest, CoreLocalAiWorkspaceRequest,
+    CoreLocalAiWorkspaceResult, CoreLocalCorpusAiRequest, CoreLocalCorpusAiResult,
+    CoreLocalReportGenerateRequest, CoreLocalReportGenerateResult, CorePasteIntakeRequest,
+    CorePhase5AttributionDecisionRequest, CorePhase5AttributionDecisionResult,
+    CorePhase5FindingDetailRequest, CorePhase5FindingDetailResult, CorePhase5FindingListRequest,
+    CorePhase5FindingListResult, CorePhase5ManualEvidenceImportRequest,
+    CorePhase5ManualEvidenceImportResult, CorePhase5ManualFindingCreateRequest,
+    CorePhase5RedactedDerivativeRequest, CorePhase5RedactedDerivativeResult,
+    CorePhase6AuditRunListRequest, CorePhase6AuditRunListResult, CorePhase6CompareRunsRequest,
+    CorePhase6ComparisonResult, CorePhase6LocalCheckpointRequest, CorePhase6LocalCheckpointResult,
     CorePhase6RemediationCreateRequest, CorePhase6RemediationDeadlineUpdateRequest,
     CorePhase6RemediationDetailRequest, CorePhase6RemediationDetailResult,
     CorePhase6RemediationDraftUpdateRequest, CorePhase6RemediationEvidenceLinkRequest,
@@ -432,6 +435,70 @@ async fn core_generate_local_report(
     supervisor.generate_local_report(request).await
 }
 
+#[tauri::command]
+async fn core_identity_workspace(
+    request: CoreIdentityWorkspaceRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityWorkspace>, CoreCommandError> {
+    supervisor.identity_workspace(request).await
+}
+
+#[tauri::command]
+async fn core_update_identity_person(
+    request: CoreIdentityPersonUpdateRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityWorkspace>, CoreCommandError> {
+    supervisor.update_identity_person(request).await
+}
+
+#[tauri::command]
+async fn core_create_identity_source(
+    request: CoreIdentitySourceCreateRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityWorkspace>, CoreCommandError> {
+    supervisor.create_identity_source(request).await
+}
+
+#[tauri::command]
+async fn core_create_identity_audit(
+    request: CoreIdentityAuditCreateRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+    supervisor.create_identity_audit(request).await
+}
+
+#[tauri::command]
+async fn core_get_identity_audit(
+    request: CoreIdentityAuditExecuteRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+    supervisor.get_identity_audit(request).await
+}
+
+#[tauri::command]
+async fn core_execute_identity_audit_batch(
+    request: CoreIdentityAuditExecuteRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+    supervisor.execute_identity_audit_batch(request).await
+}
+
+#[tauri::command]
+async fn core_control_identity_audit(
+    request: CoreIdentityAuditControlRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+    supervisor.control_identity_audit(request).await
+}
+
+#[tauri::command]
+async fn core_decide_identity_proposal(
+    request: CoreIdentityProposalDecisionRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreIdentityAuditDetail>, CoreCommandError> {
+    supervisor.decide_identity_proposal(request).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // State is constructed once here so every command shares one supervised core.
@@ -503,7 +570,15 @@ pub fn run() {
             core_link_phase6_remediation_evidence,
             core_record_phase6_provider_response,
             core_record_phase6_reappearance,
-            core_generate_local_report
+            core_generate_local_report,
+            core_identity_workspace,
+            core_update_identity_person,
+            core_create_identity_source,
+            core_create_identity_audit,
+            core_get_identity_audit,
+            core_execute_identity_audit_batch,
+            core_control_identity_audit,
+            core_decide_identity_proposal
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

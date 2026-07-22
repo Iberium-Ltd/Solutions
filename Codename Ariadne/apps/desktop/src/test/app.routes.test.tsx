@@ -10,7 +10,7 @@ function renderRoute(path: string) {
 
 const representativeRoutes = [
   ['/dashboard?fixture=standard', 'Mission Control', 'Mission Control'],
-  ['/audits/new/intake?fixture=pasted-source', 'Add source material', 'New Audit'],
+  ['/audits/new/intake?fixture=pasted-source', 'Add source material', 'Import identifiers'],
   ['/findings?fixture=review-queue', 'Findings', 'Findings'],
   ['/reports', 'Reports', 'Reports'],
   ['/ai/workspace', 'AI Workspace', 'AI Workspace'],

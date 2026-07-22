@@ -714,10 +714,10 @@ function NativeEntitiesPage() {
         <div className="span-12 audit-builder-footer">
           <div className="audit-builder-note">
             <SlidersHorizontal size={16} />
-            <div><strong>{readyForNext ? 'Next: transmission preflight.' : 'Resolve every candidate before transmission planning.'}</strong><span>Provider, jurisdiction, exact payload, purpose, retention, and cost are shown before approval.</span></div>
+            <div><strong>{readyForNext ? 'Next: run the complete audit.' : 'Resolve every candidate before starting discovery.'}</strong><span>The persistent Person workspace automatically seeds discovery from these reviewed identifiers.</span></div>
           </div>
-          <Link className={`button button--primary ${!readyForNext ? 'is-disabled' : ''}`} aria-disabled={!readyForNext} to={readyForNext ? '/privacy/transmission?from=audit-builder' : '#'}>
-            Review transmission <ArrowRight size={14} />
+          <Link className={`button button--primary ${!readyForNext ? 'is-disabled' : ''}`} aria-disabled={!readyForNext} to={readyForNext ? '/people?start=1' : '#'}>
+            Continue to full audit <ArrowRight size={14} />
           </Link>
         </div>
       </div>

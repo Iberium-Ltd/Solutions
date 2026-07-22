@@ -1,4 +1,9 @@
-"""Truthful authenticated routes for the bounded Phase 2 local foundation."""
+"""Truthful authenticated routes for the bounded local core.
+
+Routes translate strict wire models into application services and map failures
+to stable codes. They do not contain an arbitrary proxy, command executor, file
+path, or database escape hatch; capability metadata remains route-specific.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +19,17 @@ from ariadne_core.api.hibp_schemas import (
     HibpAccountResult,
     HibpDomainRequest,
     HibpDomainResult,
+)
+from ariadne_core.api.identity_discovery_schemas import (
+    AuditControlRequest,
+    AuditCreateRequest,
+    AuditDetail,
+    AuditExecuteRequest,
+    PersonSourceCreateRequest,
+    PersonUpdateRequest,
+    PersonWorkspace,
+    PersonWorkspaceRequest,
+    ProposalDecisionRequest,
 )
 from ariadne_core.api.intake_schemas import (
     EntityDecisionRequest,
@@ -128,6 +144,12 @@ from ariadne_core.api.schemas import (
     VaultUnlockRequest,
 )
 from ariadne_core.application.hibp import HibpService
+from ariadne_core.application.identity_discovery import (
+    IdentityDiscoveryConflict,
+    IdentityDiscoveryCoordinator,
+    IdentityDiscoveryNotFound,
+    IdentityDiscoveryUnavailable,
+)
 from ariadne_core.application.investigation_planning import InvestigationPlanCompiler
 from ariadne_core.application.local_ai_settings import (
     LocalAISettingsConflict,
@@ -241,6 +263,8 @@ PHASE6_DRAFT_REQUEST_BYTES = 50_000
 PHASE6_STATUS_REQUEST_BYTES = 6_144
 PHASE6_EVIDENCE_REQUEST_BYTES = 4_096
 PHASE6_PROVIDER_RESPONSE_REQUEST_BYTES = 12_288
+IDENTITY_DISCOVERY_REQUEST_BYTES = 32_768
+IDENTITY_DISCOVERY_RESPONSE_BYTES = 4_194_304
 
 
 def _vault_components(request: Request) -> tuple[VaultManager, KeyLeaseClient]:
@@ -417,6 +441,29 @@ def _phase6_coordinator(request: Request) -> Phase6Coordinator:
     return coordinator
 
 
+def _identity_discovery(request: Request) -> IdentityDiscoveryCoordinator:
+    """Resolve only the coordinator installed by the authenticated app factory."""
+
+    coordinator = request.app.state.identity_discovery_coordinator
+    if not isinstance(coordinator, IdentityDiscoveryCoordinator):
+        raise HTTPException(status_code=503)
+    return coordinator
+
+
+def _raise_identity_discovery(error: Exception) -> NoReturn:
+    """Collapse internal failures to stable status codes without leaking evidence."""
+
+    if isinstance(error, IdentityDiscoveryUnavailable):
+        raise HTTPException(status_code=409) from None
+    if isinstance(error, IdentityDiscoveryNotFound):
+        raise HTTPException(status_code=404) from None
+    if isinstance(error, IdentityDiscoveryConflict):
+        raise HTTPException(status_code=409) from None
+    if isinstance(error, ValueError):
+        raise HTTPException(status_code=400) from None
+    raise HTTPException(status_code=503) from None
+
+
 def _raise_phase6(error: Exception) -> NoReturn:
     if isinstance(error, Phase6Unavailable):
         raise HTTPException(status_code=409) from None
@@ -446,6 +493,169 @@ def _raise_reporting(error: Exception) -> NoReturn:
     if isinstance(error, ValueError):
         raise HTTPException(status_code=400) from None
     raise HTTPException(status_code=503) from None
+
+
+def _identity_capability(route_id: str) -> dict[str, dict[str, object]]:
+    """Describe the route contract; runtime enforcement remains in middleware/services."""
+
+    return {
+        "x-ariadne-capability": {
+            "routeId": route_id,
+            "maxRequestBytes": IDENTITY_DISCOVERY_REQUEST_BYTES,
+            "maxResponseBytes": IDENTITY_DISCOVERY_RESPONSE_BYTES,
+            "requiredLockState": "UNLOCKED",
+            "scopeClass": "PROFILE",
+            "revealClass": "NONE",
+            "authorizationClass": "USER_GESTURE",
+        }
+    }
+
+
+# Identity routes are intentionally orchestration-thin. Synchronous vault and
+# repository work runs off the event loop, while the coordinator owns lifecycle,
+# authorization, and durable-state rules.
+@router.post(
+    "/identity/workspace",
+    response_model=PersonWorkspace,
+    responses=ERROR_RESPONSES,
+    operation_id="getIdentityWorkspace",
+    summary="Open one persistent person workspace",
+    openapi_extra=_identity_capability("identity.workspace.read"),
+)
+async def get_identity_workspace(
+    body: PersonWorkspaceRequest,
+    request: Request,
+) -> PersonWorkspace:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).workspace, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
+
+
+@router.post(
+    "/identity/person",
+    response_model=PersonWorkspace,
+    responses=ERROR_RESPONSES,
+    operation_id="updateIdentityPerson",
+    summary="Update durable person metadata",
+    openapi_extra=_identity_capability("identity.person.update"),
+)
+async def update_identity_person(
+    body: PersonUpdateRequest,
+    request: Request,
+) -> PersonWorkspace:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).update_person, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
+
+
+@router.post(
+    "/identity/source",
+    response_model=PersonWorkspace,
+    responses=ERROR_RESPONSES,
+    operation_id="createIdentitySource",
+    summary="Add a durable public source to a person",
+    openapi_extra=_identity_capability("identity.source.create"),
+)
+async def create_identity_source(
+    body: PersonSourceCreateRequest,
+    request: Request,
+) -> PersonWorkspace:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).add_source, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
+
+
+@router.post(
+    "/identity/audits",
+    response_model=AuditDetail,
+    responses=ERROR_RESPONSES,
+    operation_id="createIdentityAudit",
+    summary="Create a durable recursive identity audit",
+    openapi_extra=_identity_capability("identity.audit.create"),
+)
+async def create_identity_audit(
+    body: AuditCreateRequest,
+    request: Request,
+) -> AuditDetail:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).create_audit, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
+
+
+@router.post(
+    "/identity/audits/detail",
+    response_model=AuditDetail,
+    responses=ERROR_RESPONSES,
+    operation_id="getIdentityAudit",
+    summary="Read durable identity-audit state",
+    openapi_extra=_identity_capability("identity.audit.read"),
+)
+async def get_identity_audit(
+    body: AuditExecuteRequest,
+    request: Request,
+) -> AuditDetail:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).audit_detail, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
+
+
+@router.post(
+    "/identity/audits/execute",
+    response_model=AuditDetail,
+    responses=ERROR_RESPONSES,
+    operation_id="executeIdentityAuditBatch",
+    summary="Execute one bounded parallel identity-audit batch",
+    openapi_extra=_identity_capability("identity.audit.execute"),
+)
+async def execute_identity_audit_batch(
+    body: AuditExecuteRequest,
+    request: Request,
+) -> AuditDetail:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).execute_batch, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
+
+
+@router.post(
+    "/identity/audits/control",
+    response_model=AuditDetail,
+    responses=ERROR_RESPONSES,
+    operation_id="controlIdentityAudit",
+    summary="Pause, resume, or cancel a durable identity audit",
+    openapi_extra=_identity_capability("identity.audit.control"),
+)
+async def control_identity_audit(
+    body: AuditControlRequest,
+    request: Request,
+) -> AuditDetail:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).control_audit, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
+
+
+@router.post(
+    "/identity/proposals/decision",
+    response_model=AuditDetail,
+    responses=ERROR_RESPONSES,
+    operation_id="decideIdentityProposal",
+    summary="Review a proposed knowledge change",
+    openapi_extra=_identity_capability("identity.proposal.decision"),
+)
+async def decide_identity_proposal(
+    body: ProposalDecisionRequest,
+    request: Request,
+) -> AuditDetail:
+    try:
+        return await anyio.to_thread.run_sync(_identity_discovery(request).decide_proposal, body)
+    except Exception as error:
+        _raise_identity_discovery(error)
 
 
 @router.get(

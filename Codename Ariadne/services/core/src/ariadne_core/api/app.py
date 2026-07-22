@@ -1,4 +1,9 @@
-"""FastAPI application factory for the authenticated local boundary."""
+"""FastAPI application factory for the authenticated local boundary.
+
+The factory is the composition root: it wires explicit service dependencies
+onto application state while leaving authentication, vault ownership, and
+provider adapters behind their existing boundaries.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +25,7 @@ from ariadne_core.api.middleware import LocalBoundaryMiddleware
 from ariadne_core.api.routes import router
 from ariadne_core.api.schemas import RuntimeTransport
 from ariadne_core.application.hibp import HibpHttpTransport, HibpService
+from ariadne_core.application.identity_discovery import IdentityDiscoveryCoordinator
 from ariadne_core.application.investigation_planning import InvestigationPlanCompiler
 from ariadne_core.application.local_ai_settings import LocalAISettingsService
 from ariadne_core.application.local_ai_workspace import LocalAIWorkspaceCoordinator
@@ -125,8 +131,17 @@ def create_app(runtime: ApiRuntime) -> FastAPI:
         if phase3_available and runtime.vault_manager is not None
         else None
     )
-    app.state.public_discovery_service = PublicDiscoveryService(
-        transport=runtime.public_discovery_transport
+    public_discovery_service = PublicDiscoveryService(transport=runtime.public_discovery_transport)
+    app.state.public_discovery_service = public_discovery_service
+    # Recursive audits reuse the reviewed public-search adapter. The coordinator
+    # receives no generic process, filesystem, or unrestricted HTTP capability.
+    app.state.identity_discovery_coordinator = (
+        IdentityDiscoveryCoordinator(
+            runtime.vault_manager,
+            public_discovery=public_discovery_service,
+        )
+        if phase3_available and runtime.vault_manager is not None
+        else None
     )
     app.state.hibp_service = HibpService(transport=runtime.hibp_transport)
     app.state.investigation_plan_compiler = InvestigationPlanCompiler()

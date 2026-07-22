@@ -14,7 +14,7 @@ pub(super) const CONTRACT_VERSION: u16 = 1;
 pub(super) const PROTOCOL_VERSION: u16 = 1;
 pub(super) const MAX_BOOTSTRAP_BYTES: usize = 4 * 1024;
 pub(super) const MAX_READINESS_BYTES: usize = 4 * 1024;
-pub(super) const MAX_RESPONSE_BYTES: usize = 1024 * 1024;
+pub(super) const MAX_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
 
 const fn default_true() -> bool {
     true
@@ -246,6 +246,14 @@ pub(super) enum CoreRoute {
     RecordPhase6ProviderResponse,
     RecordPhase6Reappearance,
     GenerateLocalReport,
+    GetIdentityWorkspace,
+    UpdateIdentityPerson,
+    CreateIdentitySource,
+    CreateIdentityAudit,
+    GetIdentityAudit,
+    ExecuteIdentityAuditBatch,
+    ControlIdentityAudit,
+    DecideIdentityProposal,
 }
 
 impl CoreRoute {
@@ -302,6 +310,14 @@ impl CoreRoute {
             Self::RecordPhase6ProviderResponse => "phase6.remediation.provider_response.record",
             Self::RecordPhase6Reappearance => "phase6.remediation.reappearance.record",
             Self::GenerateLocalReport => "reports.generate",
+            Self::GetIdentityWorkspace => "identity.workspace.read",
+            Self::UpdateIdentityPerson => "identity.person.update",
+            Self::CreateIdentitySource => "identity.source.create",
+            Self::CreateIdentityAudit => "identity.audit.create",
+            Self::GetIdentityAudit => "identity.audit.read",
+            Self::ExecuteIdentityAuditBatch => "identity.audit.execute",
+            Self::ControlIdentityAudit => "identity.audit.control",
+            Self::DecideIdentityProposal => "identity.proposal.decision",
         }
     }
 
@@ -374,6 +390,14 @@ impl CoreRoute {
             }
             "phase6.remediation.reappearance.record" => Some(Self::RecordPhase6Reappearance),
             "reports.generate" => Some(Self::GenerateLocalReport),
+            "identity.workspace.read" => Some(Self::GetIdentityWorkspace),
+            "identity.person.update" => Some(Self::UpdateIdentityPerson),
+            "identity.source.create" => Some(Self::CreateIdentitySource),
+            "identity.audit.create" => Some(Self::CreateIdentityAudit),
+            "identity.audit.read" => Some(Self::GetIdentityAudit),
+            "identity.audit.execute" => Some(Self::ExecuteIdentityAuditBatch),
+            "identity.audit.control" => Some(Self::ControlIdentityAudit),
+            "identity.proposal.decision" => Some(Self::DecideIdentityProposal),
             _ => None,
         }
     }
@@ -2422,6 +2446,418 @@ pub struct CoreLocalReportGenerateResult {
     pub manifest: CoreLocalReportManifest,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityAuditMode {
+    FullRescan,
+    Incremental,
+    NewIdentifiersOnly,
+    FailedAndBlockedRetry,
+    SelectedIdentities,
+    SelectedProviders,
+    ChangeMonitoring,
+    MaximumCoverage,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityAuditState {
+    Draft,
+    Ready,
+    Running,
+    Paused,
+    Completed,
+    Partial,
+    Cancelled,
+    Failed,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityAuditStage {
+    Knowledge,
+    Planning,
+    Searching,
+    Extracting,
+    Correlating,
+    AiAnalysis,
+    Review,
+    Checkpoint,
+    Complete,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityTaskState {
+    Planned,
+    Ready,
+    Queued,
+    Running,
+    SucceededEmpty,
+    SucceededResults,
+    Blocked,
+    RateLimited,
+    AuthRequired,
+    FailedRetryable,
+    FailedTerminal,
+    Skipped,
+    Cancelled,
+    ReviewRequired,
+    Reviewed,
+    Saved,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityTaskType {
+    SearchWeb,
+    SearchProvider,
+    SearchSite,
+    SearchDomain,
+    SearchUsername,
+    FetchUrl,
+    ParseHtml,
+    ExtractLinks,
+    ExtractIdentifiers,
+    QueryArchive,
+    QueryGithub,
+    QueryRegistry,
+    QueryDns,
+    QueryCertificateTransparency,
+    RunUsernameEnumeration,
+    RunMetadataExtraction,
+    RunOcr,
+    HashImage,
+    CompareImages,
+    CaptureScreenshot,
+    CaptureHtml,
+    CaptureDocument,
+    GenerateQueryVariants,
+    AnalyseDocument,
+    CompareSources,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentitySourceType {
+    Website,
+    Subpage,
+    SocialProfile,
+    ForumProfile,
+    ForumThread,
+    Comment,
+    MemberPage,
+    GitRepository,
+    PackageRegistry,
+    Document,
+    Pdf,
+    PublicRecord,
+    Archive,
+    SearchResult,
+    Media,
+    ManualUrl,
+    Other,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityAuditControlAction {
+    Pause,
+    Resume,
+    Cancel,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreIdentityProposalDecision {
+    Confirm,
+    ConfirmHistorical,
+    Probable,
+    SearchDeeper,
+    Reject,
+    Unrelated,
+    Merge,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityWorkspaceRequest {
+    pub profile_id: Uuid,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityPersonUpdateRequest {
+    pub profile_id: Uuid,
+    pub expected_profile_revision: u64,
+    pub expected_details_revision: u64,
+    pub display_name: String,
+    pub purpose: String,
+    pub notes: String,
+    pub tags: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentitySourceCreateRequest {
+    pub profile_id: Uuid,
+    pub url: String,
+    pub source_type: CoreIdentitySourceType,
+    pub title: Option<String>,
+    pub notes: String,
+    pub authorized_self_audit: bool,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAuditCreateRequest {
+    pub profile_id: Uuid,
+    pub name: String,
+    pub mode: CoreIdentityAuditMode,
+    pub provider_ids: Vec<String>,
+    pub max_depth: u8,
+    pub request_budget: u16,
+    pub time_budget_seconds: u32,
+    pub cost_budget_micros: u64,
+    pub use_local_ai: bool,
+    pub authorized_self_audit: bool,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAuditExecuteRequest {
+    pub profile_id: Uuid,
+    pub audit_id: Uuid,
+    pub maximum_tasks: u8,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAuditControlRequest {
+    pub profile_id: Uuid,
+    pub audit_id: Uuid,
+    pub expected_revision: u64,
+    pub action: CoreIdentityAuditControlAction,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityProposalDecisionRequest {
+    pub profile_id: Uuid,
+    pub audit_id: Uuid,
+    pub proposal_id: Uuid,
+    pub expected_revision: u64,
+    pub decision: CoreIdentityProposalDecision,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityPersonDetails {
+    pub profile_id: Uuid,
+    pub display_name: String,
+    pub purpose: String,
+    pub status: String,
+    pub notes: String,
+    pub tags: Vec<String>,
+    pub profile_revision: u64,
+    pub details_revision: u64,
+    pub identity_count: u32,
+    pub source_count: u32,
+    pub audit_count: u32,
+    pub unresolved_proposal_count: u32,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentitySource {
+    pub source_id: Uuid,
+    pub source_type: CoreIdentitySourceType,
+    pub url: String,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub title: Option<String>,
+    pub notes: String,
+    pub relationship_state: String,
+    #[serde(deserialize_with = "deserialize_required_nullable_canonical_uuid")]
+    pub parent_source_id: Option<Uuid>,
+    pub first_seen_at_us: u64,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub last_checked_at_us: Option<u64>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub http_status: Option<u16>,
+    pub revision: u64,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityTaskStateCount {
+    pub state: CoreIdentityTaskState,
+    pub count: u32,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAuditSummary {
+    pub audit_id: Uuid,
+    pub name: String,
+    pub mode: CoreIdentityAuditMode,
+    pub state: CoreIdentityAuditState,
+    pub stage: CoreIdentityAuditStage,
+    pub provider_ids: Vec<String>,
+    pub use_local_ai: bool,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub selected_model: Option<String>,
+    pub max_depth: u8,
+    pub request_budget: u16,
+    pub total_tasks: u32,
+    pub terminal_tasks: u32,
+    pub result_count: u32,
+    pub lead_count: u32,
+    pub proposal_count: u32,
+    pub progress_micros: u32,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub stop_reason: Option<String>,
+    pub task_states: Vec<CoreIdentityTaskStateCount>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub started_at_us: Option<u64>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub finished_at_us: Option<u64>,
+    pub created_at_us: u64,
+    pub updated_at_us: u64,
+    pub revision: u64,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityWorkspace {
+    pub person: CoreIdentityPersonDetails,
+    pub sources: Vec<CoreIdentitySource>,
+    pub audits: Vec<CoreIdentityAuditSummary>,
+    pub has_more_sources: bool,
+    pub has_more_audits: bool,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityFrontierTask {
+    pub task_id: Uuid,
+    #[serde(deserialize_with = "deserialize_required_nullable_canonical_uuid")]
+    pub lead_id: Option<Uuid>,
+    #[serde(deserialize_with = "deserialize_required_nullable_canonical_uuid")]
+    pub parent_task_id: Option<Uuid>,
+    pub task_type: CoreIdentityTaskType,
+    pub provider_id: String,
+    pub masked_payload: String,
+    pub priority: u8,
+    pub information_gain_micros: u32,
+    pub depth: u8,
+    pub state: CoreIdentityTaskState,
+    pub attempt_count: u32,
+    pub retry_limit: u8,
+    pub result_count: u32,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub stop_reason: Option<String>,
+    pub revision: u64,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityDiscoveryResult {
+    pub result_id: Uuid,
+    pub task_id: Uuid,
+    pub provider_id: String,
+    pub rank: u32,
+    pub category: String,
+    pub url: String,
+    pub title: String,
+    pub snippet: String,
+    pub observed_at_us: u64,
+    pub review_state: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityDiscoveryLead {
+    pub lead_id: Uuid,
+    #[serde(deserialize_with = "deserialize_required_nullable_canonical_uuid")]
+    pub parent_lead_id: Option<Uuid>,
+    #[serde(deserialize_with = "deserialize_required_nullable_canonical_uuid")]
+    pub source_id: Option<Uuid>,
+    pub lead_type: String,
+    pub display_value: String,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub source_url: Option<String>,
+    pub provider_id: String,
+    pub depth: u8,
+    pub supporting_signals: Vec<String>,
+    pub contradictions: Vec<String>,
+    pub confidence_micros: u32,
+    pub ownership_state: String,
+    pub temporal_state: String,
+    pub review_state: String,
+    pub expansion_state: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityKnowledgeProposal {
+    pub proposal_id: Uuid,
+    pub lead_id: Uuid,
+    pub entity_type: String,
+    pub display_value: String,
+    pub source_url: String,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub source_span_start: Option<u32>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub source_span_end: Option<u32>,
+    pub supporting_signals: Vec<String>,
+    pub contradictions: Vec<String>,
+    pub confidence_micros: u32,
+    pub temporal_state: String,
+    pub review_state: String,
+    pub recommended_actions: Vec<String>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub model_provider: Option<String>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub model_id: Option<String>,
+    pub revision: u64,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityToolReceipt {
+    pub receipt_id: Uuid,
+    #[serde(deserialize_with = "deserialize_required_nullable_canonical_uuid")]
+    pub task_id: Option<Uuid>,
+    pub tool_name: CoreIdentityTaskType,
+    pub authorization_state: String,
+    pub execution_state: String,
+    pub result_code: String,
+    pub result_count: u32,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub model_provider: Option<String>,
+    #[serde(deserialize_with = "deserialize_required_nullable")]
+    pub model_id: Option<String>,
+    pub started_at_us: u64,
+    pub finished_at_us: u64,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreIdentityAuditDetail {
+    pub profile_id: Uuid,
+    pub audit: CoreIdentityAuditSummary,
+    pub tasks: Vec<CoreIdentityFrontierTask>,
+    pub results: Vec<CoreIdentityDiscoveryResult>,
+    pub leads: Vec<CoreIdentityDiscoveryLead>,
+    pub proposals: Vec<CoreIdentityKnowledgeProposal>,
+    pub receipts: Vec<CoreIdentityToolReceipt>,
+    pub has_more_tasks: bool,
+    pub has_more_results: bool,
+    pub has_more_leads: bool,
+    pub has_more_proposals: bool,
+    pub has_more_receipts: bool,
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CorePasteIntakeRequest {
@@ -2741,6 +3177,24 @@ macro_rules! impl_redacted_debug {
 }
 
 impl_redacted_debug!(
+    CoreIdentityWorkspaceRequest,
+    CoreIdentityPersonUpdateRequest,
+    CoreIdentitySourceCreateRequest,
+    CoreIdentityAuditCreateRequest,
+    CoreIdentityAuditExecuteRequest,
+    CoreIdentityAuditControlRequest,
+    CoreIdentityProposalDecisionRequest,
+    CoreIdentityPersonDetails,
+    CoreIdentitySource,
+    CoreIdentityTaskStateCount,
+    CoreIdentityAuditSummary,
+    CoreIdentityWorkspace,
+    CoreIdentityFrontierTask,
+    CoreIdentityDiscoveryResult,
+    CoreIdentityDiscoveryLead,
+    CoreIdentityKnowledgeProposal,
+    CoreIdentityToolReceipt,
+    CoreIdentityAuditDetail,
     CoreProfileSummary,
     CoreProfileListResult,
     CoreIntakeReceipt,
@@ -3618,6 +4072,38 @@ mod tests {
             Some(CoreRoute::GenerateLocalReport)
         );
         assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/workspace"),
+            Some(CoreRoute::GetIdentityWorkspace)
+        );
+        assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/person"),
+            Some(CoreRoute::UpdateIdentityPerson)
+        );
+        assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/source"),
+            Some(CoreRoute::CreateIdentitySource)
+        );
+        assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/audits"),
+            Some(CoreRoute::CreateIdentityAudit)
+        );
+        assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/audits/detail"),
+            Some(CoreRoute::GetIdentityAudit)
+        );
+        assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/audits/execute"),
+            Some(CoreRoute::ExecuteIdentityAuditBatch)
+        );
+        assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/audits/control"),
+            Some(CoreRoute::ControlIdentityAudit)
+        );
+        assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/identity/proposals/decision"),
+            Some(CoreRoute::DecideIdentityProposal)
+        );
+        assert_eq!(
             CoreRoute::from_method_and_path("POST", "/v1/discovery/public/capture"),
             Some(CoreRoute::CapturePublicDiscovery)
         );
@@ -3657,7 +4143,7 @@ mod tests {
             assert_eq!(capability.required_lock_state, "ANY");
             assert_eq!(capability.scope_class, "NONE");
             assert_eq!(capability.max_request_bytes, 4_096);
-            assert_eq!(capability.max_response_bytes, MAX_RESPONSE_BYTES);
+            assert_eq!(capability.max_response_bytes, 1_048_576);
         }
         let report_capability = CoreRoute::GenerateLocalReport.capability();
         assert_eq!(report_capability.max_request_bytes, 1_024);
@@ -3666,16 +4152,10 @@ mod tests {
         assert_eq!(entity_origins_capability.required_lock_state, "UNLOCKED");
         assert_eq!(entity_origins_capability.scope_class, "PROFILE");
         assert_eq!(entity_origins_capability.max_request_bytes, 512);
-        assert_eq!(
-            entity_origins_capability.max_response_bytes,
-            MAX_RESPONSE_BYTES
-        );
+        assert_eq!(entity_origins_capability.max_response_bytes, 1_048_576);
         let manual_finding_capability = CoreRoute::CreatePhase5ManualFinding.capability();
         assert_eq!(manual_finding_capability.max_request_bytes, 4_096);
-        assert_eq!(
-            manual_finding_capability.max_response_bytes,
-            MAX_RESPONSE_BYTES
-        );
+        assert_eq!(manual_finding_capability.max_response_bytes, 1_048_576);
         assert_eq!(CoreRoute::from_method_and_path("POST", "/v1/session"), None);
         assert_eq!(
             CoreRoute::from_method_and_path("GET", "/v1/providers"),
@@ -3734,6 +4214,14 @@ mod tests {
             CoreRoute::RecordPhase6ProviderResponse,
             CoreRoute::RecordPhase6Reappearance,
             CoreRoute::GenerateLocalReport,
+            CoreRoute::GetIdentityWorkspace,
+            CoreRoute::UpdateIdentityPerson,
+            CoreRoute::CreateIdentitySource,
+            CoreRoute::CreateIdentityAudit,
+            CoreRoute::GetIdentityAudit,
+            CoreRoute::ExecuteIdentityAuditBatch,
+            CoreRoute::ControlIdentityAudit,
+            CoreRoute::DecideIdentityProposal,
         ];
         assert_eq!(
             manual_routes.len(),
@@ -3789,6 +4277,14 @@ mod tests {
                     | CoreRoute::RecordPhase6ProviderResponse
                     | CoreRoute::RecordPhase6Reappearance
                     | CoreRoute::GenerateLocalReport
+                    | CoreRoute::GetIdentityWorkspace
+                    | CoreRoute::UpdateIdentityPerson
+                    | CoreRoute::CreateIdentitySource
+                    | CoreRoute::CreateIdentityAudit
+                    | CoreRoute::GetIdentityAudit
+                    | CoreRoute::ExecuteIdentityAuditBatch
+                    | CoreRoute::ControlIdentityAudit
+                    | CoreRoute::DecideIdentityProposal
             ) {
                 assert_eq!(capability.required_lock_state, "UNLOCKED");
             }

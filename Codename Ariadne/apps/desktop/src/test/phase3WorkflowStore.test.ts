@@ -11,7 +11,7 @@ describe('Phase 3 workflow memory boundary', () => {
     sessionStorage.clear()
   })
 
-  it('keeps only opaque identifiers in ephemeral state', () => {
+  it('persists only the active opaque profile selector and keeps source authority ephemeral', () => {
     const profileId = '11111111-1111-4111-8111-111111111111'
     const sourceId = '22222222-2222-4222-8222-222222222222'
 
@@ -22,7 +22,8 @@ describe('Phase 3 workflow memory boundary', () => {
       profileId,
       sourceId,
     })
-    expect(localStorage).toHaveLength(0)
+    expect(localStorage).toHaveLength(1)
+    expect(localStorage.getItem('ariadne.active-profile-id.v1')).toBe(profileId)
     expect(sessionStorage).toHaveLength(0)
   })
 

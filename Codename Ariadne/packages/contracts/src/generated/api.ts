@@ -33,6 +33,81 @@ export interface AttributionPositiveContribution {
   readonly evidenceArtifactIds: ReadonlyArray<string>
 }
 
+export type AuditControlAction = "PAUSE" | "RESUME" | "CANCEL"
+
+export interface AuditControlRequest {
+  readonly profileId: string
+  readonly auditId: string
+  readonly expectedRevision: number
+  readonly action: AuditControlAction
+}
+
+export interface AuditCreateRequest {
+  readonly profileId: string
+  readonly name: string
+  readonly mode?: AuditMode
+  readonly providerIds?: ReadonlyArray<string>
+  readonly maxDepth?: number
+  readonly requestBudget?: number
+  readonly timeBudgetSeconds?: number
+  readonly costBudgetMicros?: number
+  readonly useLocalAi?: boolean
+  readonly authorizedSelfAudit: boolean
+}
+
+export interface AuditDetail {
+  readonly profileId: string
+  readonly audit: AuditSummary
+  readonly tasks: ReadonlyArray<FrontierTaskSummary>
+  readonly results: ReadonlyArray<DiscoveryResult>
+  readonly leads: ReadonlyArray<DiscoveryLead>
+  readonly proposals: ReadonlyArray<KnowledgeProposal>
+  readonly receipts: ReadonlyArray<ToolReceipt>
+  readonly hasMoreTasks: boolean
+  readonly hasMoreResults: boolean
+  readonly hasMoreLeads: boolean
+  readonly hasMoreProposals: boolean
+  readonly hasMoreReceipts: boolean
+}
+
+export interface AuditExecuteRequest {
+  readonly profileId: string
+  readonly auditId: string
+  readonly maximumTasks?: number
+}
+
+export type AuditMode = "FULL_RESCAN" | "INCREMENTAL" | "NEW_IDENTIFIERS_ONLY" | "FAILED_AND_BLOCKED_RETRY" | "SELECTED_IDENTITIES" | "SELECTED_PROVIDERS" | "CHANGE_MONITORING" | "MAXIMUM_COVERAGE"
+
+export type AuditStage = "KNOWLEDGE" | "PLANNING" | "SEARCHING" | "EXTRACTING" | "CORRELATING" | "AI_ANALYSIS" | "REVIEW" | "CHECKPOINT" | "COMPLETE"
+
+export type AuditState = "DRAFT" | "READY" | "RUNNING" | "PAUSED" | "COMPLETED" | "PARTIAL" | "CANCELLED" | "FAILED"
+
+export interface AuditSummary {
+  readonly auditId: string
+  readonly name: string
+  readonly mode: AuditMode
+  readonly state: AuditState
+  readonly stage: AuditStage
+  readonly providerIds: ReadonlyArray<string>
+  readonly useLocalAi: boolean
+  readonly selectedModel: string | null
+  readonly maxDepth: number
+  readonly requestBudget: number
+  readonly totalTasks: number
+  readonly terminalTasks: number
+  readonly resultCount: number
+  readonly leadCount: number
+  readonly proposalCount: number
+  readonly progressMicros: number
+  readonly stopReason: string | null
+  readonly taskStates: ReadonlyArray<TaskStateCount>
+  readonly startedAtUs?: number | null
+  readonly finishedAtUs?: number | null
+  readonly createdAtUs: number
+  readonly updatedAtUs: number
+  readonly revision: number
+}
+
 export interface CapabilityVersions {
   readonly contract: 1
   readonly schema: "ariadne-v1"
@@ -50,6 +125,37 @@ export interface CipherCapability {
 export type ComparisonIncompleteReason = "BASELINE_RUN_INCOMPLETE" | "CURRENT_RUN_INCOMPLETE" | "BASELINE_COVERAGE_INCOMPLETE" | "CURRENT_COVERAGE_INCOMPLETE" | "UNRESOLVED_ABSENCE" | "HISTORY_GAP"
 
 export type CompatibilityState = "COMPATIBLE"
+
+export interface DiscoveryLead {
+  readonly leadId: string
+  readonly parentLeadId: string | null
+  readonly sourceId: string | null
+  readonly leadType: string
+  readonly displayValue: string
+  readonly sourceUrl: string | null
+  readonly providerId: string
+  readonly depth: number
+  readonly supportingSignals: ReadonlyArray<string>
+  readonly contradictions: ReadonlyArray<string>
+  readonly confidenceMicros: number
+  readonly ownershipState: string
+  readonly temporalState: string
+  readonly reviewState: string
+  readonly expansionState: string
+}
+
+export interface DiscoveryResult {
+  readonly resultId: string
+  readonly taskId: string
+  readonly providerId: string
+  readonly rank: number
+  readonly category: string
+  readonly url: string
+  readonly title: string
+  readonly snippet: string
+  readonly observedAtUs: number
+  readonly reviewState: string
+}
 
 export interface EntityDecisionRequest {
   readonly idempotencyKey: string
@@ -195,6 +301,28 @@ export type FindingOutcome = "FOUND" | "NOT_FOUND" | "NOT_CHECKED" | "ACCESS_BLO
 export type FindingSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO"
 
 export type FindingVisibility = "PUBLICLY_ATTRIBUTABLE" | "PUBLIC_PSEUDONYMOUS" | "PRIVATELY_LINKABLE" | "HISTORICAL_RESIDUE" | "PRIVATE_ONLY" | "UNKNOWN"
+
+export type FrontierTaskState = "PLANNED" | "READY" | "QUEUED" | "RUNNING" | "SUCCEEDED_EMPTY" | "SUCCEEDED_RESULTS" | "BLOCKED" | "RATE_LIMITED" | "AUTH_REQUIRED" | "FAILED_RETRYABLE" | "FAILED_TERMINAL" | "SKIPPED" | "CANCELLED" | "REVIEW_REQUIRED" | "REVIEWED" | "SAVED"
+
+export interface FrontierTaskSummary {
+  readonly taskId: string
+  readonly leadId: string | null
+  readonly parentTaskId: string | null
+  readonly taskType: FrontierTaskType
+  readonly providerId: string
+  readonly maskedPayload: string
+  readonly priority: number
+  readonly informationGainMicros: number
+  readonly depth: number
+  readonly state: FrontierTaskState
+  readonly attemptCount: number
+  readonly retryLimit: number
+  readonly resultCount: number
+  readonly stopReason: string | null
+  readonly revision: number
+}
+
+export type FrontierTaskType = "SEARCH_WEB" | "SEARCH_PROVIDER" | "SEARCH_SITE" | "SEARCH_DOMAIN" | "SEARCH_USERNAME" | "FETCH_URL" | "PARSE_HTML" | "EXTRACT_LINKS" | "EXTRACT_IDENTIFIERS" | "QUERY_ARCHIVE" | "QUERY_GITHUB" | "QUERY_REGISTRY" | "QUERY_DNS" | "QUERY_CERTIFICATE_TRANSPARENCY" | "RUN_USERNAME_ENUMERATION" | "RUN_METADATA_EXTRACTION" | "RUN_OCR" | "HASH_IMAGE" | "COMPARE_IMAGES" | "CAPTURE_SCREENSHOT" | "CAPTURE_HTML" | "CAPTURE_DOCUMENT" | "GENERATE_QUERY_VARIANTS" | "ANALYSE_DOCUMENT" | "COMPARE_SOURCES"
 
 export interface GraphEdge {
   readonly edgeId: string
@@ -409,6 +537,25 @@ export type InvestigationPrerequisite = "EXPLICIT_SELF_AUDIT_AUTHORIZATION" | "H
 export type InvestigationProvider = "DUCKDUCKGO_HTML" | "GITHUB_USERS" | "HAVE_I_BEEN_PWNED_V3"
 
 export type InvestigationTransmission = "DIRECT_PUBLIC_QUERY" | "PARTIAL_SHA1_PREFIX" | "DIRECT_EMAIL" | "PROVIDER_VERIFIED_DOMAIN"
+
+export interface KnowledgeProposal {
+  readonly proposalId: string
+  readonly leadId: string
+  readonly entityType: string
+  readonly displayValue: string
+  readonly sourceUrl: string
+  readonly sourceSpanStart: number | null
+  readonly sourceSpanEnd: number | null
+  readonly supportingSignals: ReadonlyArray<string>
+  readonly contradictions: ReadonlyArray<string>
+  readonly confidenceMicros: number
+  readonly temporalState: string
+  readonly reviewState: string
+  readonly recommendedActions: ReadonlyArray<string>
+  readonly modelProvider: string | null
+  readonly modelId: string | null
+  readonly revision: number
+}
 
 export interface LocalAIConnectionResult {
   readonly status: LocalAIConnectionStatus
@@ -738,6 +885,66 @@ export interface PasteIntakeRequest {
   readonly consentConfirmed: boolean
   readonly retainRawSource?: boolean
   readonly semanticEnrichmentEnabled?: boolean
+}
+
+export interface PersonDetails {
+  readonly profileId: string
+  readonly displayName: string
+  readonly purpose: string
+  readonly status: string
+  readonly notes: string
+  readonly tags: ReadonlyArray<string>
+  readonly profileRevision: number
+  readonly detailsRevision: number
+  readonly identityCount: number
+  readonly sourceCount: number
+  readonly auditCount: number
+  readonly unresolvedProposalCount: number
+}
+
+export interface PersonSource {
+  readonly sourceId: string
+  readonly sourceType: SourceType
+  readonly url: string
+  readonly title: string | null
+  readonly notes: string
+  readonly relationshipState: string
+  readonly parentSourceId: string | null
+  readonly firstSeenAtUs: number
+  readonly lastCheckedAtUs?: number | null
+  readonly httpStatus?: number | null
+  readonly revision: number
+}
+
+export interface PersonSourceCreateRequest {
+  readonly profileId: string
+  readonly url: string
+  readonly sourceType?: SourceType
+  readonly title?: string | null
+  readonly notes?: string
+  readonly authorizedSelfAudit: boolean
+}
+
+export interface PersonUpdateRequest {
+  readonly profileId: string
+  readonly expectedProfileRevision: number
+  readonly expectedDetailsRevision: number
+  readonly displayName: string
+  readonly purpose: string
+  readonly notes?: string
+  readonly tags?: ReadonlyArray<string>
+}
+
+export interface PersonWorkspace {
+  readonly person: PersonDetails
+  readonly sources: ReadonlyArray<PersonSource>
+  readonly audits: ReadonlyArray<AuditSummary>
+  readonly hasMoreSources: boolean
+  readonly hasMoreAudits: boolean
+}
+
+export interface PersonWorkspaceRequest {
+  readonly profileId: string
 }
 
 export interface Phase5AttributionAssessment {
@@ -1155,6 +1362,16 @@ export interface ProfileSummary {
   readonly revision: number
 }
 
+export type ProposalDecision = "CONFIRM" | "CONFIRM_HISTORICAL" | "PROBABLE" | "SEARCH_DEEPER" | "REJECT" | "UNRELATED" | "MERGE"
+
+export interface ProposalDecisionRequest {
+  readonly profileId: string
+  readonly auditId: string
+  readonly proposalId: string
+  readonly expectedRevision: number
+  readonly decision: ProposalDecision
+}
+
 export interface ProviderCatalogRequest {
   readonly profileId: string
 }
@@ -1387,6 +1604,8 @@ export interface SessionState {
 
 export type SnapshotRunState = "COMPLETED" | "PARTIAL" | "CANCELLED" | "FAILED"
 
+export type SourceType = "WEBSITE" | "SUBPAGE" | "SOCIAL_PROFILE" | "FORUM_PROFILE" | "FORUM_THREAD" | "COMMENT" | "MEMBER_PAGE" | "GIT_REPOSITORY" | "PACKAGE_REGISTRY" | "DOCUMENT" | "PDF" | "PUBLIC_RECORD" | "ARCHIVE" | "SEARCH_RESULT" | "MEDIA" | "MANUAL_URL" | "OTHER"
+
 export interface SystemCapabilities {
   readonly versions: CapabilityVersions
   readonly transport: RuntimeTransport
@@ -1394,7 +1613,26 @@ export interface SystemCapabilities {
   readonly features: ReadonlyArray<FeatureCapability>
 }
 
+export interface TaskStateCount {
+  readonly state: FrontierTaskState
+  readonly count: number
+}
+
 export type TemporalState = "CURRENT" | "HISTORICAL" | "UNKNOWN"
+
+export interface ToolReceipt {
+  readonly receiptId: string
+  readonly taskId: string | null
+  readonly toolName: FrontierTaskType
+  readonly authorizationState: string
+  readonly executionState: string
+  readonly resultCode: string
+  readonly resultCount: number
+  readonly modelProvider: string | null
+  readonly modelId: string | null
+  readonly startedAtUs: number
+  readonly finishedAtUs: number
+}
 
 export type TransmissionPolicy = "LOCAL_ONLY" | "POLICY_CONTROLLED" | "REQUIRE_EACH_APPROVAL" | "NEVER"
 
@@ -1563,6 +1801,110 @@ export const ROUTE_CAPABILITIES = [
     "responseSchemaSha256": "c4e39b0663ca868db7b02caa233bb770d4ec5e64bb173617889f81e22f40e993",
     "revealClass": "NONE",
     "routeId": "graph.snapshot",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/audits",
+    "requestSchemaSha256": "c0ed9969659c083ee7c385217c05f082d092dd1c4c858c17f287aadd3384a8f2",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "079b2e9370078de8a72218f57405e96f79ed947a3926068f1482686725525227",
+    "revealClass": "NONE",
+    "routeId": "identity.audit.create",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/audits/control",
+    "requestSchemaSha256": "8183bf40316c203b9f9860b6d10fbe4740057c229899787ab7873adb0ef424db",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "079b2e9370078de8a72218f57405e96f79ed947a3926068f1482686725525227",
+    "revealClass": "NONE",
+    "routeId": "identity.audit.control",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/audits/detail",
+    "requestSchemaSha256": "a8ca3300b21252ff1852de4ada1f47cf37f086fe18865a0fa60f7b480abbfc86",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "079b2e9370078de8a72218f57405e96f79ed947a3926068f1482686725525227",
+    "revealClass": "NONE",
+    "routeId": "identity.audit.read",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/audits/execute",
+    "requestSchemaSha256": "a8ca3300b21252ff1852de4ada1f47cf37f086fe18865a0fa60f7b480abbfc86",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "079b2e9370078de8a72218f57405e96f79ed947a3926068f1482686725525227",
+    "revealClass": "NONE",
+    "routeId": "identity.audit.execute",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/person",
+    "requestSchemaSha256": "2c33dc78c93eb1c2b660811cad99595fb1b3813a9774550c782ad4b25de4ee75",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "f7c431faba9275898f7b35b0b1a2476a9ba9609908ff46703d7cb4865526c5ee",
+    "revealClass": "NONE",
+    "routeId": "identity.person.update",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/proposals/decision",
+    "requestSchemaSha256": "246ab2c31a93bb1f6e04ead00e28ee16c39068dfb352681124b00d00ef4b820d",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "079b2e9370078de8a72218f57405e96f79ed947a3926068f1482686725525227",
+    "revealClass": "NONE",
+    "routeId": "identity.proposal.decision",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/source",
+    "requestSchemaSha256": "b60ac2cbbabbaa3cb970c3b0924c6a47276b73e4a202236375a1bf5479ea0854",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "f7c431faba9275898f7b35b0b1a2476a9ba9609908ff46703d7cb4865526c5ee",
+    "revealClass": "NONE",
+    "routeId": "identity.source.create",
+    "scopeClass": "PROFILE"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 32768,
+    "maxResponseBytes": 4194304,
+    "method": "POST",
+    "path": "/v1/identity/workspace",
+    "requestSchemaSha256": "34ae588f8143ee43edf15341333b90af6cdb8444aeacd87f3f13530dc34956fb",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "f7c431faba9275898f7b35b0b1a2476a9ba9609908ff46703d7cb4865526c5ee",
+    "revealClass": "NONE",
+    "routeId": "identity.workspace.read",
     "scopeClass": "PROFILE"
   },
   {

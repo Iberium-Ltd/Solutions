@@ -23,6 +23,16 @@ const EntitiesPage = lazy(() =>
     default: module.EntitiesPage,
   })),
 )
+const PeoplePage = lazy(() =>
+  import('./pages/PeoplePage').then((module) => ({
+    default: module.PeoplePage,
+  })),
+)
+const IdentityAuditPage = lazy(() =>
+  import('./pages/IdentityAuditPage').then((module) => ({
+    default: module.IdentityAuditPage,
+  })),
+)
 const ToolsPage = lazy(() =>
   import('./pages/ToolsPage').then((module) => ({
     default: module.ToolsPage,
@@ -136,6 +146,8 @@ function RoutedApp() {
           <Route path="/audits/new" element={<NewAuditPage />} />
           <Route path="/audits/new/intake" element={<IntakePage />} />
           <Route path="/audits/new/entities" element={<EntitiesPage />} />
+          <Route path="/people" element={<PeoplePage />} />
+          <Route path="/identity/audits/:auditId" element={<IdentityAuditPage />} />
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/ai/workspace" element={<AIWorkspacePage />} />
           <Route path="/ai/corpus" element={<CorpusAIPage />} />

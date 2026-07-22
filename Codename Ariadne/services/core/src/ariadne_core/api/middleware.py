@@ -57,6 +57,16 @@ ROUTE_POLICIES: Final = {
     ("POST", "/v1/discovery/hibp/account"): RoutePolicy(4_096),
     ("POST", "/v1/discovery/hibp/domain"): RoutePolicy(4_096),
     ("POST", "/v1/discovery/investigation/plan"): RoutePolicy(40_960),
+    # Identity endpoints return bounded projections and accept no file bytes;
+    # the middleware enforces this cap before Pydantic or route code sees a body.
+    ("POST", "/v1/identity/workspace"): RoutePolicy(32_768),
+    ("POST", "/v1/identity/person"): RoutePolicy(32_768),
+    ("POST", "/v1/identity/source"): RoutePolicy(32_768),
+    ("POST", "/v1/identity/audits"): RoutePolicy(32_768),
+    ("POST", "/v1/identity/audits/detail"): RoutePolicy(32_768),
+    ("POST", "/v1/identity/audits/execute"): RoutePolicy(32_768),
+    ("POST", "/v1/identity/audits/control"): RoutePolicy(32_768),
+    ("POST", "/v1/identity/proposals/decision"): RoutePolicy(32_768),
     ("POST", "/v1/phase5/findings/manual"): RoutePolicy(4_096),
     ("POST", "/v1/phase5/findings/list"): RoutePolicy(512),
     ("POST", "/v1/phase5/findings/detail"): RoutePolicy(512),
@@ -84,6 +94,8 @@ RequestHandler = Callable[[Request], Awaitable[Response]]
 
 
 class LocalBoundaryMiddleware(BaseHTTPMiddleware):
+    """Authenticate and bound requests before FastAPI parses route bodies."""
+
     def __init__(
         self,
         app: ASGIApp,
@@ -101,6 +113,8 @@ class LocalBoundaryMiddleware(BaseHTTPMiddleware):
         self._logger = structlog.get_logger()
 
     async def dispatch(self, request: Request, call_next: RequestHandler) -> Response:
+        # Boundary validation precedes body parsing to cap attacker-controlled
+        # allocation and reject unknown paths, proxy headers, and replayed IDs.
         started = time.monotonic()
         request_id = self._canonical_request_id(request.headers.get(REQUEST_ID_HEADER))
         request.state.request_id = request_id

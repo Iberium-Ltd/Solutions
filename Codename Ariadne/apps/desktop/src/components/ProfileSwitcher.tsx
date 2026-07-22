@@ -4,6 +4,8 @@ import type { ProfileSummary } from '../../../../packages/contracts/src/generate
 import { listProfiles } from '../app/phase3Boundary'
 import {
   clearPhase3WorkflowMemory,
+  forgetRememberedProfile,
+  rememberedProfileId,
   usePhase3WorkflowStore,
 } from '../app/phase3WorkflowStore'
 
@@ -30,6 +32,17 @@ export function NativeProfileSwitcher() {
     void listProfiles()
       .then((result) => {
         if (cancelled) return
+        if (activeProfileId === null) {
+          const remembered = rememberedProfileId()
+          if (remembered !== null && result.profiles.some(
+            (profile) => profile.profileId === remembered &&
+              ['ACTIVE', 'DRAFT'].includes(profile.status),
+          )) {
+            setProfileId(remembered)
+            return
+          }
+          if (!result.hasMore) forgetRememberedProfile()
+        }
         if (
           activeProfileId !== null &&
           !result.profiles.some(
@@ -37,6 +50,7 @@ export function NativeProfileSwitcher() {
           ) &&
           !result.hasMore
         ) {
+          forgetRememberedProfile()
           clearPhase3WorkflowMemory()
           return
         }

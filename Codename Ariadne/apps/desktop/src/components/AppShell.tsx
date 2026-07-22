@@ -30,6 +30,7 @@ import {
   Settings2,
   ShieldCheck,
   Sun,
+  UserRound,
   Wrench,
 } from 'lucide-react'
 import * as Tooltip from '@radix-ui/react-tooltip'
@@ -51,13 +52,14 @@ const navGroups = [
     label: 'Overview',
     items: [
       { label: 'Mission Control', to: '/dashboard', icon: LayoutDashboard },
-      { label: 'New Audit', to: '/audits/new', icon: Plus },
+      { label: 'People', to: '/people', icon: UserRound },
+      { label: 'Import identifiers', to: '/audits/new', icon: Plus },
       { label: 'Operations', to: `/operations/${syntheticRun.id}`, icon: Activity },
       { label: 'Findings', to: '/findings', icon: FileSearch, count: 6 },
     ],
   },
   {
-    label: 'Explore',
+    label: 'Advanced',
     items: [
       { label: 'Discovery Console', to: '/tools', icon: Wrench },
       { label: 'AI Workspace', to: '/ai/workspace', icon: BrainCircuit },
@@ -96,6 +98,8 @@ const routeNames: Array<[RegExp, string]> = [
   [/^\/audits\/new\/intake/, 'Intake'],
   [/^\/audits\/new\/entities/, 'Entity Review'],
   [/^\/audits\/new/, 'New Audit'],
+  [/^\/identity\/audits\//, 'Identity Audit'],
+  [/^\/people/, 'People'],
   [/^\/tools/, 'Discovery Console'],
   [/^\/ai\/corpus/, 'Corpus AI'],
   [/^\/ai\/workspace/, 'AI Workspace'],
@@ -116,6 +120,8 @@ const routeNames: Array<[RegExp, string]> = [
 ]
 
 const nativeVaultRoutes = [
+  /^\/people/,
+  /^\/identity\/audits/,
   /^\/audits\/new\/intake/,
   /^\/audits\/new\/entities/,
   /^\/findings/,
@@ -391,20 +397,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             to={
               coreBoundary.state.mode === 'SIMULATED'
                 ? '/audits/new'
-                : '/audits/new/intake'
+                : '/audits/new'
             }
             className="new-audit-button"
             aria-label={
               coreBoundary.state.mode === 'SIMULATED'
                 ? 'New audit'
-                : 'Add source material'
+                : 'Import identifiers'
             }
           >
             <Plus size={17} />
             <span>
               {coreBoundary.state.mode === 'SIMULATED'
                 ? 'New audit'
-                : 'Add source'}
+                : 'Import'}
             </span>
             <kbd>⌘N</kbd>
           </Link>
