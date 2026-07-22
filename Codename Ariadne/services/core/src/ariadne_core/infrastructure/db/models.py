@@ -1,4 +1,8 @@
-"""Phase 2 foundation schema expressed as SQLAlchemy Core metadata."""
+"""Durable Ariadne schema expressed as SQLAlchemy Core metadata.
+
+Foreign keys, check constraints, append-only history, and vault/profile scoping
+repeat invariants at the storage boundary rather than trusting callers alone.
+"""
 
 from __future__ import annotations
 

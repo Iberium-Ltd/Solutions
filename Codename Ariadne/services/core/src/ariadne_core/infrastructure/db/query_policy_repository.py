@@ -1,4 +1,10 @@
-"""Encrypted persistence for Phase 4 query policy state and disclosure accounting."""
+"""Encrypted query-policy snapshots, approvals, budgets, and disclosure accounting.
+
+Planning never grants dispatch authority by itself. Immediately before a
+provider call, the caller must revalidate the snapshotted entity/provider/policy,
+reserve budget atomically, consume any one-time approval, and append the result
+to the transmission ledger.
+"""
 
 from __future__ import annotations
 
@@ -74,7 +80,12 @@ class RunContext:
 
 
 class QueryPolicyRepository:
-    """Profile-scoped state whose HMAC key is held only in mutable memory."""
+    """Profile-scoped policy state whose HMAC key exists only while unlocked.
+
+    HMACs bind a check to exact values without using those values as searchable
+    ledger identifiers. Closing the repository deliberately destroys that
+    comparison capability until the vault is unlocked with a fresh repository.
+    """
 
     def __init__(self, engine: Engine, *, policy_hmac_key: bytes | bytearray) -> None:
         if len(policy_hmac_key) != 32:
@@ -184,6 +195,7 @@ class QueryPolicyRepository:
         policy: ProviderPolicy,
         budget: RunBudget,
     ) -> str:
+        """Snapshot policy and budget; creating a run performs no transmission."""
         if (
             not purpose_code
             or len(purpose_code) > 96
@@ -368,6 +380,7 @@ class QueryPolicyRepository:
         run_id: str,
         checks: tuple[CompiledCheck, ...],
     ) -> tuple[StoredCheck, ...]:
+        """Persist a reviewable plan, including the entity revision it evaluated."""
         timestamp = now_us()
         with self.engine.begin() as connection:
             for check in checks:
@@ -436,6 +449,7 @@ class QueryPolicyRepository:
         provider: ProviderMetadata,
         policy: ProviderPolicy,
     ) -> bool:
+        """Reject dispatch when any planned input or policy fact has gone stale."""
         with self.engine.connect() as connection:
             run = (
                 connection.execute(
@@ -515,7 +529,11 @@ class QueryPolicyRepository:
         run_id: str,
         provider_id: str,
     ) -> bool:
-        """Atomically reserve both run and provider budgets before dispatch."""
+        """Atomically reserve both run and provider budgets before dispatch.
+
+        The reservation is intentionally spent before network I/O. A crash may
+        consume capacity, but can never make an unaccounted extra disclosure.
+        """
 
         timestamp = now_us()
         with self.engine.connect() as connection:
@@ -612,6 +630,7 @@ class QueryPolicyRepository:
         check_id: str,
         ttl_us: int,
     ) -> OneTimeApproval:
+        """Bind a short-lived bearer token to one immutable check snapshot."""
         if not 1_000_000 <= ttl_us <= 3_600_000_000:
             raise ValueError("approval lifetime is outside the allowed range")
         check = self.get_check(vault_id, profile_id, run_id, check_id)
@@ -650,6 +669,7 @@ class QueryPolicyRepository:
         check_id: str,
         token: str,
     ) -> bool:
+        """Consume approval once with a conditional update safe under races."""
         check = self.get_check(vault_id, profile_id, run_id, check_id)
         timestamp = now_us()
         token_hmac = self._hmac("approval-token", token)
@@ -721,6 +741,7 @@ class QueryPolicyRepository:
         verdict: str,
         result_code: str,
     ) -> LedgerRecord:
+        """Record the attempted disclosure outcome without its raw payload."""
         record_id = str(uuid7())
         jurisdiction = (
             "LOCAL" if not provider.external else ",".join(sorted(provider.processing_regions))

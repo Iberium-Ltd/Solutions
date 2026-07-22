@@ -1,3 +1,10 @@
+/**
+ * Bounded public-discovery command boundary.
+ *
+ * Search results are transient, review-required observations. They become
+ * durable findings/evidence only through the separate, profile-scoped capture
+ * command, which preserves the exact URL and query reference.
+ */
 export type PublicDiscoveryProvider =
   | 'DUCKDUCKGO_HTML'
   | 'GITHUB_USERS'

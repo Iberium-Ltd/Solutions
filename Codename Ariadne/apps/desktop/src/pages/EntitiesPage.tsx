@@ -1,3 +1,4 @@
+/** Human-review gate for extracted entities, policy, temporal state, and provenance. */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {

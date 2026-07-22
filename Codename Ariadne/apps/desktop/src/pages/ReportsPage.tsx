@@ -1,3 +1,4 @@
+/** Local report generation with redacted default and approval-gated full output. */
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Clipboard, Download, FileText, ShieldAlert } from 'lucide-react'
 import { nativeRuntimeAvailable } from '../app/coreBoundary'

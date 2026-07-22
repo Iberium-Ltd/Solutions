@@ -1,4 +1,8 @@
-"""Evidence artifact service and non-durable in-memory conformance storage."""
+"""Evidence artifact service and non-durable in-memory conformance storage.
+
+Original bytes are immutable and derivatives point back to their source. The
+in-memory store is a port conformance aid, not the production evidence ledger.
+"""
 
 from __future__ import annotations
 

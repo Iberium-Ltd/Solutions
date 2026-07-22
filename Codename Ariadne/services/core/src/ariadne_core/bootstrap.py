@@ -1,4 +1,8 @@
-"""Fail-closed parsing for the one-shot sidecar bootstrap channel."""
+"""Fail-closed parsing for the one-shot sidecar bootstrap channel.
+
+The payload is read once from a bounded private pipe, has a closed schema, and
+is discarded after establishing the launch session; it is never accepted via argv.
+"""
 
 from __future__ import annotations
 

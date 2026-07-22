@@ -1,3 +1,4 @@
+/** Review workspace for bounded, source-cited deterministic or optional AI analysis. */
 import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,

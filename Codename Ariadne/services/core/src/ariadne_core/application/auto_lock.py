@@ -1,4 +1,8 @@
-"""Deterministic auto-lock policy; the shell owns sleep/background notifications."""
+"""Deterministic auto-lock policy; the shell owns sleep/background notifications.
+
+This controller decides when to lock from monotonic activity timestamps; the
+native shell performs key revocation and platform event integration.
+"""
 
 from __future__ import annotations
 

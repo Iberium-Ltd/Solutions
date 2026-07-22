@@ -1,3 +1,7 @@
+/**
+ * Pure advanced-query composer and browser URL builder. It produces visible,
+ * user-mediated handoffs and makes no request or persistence decision itself.
+ */
 export type SearchEngineId =
   | 'GOOGLE'
   | 'BING'

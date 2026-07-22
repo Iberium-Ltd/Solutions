@@ -1,4 +1,8 @@
-"""Authenticated, server-owned query planning and network-free dry-run execution."""
+"""Authenticated, server-owned query planning and network-free dry-run execution.
+
+The service compiles policy-bound checks and simulates dispatch eligibility;
+neither operation contacts an external provider or consumes remote approval.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,8 @@
-"""Authenticated Phase 3 intake and identity application boundary."""
+"""Authenticated Phase 3 intake and identity application boundary.
+
+Preparation is kept separate from the atomic repository compilation so source,
+candidate, origin, decision, and graph projections cannot be partially stored.
+"""
 
 from __future__ import annotations
 

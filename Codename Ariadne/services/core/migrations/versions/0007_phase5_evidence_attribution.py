@@ -29,6 +29,8 @@ _NEGATIVE_SIGNALS = (
 
 
 def _immutable(table: str) -> None:
+    # Corrections are new derivatives, assessments, or decisions. Database
+    # triggers ensure no repository or maintenance path can rewrite an original.
     op.execute(
         f"CREATE TRIGGER trg_{table}_immutable_update "
         f"BEFORE UPDATE ON {table} BEGIN "

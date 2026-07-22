@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Stage only an already-inspected freezer artifact into Tauri's ignored binary
+# directory, then compare digests. Staging is a copy boundary, never a rebuild or
+# a reason to trust an older binary with the same filename.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -37,4 +40,3 @@ staged_sha256="$(shasum -a 256 "$DESTINATION" | awk '{print $1}')"
 printf 'Tauri sidecar staging passed\n'
 printf 'DESTINATION=%s\n' "$DESTINATION"
 printf 'SHA256=%s\n' "$staged_sha256"
-

@@ -1,4 +1,9 @@
-"""Atomic encrypted retention for reviewed public-discovery results."""
+"""Atomic encrypted retention for reviewed public-discovery results.
+
+One transaction creates the finding, neutral attribution assessment, immutable
+URL-reference artifact, and link. URL-hash deduplication accepts only equivalent
+replays and never hides a conflicting source under an existing identity.
+"""
 
 from __future__ import annotations
 
@@ -82,7 +87,7 @@ class StoredPublicDiscoveryCapture:
 
 
 class PublicDiscoveryCaptureRepository:
-    """Write a finding, neutral assessment, URL artifact, and link in one transaction."""
+    """Write a reviewed result and exact person/source binding atomically."""
 
     def __init__(self, engine: Engine, *, vault_id: str, profile_id: str) -> None:
         validate_opaque_id(vault_id, "vault id")

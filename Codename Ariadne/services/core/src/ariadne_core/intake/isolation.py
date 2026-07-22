@@ -5,7 +5,8 @@ in the parent.  Only a cleared :class:`DecodedSource` crosses the anonymous
 process pipe; source material is never placed in process arguments, argv, or
 environment variables.  The child has no network API, applies operating-system
 resource limits where the platform supports them, and returns a bounded JSON
-result containing no exception text.
+result containing no exception text.  The parent treats that result as an
+untrusted wire message and revalidates its complete shape before use.
 """
 
 from __future__ import annotations
@@ -396,6 +397,8 @@ def _encode_request(request: _ClearedRequest) -> bytes:
 
 
 def _run_spawned_worker(payload: bytes, limits: IsolationLimits) -> ParsedSource:
+    """Run exactly one bounded parse and always terminate, reap, and validate its child."""
+
     context = multiprocessing.get_context("spawn")
     request_receiver, request_sender = context.Pipe(duplex=False)
     receiver, sender = context.Pipe(duplex=False)
@@ -506,6 +509,8 @@ def _worker_entry(
     result_sender: Connection,
     limits: IsolationLimits,
 ) -> None:
+    """Apply resource and network restrictions before decoding the cleared request."""
+
     try:
         _apply_child_resource_limits(limits)
         _disable_child_network()

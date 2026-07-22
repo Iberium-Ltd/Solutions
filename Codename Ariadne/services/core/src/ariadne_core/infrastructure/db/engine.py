@@ -1,4 +1,9 @@
-"""SQLAlchemy engine creation over a verified SQLCipher DB-API connection."""
+"""SQLAlchemy engine creation over a verified SQLCipher DB-API connection.
+
+Every connection is keyed and feature-checked before SQLAlchemy receives it.
+Existing vault opens also pin device/inode across validation and connection so a
+path replacement cannot redirect an unlock to a different database.
+"""
 
 from __future__ import annotations
 
@@ -164,6 +169,7 @@ class SqlcipherEngineFactory:
     must_exist: bool = False
 
     def _connect(self) -> Any:
+        """Open, key, verify, and permission the exact database object."""
         driver = _load_driver()
         expected_identity: tuple[int, int] | None = None
         if self.must_exist:

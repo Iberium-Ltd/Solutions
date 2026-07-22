@@ -10,10 +10,12 @@ type Phase3WorkflowState = {
 }
 
 /**
- * Ephemeral navigation state for the native intake workflow.
+ * Ephemeral navigation capabilities for the native intake workflow.
  *
  * This store deliberately has no persistence middleware: only opaque identifiers
- * live here, and they disappear when the webview is reloaded or closed.
+ * live here, and they disappear when the webview is reloaded or closed. Durable
+ * person knowledge and audit/frontier state belong to the encrypted core; this
+ * store must never become an alternate source of truth for recoverable work.
  */
 export const usePhase3WorkflowStore = create<Phase3WorkflowState>((set) => ({
   profileId: null,

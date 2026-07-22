@@ -28,6 +28,8 @@ def migration_config() -> Config:
 
 
 def upgrade_to_head(engine: Engine) -> None:
+    # The caller supplies an already keyed and verified SQLCipher engine. Alembic
+    # must never open an independent URL that could fall back to plaintext SQLite.
     config = migration_config()
     with engine.begin() as connection:
         config.attributes["connection"] = connection

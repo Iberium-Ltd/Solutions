@@ -1,3 +1,8 @@
+//! Tauri composition root and the renderer's native command allowlist.
+//!
+//! Commands delegate to `CoreSupervisor`; they do not expose an arbitrary HTTP,
+//! filesystem, or process bridge. Vault lifecycle and key custody remain native.
+
 mod core;
 mod external_urls;
 mod platform;
@@ -429,6 +434,7 @@ async fn core_generate_local_report(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // State is constructed once here so every command shares one supervised core.
     let activity = AppActivity::default();
     let setup_activity = activity.clone();
     let application = tauri::Builder::default()

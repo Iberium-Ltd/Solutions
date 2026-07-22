@@ -1,3 +1,4 @@
+/** Developer-visible UI state catalog for empty, failure, blocked, and accessibility cases. */
 import { useEffect, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {

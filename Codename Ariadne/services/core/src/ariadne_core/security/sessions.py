@@ -1,4 +1,9 @@
-"""Per-launch authentication and bounded request replay protection."""
+"""Per-launch authentication and bounded request replay protection.
+
+Only the launch-token digest is retained. Request IDs are single-use within a
+bounded monotonic window, preventing an authenticated local request from being
+replayed while avoiding an unbounded in-memory history.
+"""
 
 from __future__ import annotations
 
@@ -109,6 +114,7 @@ class LaunchSession:
         return self._expires_monotonic is not None and time.monotonic() >= self._expires_monotonic
 
     def authenticate(self, supplied_token: str | None) -> bool:
+        """Compare fixed-size digests and clear decoded credential bytes promptly."""
         if supplied_token is None or self.is_expired():
             return False
         try:

@@ -1,3 +1,9 @@
+//! Small operating-system adapter for browser handoff and lock-relevant events.
+//!
+//! Platform notifications do not mutate vault state directly; they request the
+//! supervisor's normal lock path so key revocation and sidecar shutdown remain
+//! centralized.
+
 #[cfg(target_os = "macos")]
 mod macos {
     use std::ptr::NonNull;
@@ -31,6 +37,7 @@ mod macos {
     }
 
     impl PlatformSecurityObservers {
+        /// Retain observation tokens for exactly the lifetime of the application state.
         pub fn install(supervisor: CoreSupervisor) -> Self {
             let workspace = NSWorkspace::sharedWorkspace();
             let center = workspace.notificationCenter();

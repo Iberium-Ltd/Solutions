@@ -1,3 +1,4 @@
+/** Legacy/synthetic finding detail retained for browser-preview conformance. */
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {

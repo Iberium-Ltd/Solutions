@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Reproduce the development core environment, install the inspected SQLCipher
+# driver, and prove mutable-buffer key support before any local test is run.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

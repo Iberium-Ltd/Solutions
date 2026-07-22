@@ -1,4 +1,9 @@
-"""Compose safe decoding, quarantine, extraction, and semantic enrichment."""
+"""Compose safe decoding, quarantine, extraction, and semantic enrichment.
+
+The order is a security and provenance invariant: decode, quarantine, parse in
+isolation, extract deterministically, then propose semantics.  Optional model
+suggestions are attached later as review-only, source-grounded candidates.
+"""
 
 from __future__ import annotations
 
@@ -196,6 +201,8 @@ def _prepare(
     display_name: str,
     semantic_enrichment_enabled: bool,
 ) -> PreparedIntake:
+    """Build one review package without persisting or dispatching source content."""
+
     deterministic = compile_text(source.text, limits=PHASE3_EXTRACTION_LIMITS)
     redacted_source = replace(source, text=deterministic.redacted_text)
     structured_gate = _StructuredGate(source.source_format)

@@ -1,3 +1,4 @@
+/** Shared navigation and vault-state shell; route content owns domain operations. */
 import { Fragment, useEffect, useRef, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'

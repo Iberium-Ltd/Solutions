@@ -17,6 +17,9 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # This explicit list is the foundation boundary, not every table currently
+    # present in shared metadata. Later features must remain owned by their own
+    # forward migration and cannot appear in a fresh vault accidentally.
     bind = op.get_bind()
     foundation_tables = (
         "vaults",

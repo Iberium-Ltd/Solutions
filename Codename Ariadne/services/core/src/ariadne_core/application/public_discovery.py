@@ -1,4 +1,9 @@
-"""Credential-free public-search adapters with a strict outbound HTTP boundary."""
+"""Credential-free public-search adapters with a strict outbound HTTP boundary.
+
+Each adapter owns an allowlisted HTTPS host and one bounded request shape.
+Redirects, proxies, cookies, credentials, challenge bypass, and arbitrary fetches
+are excluded so adding a provider cannot accidentally create a generic scraper.
+"""
 
 from __future__ import annotations
 
@@ -160,6 +165,8 @@ class UrllibPublicDiscoveryTransport:
         )
 
     def send(self, request: PublicDiscoveryHttpRequest) -> PublicDiscoveryHttpResponse:
+        # Validate at the last possible boundary as well as construction time;
+        # injected transports and future adapters must not weaken host binding.
         validate_bound_https_url(request.url, expected_host=request.bound_host)
         wire_request = urllib.request.Request(
             request.url,
@@ -375,7 +382,11 @@ class GitHubPublicUserAdapter:
 
 
 class PublicDiscoveryService:
-    """Stateless provider router; deliberately performs no persistence or logging."""
+    """Stateless provider router; deliberately performs no persistence or logging.
+
+    Saving a reviewed result is a separate profile-scoped command. This keeps a
+    search response from becoming evidence merely because an adapter returned it.
+    """
 
     def __init__(
         self,
@@ -495,6 +506,7 @@ def _preflight(
     request: PublicDiscoveryRequest,
     provider: PublicDiscoveryProvider,
 ) -> PublicDiscoveryResponse | None:
+    """Return a truthful non-request outcome when authorization forbids dispatch."""
     if request.provider is not provider:
         raise ValueError("public discovery provider binding is invalid")
     if not request.authorized_self_audit:
@@ -541,6 +553,8 @@ def _failure(
     state: PublicDiscoveryState = PublicDiscoveryState.FAILED,
     rate_limit_remaining: int | None = None,
 ) -> PublicDiscoveryResponse:
+    # A transport attempt remains distinguishable from a preflight refusal. This
+    # distinction feeds honest provider coverage and later retry planning.
     return PublicDiscoveryResponse(
         provider=request.provider,
         state=state,

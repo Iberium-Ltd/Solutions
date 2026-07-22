@@ -162,6 +162,8 @@ def _write_manifest(path: Path, manifest: VaultManifest) -> None:
 
 
 class VaultManager:
+    """Own the only live SQLCipher engine and clear key material on lock."""
+
     def __init__(self, root: Path, custodian: KeyCustodian | None = None) -> None:
         self.root = root
         self.custodian = custodian
@@ -205,7 +207,11 @@ class VaultManager:
 
     @contextmanager
     def borrow_subkey(self, purpose: VaultSubkeyPurpose) -> Iterator[bytearray]:
-        """Derive one purpose-bound working key and clear it after use."""
+        """Derive one purpose-bound working key and clear it after use.
+
+        Purpose separation prevents an HMAC or fingerprint from one subsystem
+        becoming a valid token in another subsystem even within the same vault.
+        """
 
         key, manifest = self._key, self._manifest
         if key is None or manifest is None or self._engine is None:

@@ -1,3 +1,4 @@
+/** Operational job/progress presentation with explicit pause, resume, and cancel controls. */
 import { useMemo, useState } from 'react'
 import {
   AlertTriangle,

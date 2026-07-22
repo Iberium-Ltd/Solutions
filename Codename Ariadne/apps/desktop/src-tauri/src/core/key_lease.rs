@@ -1,3 +1,9 @@
+//! One-operation key transfer from macOS custody to the supervised core.
+//!
+//! Key bytes never use argv, environment variables, HTTP, or the webview. The
+//! fixed-size authenticated handshake binds one key grant to the startup nonce,
+//! manifest, vault, transaction, and operation, then zeroizes transient frames.
+
 #![allow(
     dead_code,
     reason = "the standalone key-lease protocol is integrated in the next vault command slice"
@@ -22,6 +28,8 @@ use zeroize::Zeroizing;
 use crate::security::key_custody::{KeyMaterial, KeyReference};
 
 pub(crate) const KEY_LEASE_CHILD_FD: RawFd = 198;
+// The inherited descriptor number is part of the bootstrap protocol, not a
+// reusable secret. Possession alone is insufficient without the nonce/binding.
 pub(crate) const KEY_LEASE_PROTOCOL_VERSION: u8 = 1;
 pub(crate) const MAX_KEY_LEASE_FRAME_BYTES: usize = 256;
 pub(crate) const HELLO_TIMEOUT: Duration = Duration::from_secs(30);

@@ -1,4 +1,8 @@
-"""Side-effect-free application service for audit snapshot comparison."""
+"""Side-effect-free application service for audit snapshot comparison.
+
+Snapshots are immutable inputs, making the same baseline/current pair produce
+the same changes without altering either audit run.
+"""
 
 from __future__ import annotations
 

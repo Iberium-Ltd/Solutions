@@ -1,3 +1,7 @@
+/**
+ * Browser-side boundary for ephemeral corpus reasoning. Documents and results
+ * are size-bounded and shape-checked; citations reference the supplied corpus.
+ */
 export type LocalCorpusMediaType =
   | 'text/plain'
   | 'text/markdown'

@@ -1,4 +1,8 @@
-"""Key-custody ports; production custody is mediated by the macOS shell."""
+"""Key-custody ports; production custody is mediated by the macOS shell.
+
+Persisted state contains opaque references only. A key is borrowed for one
+bounded operation and mutable copies are erased when the lease exits.
+"""
 
 from __future__ import annotations
 

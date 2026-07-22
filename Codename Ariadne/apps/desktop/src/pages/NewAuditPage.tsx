@@ -1,3 +1,4 @@
+/** Entry surface for selecting or naming a persistent profile before a new run. */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {

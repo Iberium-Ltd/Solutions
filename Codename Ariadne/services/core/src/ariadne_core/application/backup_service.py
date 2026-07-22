@@ -28,6 +28,8 @@ class BackupResult:
 
 
 class BackupService:
+    """Reserve nonce/accounting state before writing and verify before success."""
+
     def __init__(
         self,
         *,
@@ -40,6 +42,8 @@ class BackupService:
         self.file_broker = file_broker
 
     def create(self, file_broker_token: str) -> BackupResult:
+        # Reserve the nonce durably before encryption. Even a failed attempt may
+        # not reuse it with the same backup key version.
         manifest = self.vault.manifest
         destination = self.file_broker.consume(file_broker_token, BrokerOperation.BACKUP_WRITE)
         record_id = str(uuid7())

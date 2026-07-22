@@ -1,3 +1,9 @@
+//! Closed Rust representation of the authenticated UI-to-core contract.
+//!
+//! The webview cannot choose an arbitrary method or path. Every command maps
+//! through [`CoreRoute`] to generated capability metadata, and response types
+//! reject unknown fields so contract drift fails closed at the shell boundary.
+
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
@@ -243,6 +249,9 @@ pub(super) enum CoreRoute {
 }
 
 impl CoreRoute {
+    // Route IDs, methods, paths, lock state, authorization class, and byte
+    // limits must agree with the generated allowlist. This hand-written enum
+    // gives commands exhaustive dispatch without becoming a generic proxy.
     const fn route_id(self) -> &'static str {
         match self {
             Self::Capabilities => "system.capabilities.read",

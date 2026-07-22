@@ -1,3 +1,4 @@
+/** Persistent profile selector backed by the Phase 3 core boundary and workflow store. */
 import { useEffect, useMemo, useState } from 'react'
 import type { ProfileSummary } from '../../../../packages/contracts/src/generated/api'
 import { listProfiles } from '../app/phase3Boundary'

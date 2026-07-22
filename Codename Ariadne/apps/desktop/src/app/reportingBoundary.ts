@@ -1,3 +1,7 @@
+/**
+ * Bounded local-report boundary. Full exports require an explicit approval ID;
+ * returned manifests and artifacts are verified before a save capability is used.
+ */
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 const SHA256_PATTERN = /^[0-9a-f]{64}$/

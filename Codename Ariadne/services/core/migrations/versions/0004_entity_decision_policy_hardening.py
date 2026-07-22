@@ -1,5 +1,9 @@
 """Harden entity decision history and policy invariants.
 
+Database triggers mirror the application policy so rejected/excluded or highly
+sensitive entities cannot become searchable through another write path, while
+decision history retains complete before/after values for local auditability.
+
 Revision ID: 0004_decision_policy
 Revises: 0003_intake_identity_graph
 """
@@ -98,6 +102,8 @@ def _create_policy_trigger(*, name: str, timing: str, table: str, invalid: str) 
 
 
 def upgrade() -> None:
+    """Add immutable policy context and enforce it on entities and decision history."""
+
     bind = op.get_bind()
     known_columns = {
         str(column["name"]) for column in sa.inspect(bind).get_columns("entity_decisions")

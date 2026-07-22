@@ -1,3 +1,8 @@
+//! Final native boundary for opening user-mediated HTTPS destinations.
+//!
+//! Renderer validation is defense in depth; this module independently accepts
+//! only canonical fixed portals, bounded search URLs, and HIBP breach pages.
+
 use reqwest::Url;
 
 const MAX_EXTERNAL_URL_BYTES: usize = 8_192;
@@ -17,6 +22,7 @@ const FIXED_PORTALS: &[&str] = &[
 ];
 
 pub(crate) fn open_external_url(value: &str) -> Result<(), ExternalUrlError> {
+    // Pass only the canonical URL returned by the closed allowlist validator.
     let url = validate_external_url(value)?;
     if crate::platform::open_external_url(url.as_str()) {
         Ok(())

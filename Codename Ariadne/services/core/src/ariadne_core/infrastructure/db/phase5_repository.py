@@ -1,4 +1,10 @@
-"""Durable profile-scoped Phase 5 evidence and attribution persistence."""
+"""Durable profile-scoped evidence and explainable attribution persistence.
+
+An original capture is immutable and content-addressed; redaction creates a
+derivative rather than editing history. Findings, assessments, and human
+decisions retain separate revisions so later interpretation cannot rewrite what
+was captured or what supported an earlier conclusion.
+"""
 
 from __future__ import annotations
 
@@ -79,7 +85,7 @@ def _require_encrypted_profile(engine: Engine, vault_id: str, profile_id: str) -
 
 
 class Phase5EvidenceRepository:
-    """Store immutable evidence bytes inside the already-open SQLCipher vault."""
+    """Store immutable originals, derivatives, and links in one person's vault."""
 
     def __init__(
         self,
@@ -167,6 +173,7 @@ class Phase5EvidenceRepository:
         return None if row is None else self._derivative(row)
 
     def insert_original(self, artifact: EvidenceArtifactOriginal) -> None:
+        """Insert an original or accept only a byte-identical idempotent replay."""
         with self.engine.begin() as connection:
             if self._has_id(connection, artifact.artifact_id):
                 raise DuplicateEvidenceId("evidence artifact id already exists")
@@ -220,6 +227,7 @@ class Phase5EvidenceRepository:
                 ) from error
 
     def insert_derivative(self, derivative: RedactedEvidenceDerivative) -> None:
+        """Persist redaction as a child artifact; never modify the original."""
         with self.engine.begin() as connection:
             if self._has_id(connection, derivative.derivative_id):
                 raise DuplicateEvidenceId("evidence artifact id already exists")
@@ -433,6 +441,7 @@ class Phase5EvidenceRepository:
             )
 
     def verify_original(self, artifact_id: str) -> EvidenceIntegrityResult:
+        """Compare stored metadata and ciphertext hashes without changing evidence."""
         with self.engine.connect() as connection:
             row = self._original_row(connection, artifact_id)
         if row is None:
@@ -718,7 +727,7 @@ class AttributionRevisionConflict(RuntimeError):
 
 
 class Phase5AttributionRepository:
-    """Persist immutable finding projections, assessments, and human decisions."""
+    """Persist findings and append-only, evidence-backed attribution history."""
 
     def __init__(self, engine: Engine, *, vault_id: str, profile_id: str) -> None:
         _require_encrypted_profile(engine, vault_id, profile_id)
@@ -778,6 +787,7 @@ class Phase5AttributionRepository:
         assessment: AttributionAssessment,
         assessed_at_us: int,
     ) -> tuple[StoredFinding, StoredAttributionAssessment]:
+        """Create the first finding and neutral assessment in one transaction."""
         """Atomically create one manual finding and its neutral initial assessment."""
 
         validate_opaque_id(assessment_id, "attribution assessment id")
@@ -977,6 +987,7 @@ class Phase5AttributionRepository:
         assessment: AttributionAssessment,
         assessed_at_us: int,
     ) -> StoredAttributionAssessment:
+        """Append an assessment only after every cited evidence link is verified."""
         validate_opaque_id(assessment_id, "attribution assessment id")
         validate_opaque_id(assessment.case_id, "attribution finding id")
         validate_timestamp(assessed_at_us, "attribution assessment time")
@@ -1127,6 +1138,7 @@ class Phase5AttributionRepository:
         decision: HumanAttributionDecision,
         expected_previous_decision_id: str | None,
     ) -> StoredAttributionDecision:
+        """Append a human decision; never overwrite the assessment it reviewed."""
         validate_opaque_id(decision_id, "attribution decision id")
         validate_opaque_id(assessment_id, "attribution assessment id")
         if expected_previous_decision_id is not None:

@@ -1,4 +1,8 @@
-"""Bounded projection and review-only local analysis of profile or document data."""
+"""Bounded projection and review-only local analysis of profile or document data.
+
+The service constructs a source catalog first and accepts model statements only
+as cited, reviewable output; it never writes conclusions into canonical facts.
+"""
 
 from __future__ import annotations
 

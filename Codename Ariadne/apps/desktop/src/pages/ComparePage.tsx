@@ -1,3 +1,4 @@
+/** Immutable baseline/current audit comparison with explicit local checkpoints. */
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   AlertTriangle,

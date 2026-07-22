@@ -1,3 +1,7 @@
+/**
+ * Renderer contract for provider catalogs, plans, and local dry runs. Planning
+ * and execution stay separate, and all native payloads are decoded fail-closed.
+ */
 import type {
   ProviderCatalogRequest,
   ProviderCatalogResult,

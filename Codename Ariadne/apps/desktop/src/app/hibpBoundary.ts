@@ -1,3 +1,7 @@
+/**
+ * Runtime contract for explicit HIBP self-audit calls. Requests are validated
+ * before invocation and native responses are treated as untrusted data.
+ */
 export type HibpAccountMode = 'K_ANONYMITY' | 'DIRECT'
 export type HibpState =
   | 'NOT_CHECKED'

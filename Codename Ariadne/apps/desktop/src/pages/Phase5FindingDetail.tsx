@@ -1,3 +1,4 @@
+/** Durable finding review: immutable evidence, attribution history, and remediation handoff. */
 import {
   type ChangeEvent,
   type FormEvent,

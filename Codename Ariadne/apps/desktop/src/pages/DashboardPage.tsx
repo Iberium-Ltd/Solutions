@@ -1,3 +1,4 @@
+/** Workspace overview and navigation into the auditable workflow surfaces. */
 import { Link } from 'react-router-dom'
 import {
   AlertTriangle,

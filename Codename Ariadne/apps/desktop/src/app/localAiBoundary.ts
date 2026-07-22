@@ -1,3 +1,9 @@
+/**
+ * Runtime validation for local-model settings and discovery responses.
+ *
+ * Loopback checks here improve UI feedback; the Rust and Python boundaries must
+ * independently enforce them because webview validation grants no authority.
+ */
 import type {
   LocalAIConnectionResult,
   LocalAIEndpointRequest,

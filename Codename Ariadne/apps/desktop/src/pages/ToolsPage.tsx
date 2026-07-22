@@ -1,3 +1,4 @@
+/** Optional authorised research tools kept outside the primary audit workflow. */
 import { useEffect, useMemo, useState } from 'react'
 import {
   Archive,

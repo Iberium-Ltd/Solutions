@@ -1,3 +1,4 @@
+/** Local preferences, vault controls, and explicit optional-model configuration. */
 import { useEffect, useState } from 'react'
 import {
   Bot,

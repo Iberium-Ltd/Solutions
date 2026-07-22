@@ -1,3 +1,4 @@
+/** User-mediated portal metadata; entries are navigation aids, not automations. */
 export type ManualResearchPortalCategory =
   | 'BREACH_AWARENESS'
   | 'PEOPLE_SEARCH'

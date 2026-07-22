@@ -895,7 +895,12 @@ class _OpenAICompatibleAdapter:
 
 
 class LocalAIClient:
-    """Disabled-by-default provider-neutral local inference facade."""
+    """Disabled-by-default provider-neutral local inference facade.
+
+    Provider JSON is untrusted even on loopback. Adapters constrain its shape,
+    then grounding code independently proves offsets and citations before any
+    suggestion can cross into the review layer.
+    """
 
     def __init__(
         self,
@@ -1055,7 +1060,12 @@ class LocalAIClient:
 
 
 class OpenAIResponsesClient:
-    """One-shot official Responses API analysis with ephemeral caller credentials."""
+    """One-shot remote analysis with ephemeral credentials and aliased citations.
+
+    This explicit path never acts as a fallback for a failed local runtime. The
+    request disables provider storage, and source-reference aliases are mapped
+    back only after the structured response passes the same citation checks.
+    """
 
     def __init__(
         self,
@@ -1228,6 +1238,8 @@ def _deduplicated(values: list[str]) -> tuple[str, ...]:
 
 
 def _messages(redacted_text: str) -> list[dict[str, str]]:
+    # Delimit source text as data in addition to instructing the model. The
+    # deterministic grounding pass below remains the actual trust boundary.
     return [
         {"role": "system", "content": _SYSTEM_INSTRUCTION},
         {
@@ -1377,6 +1389,7 @@ def _validated_workspace_analysis(
     engine_version: str,
     reference_remap: Mapping[str, str] | None = None,
 ) -> LocalAIWorkspaceAnalysis:
+    """Admit only schema-valid output whose citations came from the input catalog."""
     output = _WorkspaceModelOutput.model_validate_json(content)
     allowed = frozenset(request.allowed_reference_ids)
     if reference_remap is not None and frozenset(reference_remap) != allowed:
@@ -1500,6 +1513,7 @@ def _ground_output(
     output: _ModelOutput,
     redacted_text: str,
 ) -> tuple[tuple[LocalEntitySuggestion, ...], tuple[LocalRelationshipSuggestion, ...]]:
+    """Prove model spans against source text before creating review suggestions."""
     entities: list[LocalEntitySuggestion] = []
     for entity in output.entities:
         if (

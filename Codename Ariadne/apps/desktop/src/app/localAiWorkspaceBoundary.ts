@@ -1,3 +1,7 @@
+/**
+ * Strict decoder for optional AI workspace results. Model-derived content must
+ * remain bounded, typed, review-only, and linked to validated source references.
+ */
 import type {
   LocalAIWorkspaceRequest,
   LocalAIWorkspaceResult,

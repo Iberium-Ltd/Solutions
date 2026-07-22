@@ -1,3 +1,8 @@
+//! Fail-closed idle-lock policy driven by macOS activity when available.
+//!
+//! Focus is only a fallback signal: an unfocused window is not automatically an
+//! idle user, and focus changes must never destroy durable core work.
+
 use std::{
     sync::{
         Arc,

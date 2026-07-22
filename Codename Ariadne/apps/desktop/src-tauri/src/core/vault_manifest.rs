@@ -1,3 +1,9 @@
+//! Canonical, non-secret vault manifest validation.
+//!
+//! The manifest binds opaque Keychain references and database identity. Reads
+//! reject symlinks, wrong ownership/mode, non-canonical JSON, or a missing
+//! encrypted database so unlock can never silently create a replacement vault.
+
 use std::{
     fmt,
     fs::{self, File, OpenOptions},
@@ -23,7 +29,8 @@ const DATABASE_FILENAME: &str = "vault.db";
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct WireManifest {
-    // Declaration order is the version-1 canonical JSON key order.
+    // Declaration order is the version-1 canonical JSON key order and therefore
+    // part of the digest contract. Reordering fields requires a format version.
     backup_key_ref: String,
     database_key_ref: String,
     database_key_version: u32,

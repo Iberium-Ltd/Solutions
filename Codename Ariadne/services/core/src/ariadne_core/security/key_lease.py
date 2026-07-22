@@ -1,4 +1,8 @@
-"""Anonymous, one-operation vault-key lease protocol for the packaged sidecar."""
+"""Anonymous, one-operation vault-key lease protocol for the packaged sidecar.
+
+The inherited socket, peer/process binding, strict frame sequence, transcript
+authentication, and commit handshake constrain a grant to one database action.
+"""
 
 from __future__ import annotations
 

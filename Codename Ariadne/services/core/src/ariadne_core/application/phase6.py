@@ -1,4 +1,8 @@
-"""Application boundary for durable Phase 6 monitoring and local remediation."""
+"""Application boundary for durable Phase 6 monitoring and local remediation.
+
+Checkpoints are explicit local snapshots; comparisons and remediation updates
+preserve run identity and revision history rather than rewriting prior state.
+"""
 
 from __future__ import annotations
 

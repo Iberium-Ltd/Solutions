@@ -1,3 +1,4 @@
+/** Evidence-backed identity graph projection; visual edges do not create facts. */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import cytoscape from 'cytoscape'

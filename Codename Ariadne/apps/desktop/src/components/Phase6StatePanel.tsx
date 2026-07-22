@@ -1,3 +1,4 @@
+/** Closed set of Phase 6 loading/empty/error/comparison states. */
 import {
   DatabaseZap,
   GitCompareArrows,

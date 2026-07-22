@@ -1,3 +1,4 @@
+/** Prototype presentation of impersonation signals and locally drafted actions. */
 import { useEffect, useState } from 'react'
 import {
   AlertTriangle,

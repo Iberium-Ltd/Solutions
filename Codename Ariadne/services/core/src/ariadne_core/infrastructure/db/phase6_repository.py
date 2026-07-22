@@ -1,4 +1,10 @@
-"""Durable profile-scoped Phase 6 audit and remediation persistence."""
+"""Durable immutable audit checkpoints and revisioned remediation history.
+
+Audit snapshots are comparison projections of findings and coverage at a point
+in time; they are not mutable execution records. Remediation changes append a
+complete revision plus one matching history event so state cannot drift away
+from the event that explains it.
+"""
 
 from __future__ import annotations
 
@@ -118,7 +124,7 @@ def _validate_limit(limit: int, *, maximum: int = 100) -> None:
 
 
 class Phase6AuditRepository:
-    """Append and replay immutable audit snapshots used for deterministic comparison."""
+    """Append and replay bounded, person-scoped comparison checkpoints."""
 
     def __init__(
         self,
@@ -142,6 +148,7 @@ class Phase6AuditRepository:
         self.phase5_findings = Table("phase5_findings", metadata, autoload_with=engine)
 
     def persist_snapshot(self, snapshot: AuditRunSnapshot) -> AuditSnapshotRecord:
+        """Append a snapshot or accept only an identical idempotent replay."""
         payload_sha256 = _payload_sha256(self._snapshot_payload(snapshot))
         with self.engine.begin() as connection:
             existing = self._snapshot_row(connection, snapshot.run_id)
@@ -297,6 +304,7 @@ class Phase6AuditRepository:
         baseline_run_id: str,
         current_run_id: str,
     ) -> tuple[AuditRunSnapshot, ...]:
+        """Return the complete persisted interval needed for lifecycle analysis."""
         validate_opaque_id(baseline_run_id, "baseline audit run id")
         validate_opaque_id(current_run_id, "current audit run id")
         if baseline_run_id == current_run_id:
@@ -339,7 +347,11 @@ class Phase6AuditRepository:
             )
 
     def next_snapshot_position(self, wall_time_us: int) -> tuple[int, int]:
-        """Return the next bounded sequence and a monotonic capture time."""
+        """Return the next bounded sequence and a monotonic capture time.
+
+        Wall clocks can repeat or move backwards. Ordering therefore advances
+        from the last durable timestamp instead of trusting the current clock.
+        """
 
         if (
             type(wall_time_us) is not int
@@ -553,6 +565,7 @@ class Phase6RemediationRepository:
         *,
         expected_previous_revision: int | None,
     ) -> RemediationCaseRecord:
+        """Append exactly one CAS-checked case revision and its history event."""
         if expected_previous_revision is not None and (
             type(expected_previous_revision) is not int
             or expected_previous_revision < 1
@@ -791,6 +804,9 @@ class Phase6RemediationRepository:
 
     @staticmethod
     def _require_revision_delta(previous: RemediationCase, current: RemediationCase) -> None:
+        # Each allowed state delta must match the single new history event. This
+        # prevents a caller from smuggling unrelated edits into an otherwise
+        # valid revision increment.
         event_type = current.history[-1].event_type
         if not set(previous.finding_ids) <= set(current.finding_ids):
             raise RemediationPersistenceConflict("remediation finding history is not append-only")

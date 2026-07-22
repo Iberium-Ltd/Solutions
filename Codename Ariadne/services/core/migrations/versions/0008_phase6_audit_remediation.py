@@ -18,6 +18,8 @@ _MAX_TIMESTAMP_US = 9_007_199_254_740_991
 
 
 def _immutable(table: str) -> None:
+    # Comparison correctness depends on historical snapshots and remediation
+    # revisions never changing after a later run has referenced them.
     op.execute(
         f"CREATE TRIGGER trg_{table}_immutable_update "
         f"BEFORE UPDATE ON {table} BEGIN "

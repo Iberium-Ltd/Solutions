@@ -1,4 +1,8 @@
-"""Official HIBP v3 adapter for bounded, authorised defensive self-audits."""
+"""Official HIBP v3 adapter for bounded, authorised defensive self-audits.
+
+Each call is provider-specific, redirect-refusing, response-bounded, and
+explicitly authorised; failures become stable states instead of leaked bodies.
+"""
 
 from __future__ import annotations
 

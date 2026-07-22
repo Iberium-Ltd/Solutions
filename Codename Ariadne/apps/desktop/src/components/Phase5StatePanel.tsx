@@ -1,3 +1,4 @@
+/** Closed set of Phase 5 loading/empty/error states with retry affordances. */
 import {
   AlertTriangle,
   DatabaseZap,

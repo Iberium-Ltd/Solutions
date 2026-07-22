@@ -1,4 +1,8 @@
-"""Typed import/export plans backed by shell-issued file capabilities."""
+"""Typed import/export plans backed by shell-issued file capabilities.
+
+Plans carry opaque, operation-scoped grants rather than paths. Possessing a
+plan does not widen its capability or bypass native save/open mediation.
+"""
 
 from __future__ import annotations
 

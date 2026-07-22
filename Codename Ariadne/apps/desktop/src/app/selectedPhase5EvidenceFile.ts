@@ -1,3 +1,7 @@
+/**
+ * Browser-selected evidence preflight. Kind, suffix, media type, name, and size
+ * are checked before bytes are sent to the core for durable provenance capture.
+ */
 import type { Phase5ManualArtifactKind } from './phase5Boundary'
 
 const MAX_FILE_BYTES = 10 * 1_024 * 1_024

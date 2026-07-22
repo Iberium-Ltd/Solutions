@@ -1,3 +1,7 @@
+/**
+ * Local presentation preferences only. Values are revalidated when loaded and
+ * expressed as root attributes so every screen responds to one coherent scale.
+ */
 import { create } from 'zustand'
 
 export const FONT_SCALE_OPTIONS = [90, 100, 110, 125, 140] as const

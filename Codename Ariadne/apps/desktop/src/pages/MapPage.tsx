@@ -1,3 +1,4 @@
+/** Geographic evidence projection; map points retain their temporal/source context. */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {

@@ -1,3 +1,4 @@
+/** Ephemeral multi-document analysis whose statements remain linked to source pointers. */
 import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,

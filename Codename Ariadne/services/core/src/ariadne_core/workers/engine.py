@@ -1,4 +1,9 @@
-"""A minimal bounded durable worker for Phase 2 lifecycle verification."""
+"""Bounded foundation worker used to prove the durable lifecycle contract.
+
+Only synthetic jobs execute here.  Real discovery, evidence, or provider work
+must register a dedicated typed handler with its own replay and cancellation
+contract; accepting an arbitrary stored callable would turn vault data into code.
+"""
 
 from __future__ import annotations
 
@@ -19,6 +24,8 @@ class UnsupportedFoundationJob(RuntimeError):
 
 
 class TaskEngine:
+    """Project durable claims into at most four local worker executions."""
+
     def __init__(self, repository: JobRepository, *, worker_id: str | None = None) -> None:
         self.repository = repository
         self.worker_id = str(uuid4()) if worker_id is None else worker_id
@@ -37,6 +44,8 @@ class TaskEngine:
         )
         if job is None:
             return None
+        # The lease is already durable before handler work begins.  No database
+        # transaction remains open while the worker sleeps or performs I/O.
         try:
             if job.job_type == "NOOP":
                 pass
@@ -82,6 +91,9 @@ class TaskEngine:
                 limiter=self._limiter,
             )
         except (JobStateConflict, LeaseConflict):
+            # Pause/cancel can win the race after the handler's last checkpoint.
+            # Re-read the durable state and acknowledge only a request still
+            # owned by this worker; another owner or transition remains an error.
             current = await anyio.to_thread.run_sync(
                 lambda: self.repository.get(job.id),
                 limiter=self._limiter,

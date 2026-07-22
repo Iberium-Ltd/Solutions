@@ -1,3 +1,4 @@
+/** Policy-bound provider planning and network-free preflight; compilation is not dispatch. */
 import { useEffect, useState } from 'react'
 import {
   AlertTriangle,

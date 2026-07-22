@@ -1,3 +1,4 @@
+/** Short operational guide that separates the primary audit flow from optional tools. */
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,

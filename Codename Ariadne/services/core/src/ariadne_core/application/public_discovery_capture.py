@@ -1,4 +1,8 @@
-"""Application boundary for atomically retaining reviewed public results."""
+"""Application boundary for atomically retaining reviewed public results.
+
+Search results remain transient until a user selects one; capture then stores
+the finding, source receipt, artifact, and links in one transaction.
+"""
 
 from __future__ import annotations
 

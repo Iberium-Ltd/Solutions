@@ -1,4 +1,8 @@
-"""Application boundary for durable Phase 5 findings, evidence, and decisions."""
+"""Application boundary for durable Phase 5 findings, evidence, and decisions.
+
+It coordinates immutable evidence, append-only attribution history, and current
+finding projections without treating a model or provider result as a decision.
+"""
 
 from __future__ import annotations
 

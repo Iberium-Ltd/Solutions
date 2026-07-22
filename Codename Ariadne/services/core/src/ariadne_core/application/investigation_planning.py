@@ -1,4 +1,9 @@
-"""Pure compiler for composable provider plans; this module performs no I/O."""
+"""Pure compiler for composable provider plans; this module performs no I/O.
+
+A compiled step explains prerequisites and transmission mode but grants no
+execution authority. Durable orchestration must re-resolve current person
+knowledge and policy immediately before enqueue or dispatch.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +24,7 @@ from ariadne_core.domain.investigation_plan import (
 
 
 class InvestigationPlanCompiler:
-    """Select lawful steps deterministically without dispatching any provider request."""
+    """Select lawful steps deterministically without dispatching a provider."""
 
     def compile(self, request: InvestigationPlanRequest) -> InvestigationPlan:
         if not request.authorized_self_audit:

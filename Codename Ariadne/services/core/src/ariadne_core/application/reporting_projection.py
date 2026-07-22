@@ -1,4 +1,8 @@
-"""Profile-scoped projection and in-memory generation of one local report artifact."""
+"""Profile-scoped projection and in-memory generation of one local report artifact.
+
+The projection validates baseline/current ownership before collecting data and
+returns bytes in memory so a separate file capability controls persistence.
+"""
 
 from __future__ import annotations
 

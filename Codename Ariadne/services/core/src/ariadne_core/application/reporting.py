@@ -1,4 +1,8 @@
-"""Pure generation of bounded local JSON and Markdown report artifacts."""
+"""Pure generation of bounded local JSON and Markdown report artifacts.
+
+Redacted output is the default; full output requires an explicit approval and
+both formats derive from the same deterministic, profile-scoped projection.
+"""
 
 from __future__ import annotations
 

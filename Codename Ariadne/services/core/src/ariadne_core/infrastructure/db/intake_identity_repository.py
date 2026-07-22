@@ -1,4 +1,10 @@
-"""Atomic profile-scoped intake, identity, provenance, review, and graph persistence."""
+"""Atomic profile-scoped intake, identity, provenance, review, and graph persistence.
+
+Canonical entities may deduplicate within one person, but observations do not:
+every distinct source/span remains an origin.  Every lookup carries vault and
+profile scope so a valid UUID from another person cannot cross the correlation
+boundary.
+"""
 
 from __future__ import annotations
 
@@ -538,6 +544,8 @@ class GraphSnapshot:
 
 
 class IntakeIdentityRepository:
+    """Persist one compilation and all of its explainable origins atomically."""
+
     """One profile-scoped persistence boundary; fingerprint material never leaves memory."""
 
     def __init__(self, engine: Engine, *, fingerprint_key: bytes | bytearray) -> None:
@@ -763,6 +771,7 @@ class IntakeIdentityRepository:
         enrichment_outcome: EnrichmentOutcomeDraft | None = None,
         connection: Connection | None = None,
     ) -> CompilationRecord:
+        """Commit source, extraction, entities, origins, and graph as one unit."""
         """Persist one bounded compiler result and its redacted event atomically."""
 
         enrichment_outcome = (
@@ -2214,6 +2223,7 @@ class IntakeIdentityRepository:
         edges: Sequence[EdgeDraft],
         enrichment_outcome: EnrichmentOutcomeDraft,
     ) -> None:
+        """Reject unbounded or internally untraceable compiler output pre-write."""
         if len(segments) > 10_000 or len(quarantine) > 10_000 or len(entities_input) > 10_000:
             raise ValueError("compilation collection exceeds its bound")
         if len(edges) > 20_000:
@@ -2464,6 +2474,8 @@ class IntakeIdentityRepository:
 
     @staticmethod
     def _entity_origins(entity: EntityDraft) -> tuple[EntityOriginDraft, ...]:
+        # Older callers supplied one flattened origin on EntityDraft.  Normalize
+        # it here so persistence still applies the same multi-origin invariants.
         if entity.origins:
             return entity.origins
         return (
@@ -2485,6 +2497,8 @@ class IntakeIdentityRepository:
         entity_type: str,
         value_hmac: str,
     ) -> RowMapping | None:
+        # Deduplication is intentionally person-local.  Matching HMACs in two
+        # profiles are separate knowledge and must never be silently merged.
         return (
             connection.execute(
                 select(entities).where(
@@ -2512,6 +2526,8 @@ class IntakeIdentityRepository:
         origins: Sequence[EntityOriginDraft],
         timestamp: int,
     ) -> None:
+        # A deduplicated entity still receives every new observation.  Provenance
+        # cardinality is evidence, so it is not collapsed into the entity row.
         for origin in origins:
             connection.execute(
                 insert(entity_origins).values(
@@ -2677,6 +2693,7 @@ class IntakeIdentityRepository:
         profile_id: str,
         entity_id: str,
     ) -> RowMapping:
+        """Resolve an entity only inside the caller's vault/person boundary."""
         row = (
             connection.execute(
                 select(

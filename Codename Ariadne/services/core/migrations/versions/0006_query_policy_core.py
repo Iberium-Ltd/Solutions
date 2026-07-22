@@ -1,5 +1,9 @@
 """Add the Phase 4 query policy, approval, budget, and ledger core.
 
+Plans bind policy snapshots to checks; approvals are scoped and consumable;
+budget usage and dispatch receipts make every attempted provider action
+recoverable and independently auditable.
+
 Revision ID: 0006_query_policy_core
 Revises: 0005_graph_edge_origins
 """
@@ -16,6 +20,8 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """Install the durable planning-to-dispatch chain and its database constraints."""
+
     op.create_table(
         "phase4_providers",
         sa.Column("vault_id", sa.String(36), nullable=False),

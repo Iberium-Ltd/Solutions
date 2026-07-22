@@ -1,4 +1,10 @@
-"""Transactional Phase 2 repositories with redacted audit/outbox records."""
+"""Transactional job, settings, audit, and outbox persistence.
+
+Mutations that change durable state append their redacted audit/outbox event in
+the same transaction.  Workers may disappear at any point; leases, revisions,
+attempts, and idempotency records are therefore the authority, while in-memory
+queues and emitted UI events are replaceable projections.
+"""
 
 from __future__ import annotations
 
@@ -136,6 +142,12 @@ def _append_event(
     resource_revision: int | None,
     metadata: dict[str, object],
 ) -> None:
+    """Append audit history and the publishable event as one caller transaction.
+
+    Callers must pass the connection that owns the resource mutation.  Opening a
+    nested transaction here would permit either history or state to commit alone.
+    Metadata is intentionally bounded, redacted context rather than source data.
+    """
     timestamp = now_us()
     audit_id = str(uuid7())
     event_id = str(uuid7())
@@ -421,6 +433,8 @@ class SettingsRepository:
 
 
 class JobRepository:
+    """Serialize durable job commands and enforce lease/revision ownership."""
+
     def __init__(self, engine: Engine, *, idempotency_hmac_key: bytes | bytearray) -> None:
         if len(idempotency_hmac_key) < 32:
             raise ValueError("idempotency HMAC key is too short")
@@ -479,6 +493,7 @@ class JobRepository:
         retry_limit: int = 2,
         connection: Connection | None = None,
     ) -> tuple[JobRecord, bool]:
+        """Create once per logical command, atomically with its replay record."""
         if len(idempotency_key) < 16 or len(idempotency_key) > 256:
             raise ValueError("idempotency key length is outside the allowed range")
         if retry_limit < 0 or retry_limit > 5:
@@ -572,6 +587,9 @@ class JobRepository:
 
             idempotency_id = str(uuid7())
             job_id = str(uuid7())
+            # The idempotency result points at the job created below.  Both rows
+            # and the initial event share this transaction so a retry can never
+            # observe a replay token without its durable result.
             active_connection.execute(
                 insert(idempotency_records).values(
                     id=idempotency_id,
@@ -904,6 +922,7 @@ class JobRepository:
         return blocked, cancelled
 
     def claim_next(self, *, worker_id: str, lease_us: int = 10_000_000) -> JobRecord | None:
+        """Claim one dependency-ready job with a compare-and-swap lease."""
         _require_worker_id(worker_id)
         if lease_us < 500_000 or lease_us > 60_000_000:
             raise ValueError("job lease duration is outside the allowed range")
@@ -958,6 +977,9 @@ class JobRepository:
             if row is None:
                 return None
             job_id = str(row[0])
+            # Selection and conditional update intentionally share a transaction.
+            # Multiple schedulers may select the same candidate, but only one can
+            # move its still-QUEUED revision to RUNNING and own the attempt.
             claimed = connection.execute(
                 update(jobs)
                 .where(
@@ -1013,6 +1035,7 @@ class JobRepository:
         outcome_code: str,
         timestamp_us: int | None = None,
     ) -> JobRecord:
+        """Commit a worker result only for the current, unexpired lease revision."""
         _require_worker_id(worker_id)
         timestamp = now_us() if timestamp_us is None else timestamp_us
         with self.engine.begin() as connection:
@@ -1224,6 +1247,7 @@ class JobRepository:
             return updated
 
     def recover_expired_leases(self, *, timestamp_us: int | None = None) -> RecoverySummary:
+        """Reconcile abandoned attempts without inferring successful completion."""
         timestamp = now_us() if timestamp_us is None else timestamp_us
         counts = {"requeued": 0, "paused": 0, "cancelled": 0, "failed": 0}
         with self.engine.begin() as connection:
@@ -1261,6 +1285,8 @@ class JobRepository:
                     next_retry_count = retry_count
                     scheduled_at_us = int(row["scheduled_at_us"])
                 elif retry_count < int(row["retry_limit"]):
+                    # Persisted deterministic delay makes restart preserve the
+                    # retry schedule rather than creating a tight retry loop.
                     requested = JobState.QUEUED
                     outcome_code = "WORKER_LEASE_EXPIRED_REQUEUED"
                     count_key = "requeued"

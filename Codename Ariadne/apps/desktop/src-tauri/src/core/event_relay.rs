@@ -1,3 +1,9 @@
+//! At-least-once projection of the durable core outbox into Tauri events.
+//!
+//! Events are invalidation hints, not application state. Duplicates are removed
+//! locally; a cursor expiry or sequence gap tells the webview to refetch the
+//! bounded resource from the core rather than guessing what was missed.
+
 use std::collections::{HashSet, VecDeque};
 use std::time::Duration;
 
@@ -69,6 +75,8 @@ struct RelayState {
 
 impl RelayState {
     fn accept(&mut self, replay: EventReplayResult) -> Vec<RelayedCoreEvent> {
+        // Update the cursor only from a validated replay page. The bounded seen
+        // set protects ordinary duplicate delivery without promising exactly once.
         let mut output = Vec::new();
         let mut refetch_emitted = false;
         match replay.disposition {

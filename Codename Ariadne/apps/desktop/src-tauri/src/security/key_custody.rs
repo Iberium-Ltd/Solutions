@@ -3,6 +3,11 @@
     reason = "managed key custody is reserved for the next vault unlock slice"
 )]
 
+//! macOS key custody represented by opaque references and zeroizing leases.
+//!
+//! Raw vault keys are generated and retrieved only inside this native module;
+//! logs, renderer messages, manifests, and errors carry opaque references only.
+
 use std::{fmt, sync::Arc};
 
 #[cfg(test)]

@@ -30,6 +30,8 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # All identity and graph tables are born profile-scoped. Adding scope later
+    # would permit ambiguous historical rows that cannot be assigned safely.
     bind = op.get_bind()
     for table in (
         intake_sources,

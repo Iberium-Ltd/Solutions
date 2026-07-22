@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Produce a self-contained arm64 sidecar from the inspected SQLCipher package.
+# This creates release evidence in a fresh output tree; it never treats the
+# development uv environment or a previously staged binary as a build input.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,6 +35,9 @@ mkdir -p "$BUILD_ROOT" "$DIST_ROOT" "$LOG_ROOT" "$LICENSE_ROOT"
 "$SCRIPT_DIR/build_sqlcipher_commoncrypto.sh" "$DRIVER_ROOT" \
   > "$LOG_ROOT/sqlcipher-build.log" 2>&1
 DRIVER_PACKAGE="$DRIVER_ROOT/package"
+# Replace any resolver-supplied binding with the just-built inspected artifact.
+# This prevents an ABI-compatible plaintext SQLite module from entering the
+# frozen archive unnoticed.
 [[ -f "$DRIVER_PACKAGE/pysqlcipher3/dbapi2.py" ]] || fail "static SQLCipher package is unavailable"
 
 uv export --directory "$ROOT" --frozen --package ariadne-core --no-dev \

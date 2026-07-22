@@ -1,3 +1,7 @@
+/**
+ * Native browser handoff boundary. Only fixed portals and canonical search URLs
+ * survive validation; arbitrary schemes, hosts, paths, and query keys fail shut.
+ */
 import { nativeRuntimeAvailable } from './coreBoundary'
 
 const FIXED_PORTALS = new Set([
@@ -47,6 +51,7 @@ export function isApprovedExternalUrl(value: string): boolean {
 }
 
 export async function openApprovedExternalUrl(value: string): Promise<void> {
+  // Validation is repeated at the final handoff even when the caller built the URL.
   if (!isApprovedExternalUrl(value)) throw new Error('External URL refused')
   if (nativeRuntimeAvailable()) {
     const { invoke } = await import('@tauri-apps/api/core')

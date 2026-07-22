@@ -1,3 +1,5 @@
+//! Supervised sidecar boundary, typed wire contract, key lease, and lock lifecycle.
+
 mod auto_lock;
 mod contract;
 mod event_relay;

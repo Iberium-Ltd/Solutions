@@ -3,6 +3,8 @@
 The module is deliberately pure: it performs no I/O, persistence, logging, or
 network access.  Restricted matches are represented only by type and source
 coordinates; their plaintext is never returned in a descriptor or exception.
+Quarantine always precedes extraction, and canonical deduplication retains all
+distinct source spans so a merged identity never loses its provenance.
 """
 
 from __future__ import annotations
@@ -760,6 +762,8 @@ def _raw_candidates(text: str) -> Iterator[_RawCandidate]:
 
 
 def _extract_safe_text(text: str, limits: ExtractionLimits) -> tuple[CandidateEntity, ...]:
+    """Extract canonical candidates while preserving every exact occurrence span."""
+
     grouped: dict[tuple[EntityType, str], tuple[Sensitivity, list[SourceSpan]]] = {}
     occurrences = 0
     sensitivity_rank = {
@@ -879,7 +883,11 @@ def deduplicate_candidates(
 
 
 def compile_text(text: str, *, limits: ExtractionLimits | None = None) -> CompilationResult:
-    """Quarantine restricted spans, then extract only from same-length redacted text."""
+    """Quarantine first, then extract only from same-length redacted text.
+
+    Equal-length redaction keeps offsets stable across quarantine descriptors,
+    candidates, later human review, and evidence receipts.
+    """
 
     active_limits = limits or ExtractionLimits()
     scan = detect_restricted_values(text, limits=active_limits)

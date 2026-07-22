@@ -1,3 +1,10 @@
+/**
+ * Narrow webview facade over named Tauri commands.
+ *
+ * Runtime parsing is intentional even though generated types exist: TypeScript
+ * disappears at runtime, so an incompatible or compromised sidecar response
+ * must fail here before it can alter UI authority or vault state.
+ */
 import { useCallback, useEffect, useState } from 'react'
 import type {
   SessionState,

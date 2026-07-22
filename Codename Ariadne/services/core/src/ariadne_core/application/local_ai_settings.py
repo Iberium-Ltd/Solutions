@@ -1,4 +1,8 @@
-"""Encrypted settings and explicit user-gesture boundary for optional local AI."""
+"""Encrypted settings and explicit user-gesture boundary for optional local AI.
+
+Connection testing and model discovery are separate explicit actions; settings
+alone never cause a model request or transmit workspace content.
+"""
 
 from __future__ import annotations
 

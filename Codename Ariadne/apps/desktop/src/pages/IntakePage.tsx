@@ -1,3 +1,4 @@
+/** Local intake UI for bounded paste/file preparation before entity review. */
 import { useRef, useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {

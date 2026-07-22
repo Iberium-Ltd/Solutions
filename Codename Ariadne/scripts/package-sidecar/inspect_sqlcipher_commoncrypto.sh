@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Verify the exact extension that freezing will consume. Runtime SQLCipher/FTS/
+# JSON checks complement Mach-O inspection; neither alone proves encrypted
+# database support is present and loadable on the target macOS floor.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

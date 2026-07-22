@@ -1,4 +1,8 @@
-"""Application boundary for deterministic Ariadne Core attribution scoring."""
+"""Application boundary for deterministic Ariadne Core attribution scoring.
+
+Scoring consumes explicit evidence and returns an explainable assessment; it
+does not establish identity, persist a decision, or perform discovery.
+"""
 
 from __future__ import annotations
 

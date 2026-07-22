@@ -1,4 +1,8 @@
-"""Sidecar process entry point with an authenticated one-shot bootstrap."""
+"""Sidecar process entry point with an authenticated one-shot bootstrap.
+
+This module owns process lifecycle and private transport setup. The HTTP app is
+reachable only through the launch-bound session and shuts down with its parent.
+"""
 
 from __future__ import annotations
 

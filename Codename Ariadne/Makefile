@@ -1,3 +1,5 @@
+# Verification entry points are intentionally layered: phase checks exercise
+# privacy, encrypted storage, contracts, Rust shell, packaging scripts, and UI.
 .PHONY: bootstrap privacy-check privacy-check-staged frontend-check core-sync core-driver-check core-format core-lint core-typecheck core-test contracts-check rust-check sidecar-scripts-check sqlcipher-package-spike frozen-sidecar-spike stage-frozen-sidecar package-spike-app package-spike-app-check phase2-check phase3-check phase4-check phase5-check
 
 RUST_PATH = PATH="/opt/homebrew/opt/rustup/bin:$(PATH)"

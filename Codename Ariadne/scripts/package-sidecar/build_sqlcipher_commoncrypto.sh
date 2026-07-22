@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Rebuild the database binding from hash-pinned source in an empty output tree.
+# Nothing from Homebrew or /usr/local is a permitted release dependency; the
+# companion inspector proves architecture, deployment target, symbols, and load
+# commands before this package can become a freezer input.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -79,6 +83,8 @@ esac
 (( BUILD_JOBS >= 1 && BUILD_JOBS <= 16 )) || fail "ARIADNE_BUILD_JOBS must be between 1 and 16"
 
 fetch_and_verify() {
+  # Keep the partial suffix until TLS transfer and the pinned digest succeed so
+  # an interrupted download cannot be mistaken for a reusable source archive.
   url="$1"
   expected_sha="$2"
   destination="$3"

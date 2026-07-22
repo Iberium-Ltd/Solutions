@@ -1,3 +1,7 @@
+/**
+ * Network-free investigation-plan boundary. Compilation describes ordered,
+ * policy-gated work but never grants approval or performs provider requests.
+ */
 export type InvestigationIdentifierKind =
   | 'EMAIL'
   | 'USERNAME'

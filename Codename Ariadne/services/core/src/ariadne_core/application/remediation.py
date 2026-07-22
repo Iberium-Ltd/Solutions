@@ -1,4 +1,8 @@
-"""Pure application service for remediation planning; it never sends actions."""
+"""Pure application service for remediation planning; it never sends actions.
+
+Drafts and transitions are local workflow proposals. Any provider submission is
+a distinct, explicitly authorised integration outside this module.
+"""
 
 from __future__ import annotations
 

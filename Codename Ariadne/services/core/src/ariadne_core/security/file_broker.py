@@ -30,6 +30,8 @@ class BrokeredPath:
 
 
 class FileBroker:
+    """Exchange a shell-selected path for one short-lived, operation-bound token."""
+
     def __init__(self, *, clock: Callable[[], float] = time.monotonic) -> None:
         self._clock = clock
         self._entries: dict[bytes, BrokeredPath] = {}
@@ -63,6 +65,8 @@ class FileBroker:
         return token
 
     def consume(self, token: str, operation: BrokerOperation) -> Path:
+        # Pop before validation so an expired or wrong-operation capability is
+        # still burned and cannot be probed repeatedly or reused in another flow.
         digest = hashlib.sha256(token.encode("utf-8", errors="ignore")).digest()
         entry = self._entries.pop(digest, None)
         if entry is None or entry.expires_at < self._clock() or entry.operation is not operation:

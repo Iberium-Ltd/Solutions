@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Treat packaging as a verification boundary, not merely a successful build.
+# Static inspection runs before lifecycle probes so wrong architecture, OS
+# floor, external crypto linkage, or missing migrations fail without execution.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,6 +47,8 @@ fi
 
 codesign --verify --strict "$BINARY"
 archive_listing="$($ARCHIVE_VIEWER --list "$BINARY")"
+# The sidecar owns migrations at runtime; absence here would let source tests
+# pass while a packaged vault cannot reach the same schema.
 grep -Fq 'pysqlcipher3/_sqlite3.cpython-312-darwin.so' <<<"$archive_listing" || fail "static SQLCipher extension is absent"
 grep -Fq 'libpython3.12.dylib' <<<"$archive_listing" || fail "Python runtime is absent"
 grep -Fq 'ariadne_core_migrations/alembic.ini' <<<"$archive_listing" || fail "Alembic configuration is absent"

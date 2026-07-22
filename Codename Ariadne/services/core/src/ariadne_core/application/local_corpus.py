@@ -1,4 +1,8 @@
-"""Build an ephemeral, provenance-preserving corpus through safe intake."""
+"""Build an ephemeral, provenance-preserving corpus through safe intake.
+
+Every segment and entity keeps a stable document pointer. Corpus construction
+reuses the normal quarantine pipeline and performs no durable write itself.
+"""
 
 from __future__ import annotations
 

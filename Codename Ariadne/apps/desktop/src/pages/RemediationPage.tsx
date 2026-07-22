@@ -1,3 +1,4 @@
+/** Local remediation case workflow; drafts never imply an external action was sent. */
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {

@@ -1,3 +1,4 @@
+/** Non-sensitive presentation state for legacy prototype-only controls. */
 import { create } from 'zustand'
 
 type PrototypeState = {
@@ -28,4 +29,3 @@ export const usePrototypeStore = create<PrototypeState>((set) => ({
   selectTool: (tool) => set({ selectedTool: tool }),
   setTransmissionMode: (mode) => set({ transmissionMode: mode }),
 }))
-

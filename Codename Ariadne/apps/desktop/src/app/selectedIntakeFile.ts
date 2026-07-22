@@ -1,3 +1,7 @@
+/**
+ * Browser-selected intake preflight. Only inert allowlisted formats within the
+ * byte bound are encoded for the native boundary; filesystem paths never cross.
+ */
 const MAX_FILE_BYTES = 1_048_576
 
 const FORMATS = {

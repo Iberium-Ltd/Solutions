@@ -1,3 +1,10 @@
+/**
+ * Runtime parser for audit checkpoints, comparisons, and remediation revisions.
+ *
+ * A Phase 6 snapshot is an immutable comparison projection, not live execution
+ * state. Partial coverage therefore remains explicit and cannot be presented as
+ * proof that a source or finding disappeared.
+ */
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const SHA256_PATTERN = /^[0-9a-f]{64}$/

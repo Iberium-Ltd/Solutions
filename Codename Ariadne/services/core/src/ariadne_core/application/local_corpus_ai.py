@@ -1,4 +1,8 @@
-"""Ephemeral, source-grounded reasoning across a bounded local document corpus."""
+"""Ephemeral, source-grounded reasoning across a bounded local document corpus.
+
+Deterministic and model modes share the same bounded source catalog. Generated
+facts and connections remain cited suggestions, not silently accepted records.
+"""
 
 from __future__ import annotations
 

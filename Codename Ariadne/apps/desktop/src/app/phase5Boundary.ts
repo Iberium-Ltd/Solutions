@@ -1,3 +1,9 @@
+/**
+ * Runtime parser for immutable evidence and append-only attribution contracts.
+ *
+ * The boundary keeps originals, redacted derivatives, assessments, and human
+ * decisions distinct; treating one as another would erase provenance in the UI.
+ */
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const SHA256_PATTERN = /^[0-9a-f]{64}$/

@@ -1,3 +1,4 @@
+/** Provider capability/health catalog; availability is not represented as coverage. */
 import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,

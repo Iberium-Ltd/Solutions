@@ -2,7 +2,8 @@
 
 Decoding and structured parsing are deliberately separate.  A restricted-value
 scanner must clear decoded text before CSV, JSON, or vCard structure is parsed.
-Neither stage logs source bytes, text, filenames, paths, or rejected values.
+The extension/MIME allowlist, inert-content checks, and bounded parsers form one
+fail-closed boundary; neither stage logs source bytes, text, paths, or rejects.
 """
 
 from __future__ import annotations
@@ -408,6 +409,8 @@ def _validate_declared_media_type(value: str | None, policy: _FormatPolicy) -> N
 
 
 def _read_regular_file(path: Path, max_bytes: int) -> bytes:
+    """Read through one verified descriptor so validation and consumption cannot race."""
+
     descriptor = -1
     try:
         descriptor = _open_without_symlinks(path)
@@ -438,6 +441,8 @@ def _read_regular_file(path: Path, max_bytes: int) -> bytes:
 
 
 def _open_without_symlinks(path: Path) -> int:
+    """Resolve every path component by descriptor and refuse all symlink traversal."""
+
     parts = path.parts
     if path.anchor != os.sep or len(parts) < 2 or any(part in {".", ".."} for part in parts):
         raise SafeParseError(SafeParseErrorCode.UNSAFE_SOURCE)

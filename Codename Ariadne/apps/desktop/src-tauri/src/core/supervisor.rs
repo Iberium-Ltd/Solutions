@@ -1,3 +1,10 @@
+//! Lifecycle and capability boundary for the Python core sidecar.
+//!
+//! The supervisor owns the child, its unguessable session credential, validated
+//! endpoint, key-lease channel, and lock state. No webview command receives a
+//! generic HTTP primitive; each request uses a closed route and validates its
+//! bounded response before returning data to the UI.
+
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     ffi::OsString,
@@ -255,6 +262,9 @@ impl CoreSupervisor {
     }
 
     async fn start_sidecar(&self, mode: RuntimeMode) -> Result<(), CoreError> {
+        // Readiness is not process survival. The child becomes Ready only after
+        // bootstrap, key-lease handshake, endpoint validation, capability
+        // version agreement, and proof that the new session starts locked.
         let credential = Arc::new(SessionCredential::generate().map_err(CoreError::Random)?);
         let bootstrap = BootstrapMessage::new(&credential);
         let bootstrap_bytes = encode_json_line_bounded(&bootstrap, MAX_BOOTSTRAP_BYTES)?;
@@ -1657,6 +1667,9 @@ impl CoreSupervisor {
         B: Serialize,
         V: FnOnce(&T) -> Result<(), CoreError>,
     {
+        // Serializing vault requests closes the race in which a command passes
+        // an unlocked check while a lock operation revokes the session. The
+        // state is checked again after response validation for the same reason.
         let _request_guard = self.vault_request_gate.lock().await;
         let _active_operation = self.begin_active_operation();
         let fallback_request_id = Uuid::new_v4();
@@ -1857,6 +1870,9 @@ impl CoreSupervisor {
     }
 
     fn begin_system_lock(&self) -> Option<SystemLockPlan> {
+        // Revoke every in-memory capability before waiting on child termination.
+        // Durable core work is recovered later from its own leases; retaining an
+        // HTTP client or credential during system lock would violate fail-closed.
         let mut inner = self.lock();
         let sensitive = matches!(
             inner.state,
@@ -6979,6 +6995,8 @@ async fn request_route_inner<T>(
 where
     T: DeserializeOwned,
 {
+    // Capability metadata is the single authority for method, path, size, and
+    // authorization class. Even internal callers cannot widen these per request.
     let request_id = Uuid::new_v4();
     let capability = route.capability();
     let response_limit = capability.max_response_bytes.min(MAX_RESPONSE_BYTES);

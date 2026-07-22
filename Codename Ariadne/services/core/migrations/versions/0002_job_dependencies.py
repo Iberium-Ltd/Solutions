@@ -1,5 +1,8 @@
 """Add the bounded durable-job dependency DAG.
 
+Dependencies are durable scheduling facts: a worker may claim a job only after
+all prerequisite rows reach their required terminal state.
+
 Revision ID: 0002_job_dependencies
 Revises: 0001_phase2_foundation
 """
@@ -17,6 +20,8 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """Install dependency storage after the job table created by revision 0001."""
+
     job_dependencies.create(bind=op.get_bind(), checkfirst=False)
 
 

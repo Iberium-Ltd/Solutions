@@ -43,6 +43,7 @@ def _canonical_json(value: dict[str, object]) -> bytes:
 
 
 def _atomic_write(path: Path, content: bytes) -> None:
+    """Publish a complete private file by same-directory atomic replacement."""
     parent = path.parent.resolve(strict=True)
     if path.exists() and path.is_symlink():
         raise BackupError("backup destination is unsafe")
@@ -112,6 +113,7 @@ def create_backup(
     nonce: bytes | None = None,
     clock_us: Callable[[], int] = lambda: time.time_ns() // 1_000,
 ) -> BackupMetadata:
+    """Authenticate canonical metadata and one bounded encrypted snapshot."""
     if len(backup_key) != 32:
         raise BackupError("backup key is unavailable")
     try:
@@ -247,6 +249,7 @@ def stage_restore(
     backup_key: bytes | bytearray,
     expected_vault_id: str,
 ) -> Path:
+    """Authenticate into a same-filesystem staging file without replacing a vault."""
     metadata, plaintext = decrypt_backup(bundle, backup_key)
     if metadata.vault_id != expected_vault_id:
         raise BackupError("backup belongs to a different vault")

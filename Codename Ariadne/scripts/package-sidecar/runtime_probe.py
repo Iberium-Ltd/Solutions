@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Runtime verification for the locally built SQLCipher DB-API extension."""
+"""Runtime verification for the locally built SQLCipher DB-API extension.
+
+The probe loads from the candidate package path, verifies encryption and
+features, and confirms a wrong key cannot authenticate the test database. It is
+not interchangeable with checking that the extension merely imports.
+"""
 
 from __future__ import annotations
 

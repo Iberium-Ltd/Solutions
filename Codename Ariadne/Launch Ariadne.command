@@ -1,4 +1,6 @@
 #!/bin/zsh
+# User-facing launcher for the already-built macOS bundle; it never starts a
+# development server or silently rebuilds binaries.
 set -euo pipefail
 
 project_root="$(cd -- "$(dirname -- "$0")" && pwd)"

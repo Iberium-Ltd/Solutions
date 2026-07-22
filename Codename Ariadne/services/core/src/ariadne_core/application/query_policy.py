@@ -1,4 +1,9 @@
-"""Inspectable query compilation and the final fail-closed dispatch boundary."""
+"""Inspectable query compilation and the final fail-closed dispatch boundary.
+
+Compilation snapshots what would be disclosed. Execution revalidates that
+snapshot, reserves budget, consumes approval, and records an outcome; no caller
+may treat a successful plan as proof that a request occurred.
+"""
 
 from __future__ import annotations
 
@@ -172,6 +177,8 @@ class QueryCompiler:
 
 
 class QueryPolicyService:
+    """Coordinate final policy checks, accounting, and one typed adapter call."""
+
     def __init__(self, repository: QueryPolicyRepository) -> None:
         self.repository = repository
         self.compiler = QueryCompiler()
@@ -235,6 +242,7 @@ class QueryPolicyService:
         adapter: QueryAdapter,
         approval_token: str | None = None,
     ) -> StoredCheck:
+        """Dispatch once only after stale-plan, approval, and budget checks pass."""
         stored = self.repository.get_check(
             vault_id,
             profile_id,

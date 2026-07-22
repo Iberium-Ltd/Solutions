@@ -1,4 +1,9 @@
-"""Bounded, explainable semantic rules over already-redacted intake text."""
+"""Bounded, explainable semantic rules over already-redacted intake text.
+
+Relationships are review candidates backed by exact spans and stable rule
+codes, never hidden assertions of identity.  Negated language is retained as
+contradictory evidence rather than silently converted into ownership.
+"""
 
 from __future__ import annotations
 
@@ -219,7 +224,7 @@ def enrich_semantics(
     redacted_text: str,
     deterministic_candidates: tuple[CandidateEntity, ...],
 ) -> SemanticEnrichment:
-    """Apply closed semantic rules without model calls or hidden inference."""
+    """Apply closed rules and return proposals without model calls or hidden inference."""
 
     if len(redacted_text.encode("utf-8")) > 1_048_576:
         raise SemanticRuleError("semantic input limit exceeded")

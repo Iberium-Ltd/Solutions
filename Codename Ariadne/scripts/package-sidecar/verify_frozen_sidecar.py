@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Exercise a frozen Ariadne sidecar over both supported local transports."""
+"""Exercise the frozen sidecar through the same bounded contract as the shell.
+
+The probe uses synthetic records and validates responses rather than trusting a
+successful HTTP status. TCP proves the development transport; UDS plus the key
+lease proves the packaged boundary and cleanup behavior.
+"""
 
 from __future__ import annotations
 
@@ -394,6 +399,7 @@ def _serve_create_lease(
 
 
 def _exercise(binary: Path, transport: str) -> dict[str, object]:
+    """Run one isolated vault lifecycle; no state is shared between transports."""
     token = base64.urlsafe_b64encode(os.urandom(32)).rstrip(b"=").decode("ascii")
     startup_nonce = uuid4()
     bootstrap = {

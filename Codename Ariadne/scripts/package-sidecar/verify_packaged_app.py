@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Verify the local macOS Tauri packaging spike and its supervised UDS sidecar."""
+"""Verify the signed app bundle and supervised packaged-sidecar lifecycle.
+
+This is intentionally black-box: it observes the launched process tree, UDS
+permissions, inherited environment, TCP listeners, and cleanup after normal and
+abrupt exits. Source-level tests cannot establish these packaging properties.
+"""
 
 from __future__ import annotations
 
@@ -150,6 +155,7 @@ def _observe_runtime(
 def _verify_runtime_boundary(
     process: subprocess.Popen[str], observation: RuntimeObservation
 ) -> None:
+    """Reject a packaged process that escapes the expected local UDS boundary."""
     processes = (
         ProcessRow(process.pid, os.getpid(), "ariadne-desktop"),
         *observation.descendants,

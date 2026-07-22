@@ -1,4 +1,10 @@
-"""Durable job state rules kept independent of worker implementation."""
+"""Closed durable-job transitions shared by every worker implementation.
+
+The database state, not a running coroutine, is authoritative.  Keeping the
+normal and crash-recovery graphs here prevents a worker or new task adapter from
+inventing a shortcut that would report work as completed without a committed
+attempt.
+"""
 
 from __future__ import annotations
 
@@ -30,6 +36,8 @@ class DependencyFailurePolicy(StrEnum):
     CANCEL = "CANCEL"
 
 
+# BLOCKED is deliberately recoverable: a later approval, credential, provider,
+# or dependency change can make the same durable job eligible again.
 TERMINAL_JOB_STATES = frozenset(
     {JobState.CANCELLED, JobState.SUCCEEDED, JobState.PARTIAL, JobState.FAILED}
 )
@@ -66,6 +74,8 @@ ALLOWED_JOB_TRANSITIONS: dict[JobState, frozenset[JobState]] = {
     JobState.FAILED: frozenset(),
 }
 
+# Recovery is narrower than ordinary command handling.  An expired lease proves
+# that ownership was lost; it never proves that the abandoned work succeeded.
 ALLOWED_RECOVERY_TRANSITIONS: dict[JobState, frozenset[JobState]] = {
     JobState.RUNNING: frozenset({JobState.QUEUED, JobState.FAILED}),
     JobState.PAUSE_REQUESTED: frozenset({JobState.PAUSED}),

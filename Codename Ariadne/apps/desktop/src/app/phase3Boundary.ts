@@ -1,3 +1,7 @@
+/**
+ * Phase 3 renderer-to-core boundary. Every native reply is parsed against a
+ * closed contract before profile, intake, entity, or graph state reaches UI.
+ */
 import type {
   EntityDecisionRequest,
   EntityReviewRequest,

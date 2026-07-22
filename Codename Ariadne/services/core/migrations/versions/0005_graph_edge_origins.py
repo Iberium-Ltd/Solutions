@@ -17,6 +17,8 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Composite unique parents let each origin prove that source, segment, and
+    # extraction run belong to the same vault/profile before an edge cites them.
     op.create_index(
         "uq_intake_segments_edge_origin_parent",
         "intake_segments",
@@ -32,6 +34,8 @@ def upgrade() -> None:
         if_not_exists=True,
     )
     graph_edge_origins.create(bind=op.get_bind(), checkfirst=True)
+    # Backfill only edges whose endpoints share a provable historical segment.
+    # A later guard aborts the migration if any live edge remains unattributed.
     op.execute(
         """
         INSERT INTO graph_edge_origins (
