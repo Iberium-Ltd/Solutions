@@ -144,6 +144,19 @@ The selected model is stored in the encrypted vault. Ariadne never chooses a
 different model silently and has no cloud fallback. The result badge states
 whether the chosen local model ran or deterministic analysis was used instead.
 
+On this Mac, Ollama's model store is located at
+`/Volumes/Predator SSD GM7000/LLMs/Ollama/models`, with
+`~/.ollama/models` linked to that directory. **Launch Ariadne.command** exports
+the same `OLLAMA_MODELS` path and starts the Ollama application if necessary.
+The Ollama application itself remains in `/Applications`; only its large model
+data is stored on the SSD. If the SSD is disconnected, Ariadne still opens and
+reports local AI as unavailable instead of silently using another model.
+
+Ariadne does not read Ollama model blobs directly. It connects to the loopback
+endpoint, discovers the served model IDs, and records the exact selected model
+with each AI result. This separation allows the model store to move again
+without changing audit data or report provenance.
+
 ### Optional OpenAI Responses execution
 
 AI Workspace and Corpus AI also offer **OpenAI Responses** as an explicit

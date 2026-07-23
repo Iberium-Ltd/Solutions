@@ -12,8 +12,15 @@
   truncation state, byte count, and SHA-256.
 - Passed the focused backend workflow integration, 152/152 frontend tests,
   typecheck, lint, production build, a fresh 4/4 live `qwen3:30b` schema/
-  summary/connections/gap-analysis run, the 444-file privacy scan, and fresh
+  summary/connections/gap-analysis run, the 445-file privacy scan, and fresh
   normal/abrupt packaged-app lifecycle and strict-signature checks.
+- Added a complete synthetic native-renderer journey from vault creation to a
+  cited package, with representative name, username, URL, workplace, and
+  location clues plus focused screenshots of every primary screen.
+- Relocated the complete Ollama model store to the external SSD, retained the
+  normal Ollama application and loopback boundary, taught the launcher to
+  restore the SSD path/start the runtime, and passed the live `qwen3:30b`
+  schema/summary/connections/gap-analysis checks again after relocation.
 
 ## 2026-07-23 — Persistent identity audits and confirmed profile deletion
 

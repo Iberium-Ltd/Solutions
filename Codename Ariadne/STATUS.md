@@ -40,9 +40,17 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 - Frontend: typecheck, lint, production build, and **152/152 Vitest tests across 38 files** pass.
 - Focused end-to-end backend: the synthetic named-profile → intake → decision →
   audit execution → cited AI → proposal promotion → reopen workflow passes.
-- Privacy: **444 candidate files passed**.
-- Live local Qwen: fresh opt-in `qwen3:30b` run **4/4 passed in 122.66 seconds**;
-  Ollama reported the 44 GB model at 100% GPU during execution.
+- Privacy: **445 candidate files passed**.
+- Live local Qwen after SSD relocation: fresh opt-in `qwen3:30b` run **4/4
+  passed in 127.90 seconds**; Ollama reported the 45 GB runtime at 100% GPU.
+  The running `llama-server` held its 18,556,685,856-byte model blob open from
+  `/Volumes/Predator SSD GM7000/LLMs/Ollama/models`.
+- Primary renderer journey: one synthetic native Playwright flow passed from
+  vault creation through named profile, representative identity-clue intake,
+  review, automatic audit progress, exact-source review, cited AI review, and
+  final package download with zero external requests or runtime problems.
+- Focused workflow visual evidence: nine 1720×1000 screenshots were captured
+  and reviewed once; no blocking defect remained.
 - Targeted Chromium: final gate **2/2 passed in 15.1 seconds**, with no external request, error, failed request, or horizontal overflow; the earlier screenshot capture/review run passed 2/2 in 21.3 seconds, and inspection of only the changed query composer and one Settings image found no blocking defect.
 - HIBP direct official synthetic smoke: `SUCCEEDED`/`COMPLETE`, HTTP 200, one exact breach source.
 - HIBP k-anonymity public-key smoke: HTTP 401 correctly surfaced as an HIBP plan/subscription requirement; no successful result claimed.

@@ -19,9 +19,10 @@ operations and one confirmed physical-profile deletion operation.
 | Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **57 operations / 55 paths** |
 | Rust | Format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual macOS Keychain test in **15.16 seconds** |
 | Frontend | **152/152 passed across 38 files**; typecheck, lint, and production build passed |
-| Focused workflow | **16/16 frontend workflow tests** plus the backend profile-to-audit integration passed |
-| Live local Qwen | Fresh opt-in `qwen3:30b` schema, summary, connections, and gap-analysis run: **4/4 passed in 122.66 seconds**; Ollama reported 44 GB loaded at 100% GPU |
-| Privacy | **444 candidate files passed** |
+| Focused workflow | **16/16 frontend workflow tests**, the backend profile-to-audit integration, and one complete native-renderer Playwright journey passed |
+| Live local Qwen | Post-relocation opt-in `qwen3:30b` schema, summary, connections, and gap-analysis run: **4/4 passed in 127.90 seconds**; Ollama reported 45 GB at 100% GPU and opened the 18,556,685,856-byte model blob from the SSD |
+| Focused screenshots | Nine 1720×1000 primary-journey screens captured and reviewed once; zero external requests/runtime problems and no blocking visual defect |
+| Privacy | **445 candidate files passed** |
 | Frozen/package | Schema-0011 frozen/staged inspection, deep strict ad-hoc signature, and normal/abrupt packaged lifecycle passed |
 
 The streamlined-workflow tests verify explicit named-profile routing, refusal
@@ -29,6 +30,9 @@ of anonymous intake, profile-bound extraction, the terminal audit review gate,
 and deterministic cited Markdown/JSON download. The backend integration covers
 synthetic profile creation, intake, decisions, person persistence, automatic
 audit execution, exact results, cited local AI, proposal promotion, and reopen.
+The Playwright journey uses only synthetic name, username, URL, workplace, and
+location clues and traverses every primary UI handoff through a downloaded
+cited package.
 
 The profile-deletion integration test creates a synthetic profile with ingested
 identity data, rejects a mismatched confirmation name, deletes with the current

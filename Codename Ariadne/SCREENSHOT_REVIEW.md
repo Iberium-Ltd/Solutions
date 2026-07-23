@@ -116,3 +116,17 @@ The historical Phase 1 and Phase 3 reviews above have not been reopened or repre
 Fresh-context Playwright capture passed **4/4** for Public Discovery, Workspace AI, Corpus AI, and Entity Review/exact origins. The initially scrolled entity-origin capture worked but framed the screen poorly; a focused top-of-page recapture plus a separate panel detail passed **1/1** without requiring an application code change. Public Discovery, Workspace AI, the corrected Entity capture, and the exact-provenance panel were manually inspected, and no blocking defect remained.
 
 Five artifacts are retained under `apps/desktop/artifacts/ui-screenshots/final-targeted-20260713-01`: the four 1440×900 major-screen captures plus one focused exact-origin panel detail. The accepted 69-image matrix was not reopened and will not be manually reviewed again unless a later test identifies a shared layout regression. The current targeted visual gate is **passed**.
+
+## Streamlined primary-workflow disposition
+
+The final foreground workflow was captured once at 1720×1000 with a closed
+synthetic native runtime and external requests blocked. The focused pass
+contains nine screens: vault creation, named profile, local intake, entity
+review, audit setup, durable progress, exact-source review, cited AI review,
+and the final cited-package state. Its manifest reports zero external requests
+and zero console, page, or failed-request problems.
+
+All nine screens were reviewed once. The initial setup, exact-source, and AI
+captures were reframed once to put their relevant controls/evidence in view;
+only those three were rechecked. No blocking visual defect remained. The
+accepted 69-screen baseline was not reopened.
