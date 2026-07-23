@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppShell } from '../components/AppShell'
 
@@ -40,10 +40,15 @@ function renderShell() {
   return render(
     <MemoryRouter initialEntries={['/audits/new/intake']}>
       <AppShell>
-        <div data-testid="native-workspace" />
+        <LocationProbe />
       </AppShell>
     </MemoryRouter>,
   )
+}
+
+function LocationProbe() {
+  const location = useLocation()
+  return <div data-testid="native-workspace">{location.pathname}</div>
 }
 
 describe('native vault setup controls', () => {
@@ -84,7 +89,7 @@ describe('native vault setup controls', () => {
       await screen.findByRole('heading', { name: 'Create your local vault' }),
     ).toBeVisible()
     expect(
-      screen.getByRole('button', { name: 'Create vault and open Intake' }),
+      screen.getByRole('button', { name: 'Create vault and choose profile' }),
     ).toBeVisible()
     expect(
       screen.getByRole('link', { name: 'View getting-started guide' }),
@@ -99,6 +104,7 @@ describe('native vault setup controls', () => {
     expect(
       await screen.findByRole('button', { name: 'Lock local vault' }),
     ).toBeVisible()
+    expect(screen.getByTestId('native-workspace')).toHaveTextContent('/audits/new')
     expect(invokeMock).toHaveBeenCalledWith('core_create_vault', {
       displayName: 'Local Ariadne vault',
     })

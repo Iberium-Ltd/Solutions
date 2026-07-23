@@ -5,13 +5,16 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clipboard,
+  Download,
   ExternalLink,
   FileSearch,
+  FileText,
   LoaderCircle,
   Pause,
   Play,
   RefreshCw,
   Search,
+  ShieldCheck,
   Sparkles,
   Square,
 } from 'lucide-react'
@@ -26,6 +29,11 @@ import {
   executeIdentityAuditBatch,
   getIdentityAudit,
 } from '../app/identityDiscoveryBoundary'
+import {
+  buildIdentityAuditPackage,
+  type IdentityAuditPackage,
+  type IdentityAuditPackageFormat,
+} from '../app/identityAuditPackage'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { Badge, Button, Metric, PageHeader, Panel, Progress } from '../components/Primitives'
 
@@ -52,6 +60,19 @@ function formatTime(value: number | null | undefined): string {
   }).format(new Date(value / 1_000))
 }
 
+function savePackage(artifact: IdentityAuditPackage) {
+  const blob = new Blob([artifact.content], { type: artifact.mediaType })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = artifact.filename
+  link.hidden = true
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+}
+
 export function IdentityAuditPage() {
   const { auditId } = useParams<{ auditId: string }>()
   const profileId = usePhase3WorkflowStore((state) => state.profileId)
@@ -63,6 +84,10 @@ export function IdentityAuditPage() {
   const [actionPending, setActionPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [packageFormat, setPackageFormat] =
+    useState<IdentityAuditPackageFormat>('MARKDOWN')
+  const [packagePending, setPackagePending] = useState(false)
+  const [auditPackage, setAuditPackage] = useState<IdentityAuditPackage | null>(null)
 
   useEffect(() => {
     if (profileId === null || auditId === undefined) return
@@ -142,6 +167,21 @@ export function IdentityAuditPage() {
     }
   }
 
+  async function finishAudit() {
+    if (detail === null || packagePending) return
+    setPackagePending(true)
+    setError(null)
+    try {
+      const artifact = await buildIdentityAuditPackage(detail, packageFormat)
+      setAuditPackage(artifact)
+      savePackage(artifact)
+    } catch {
+      setError('The final audit package could not be generated. Reload the committed run and try again.')
+    } finally {
+      setPackagePending(false)
+    }
+  }
+
   if (profileId === null || auditId === undefined) {
     return (
       <div className="page identity-audit-page" data-testid="route-ready">
@@ -163,6 +203,10 @@ export function IdentityAuditPage() {
 
   const percentage = detail.audit.progressMicros / 10_000
   const running = RUNNING_STATES.has(detail.audit.state)
+  const finalizable = TERMINAL_GOOD.has(detail.audit.state)
+  const unresolvedProposals = detail.proposals.filter(
+    (proposal) => proposal.reviewState === 'UNREVIEWED',
+  ).length
 
   return (
     <div className="page identity-audit-page" data-testid="route-ready">
@@ -194,6 +238,59 @@ export function IdentityAuditPage() {
         <Metric label="Review proposals" value={String(detail.audit.proposalCount)} detail="never auto-promoted" tone="amber" />
         <Metric label="Tool receipts" value={String(detail.receipts.length)} detail="execution accountability" tone="violet" />
       </div>
+
+      {finalizable ? (
+        <Panel
+          className="identity-finish panel--signal"
+          eyebrow="Final step · cited local artifact"
+          title="Finish this audit"
+          action={<Badge tone={unresolvedProposals === 0 ? 'green' : 'amber'}>{unresolvedProposals === 0 ? 'Ready to export' : `${unresolvedProposals} reviews remaining`}</Badge>}
+        >
+          <div className="panel__body identity-finish__body">
+            <div className="identity-finish__checks">
+              <span><CheckCircle2 size={16} /><strong>Discovery terminal</strong><small>{detail.audit.terminalTasks}/{detail.audit.totalTasks} tasks terminal</small></span>
+              <span><CheckCircle2 size={16} /><strong>Exact sources retained</strong><small>{detail.results.length} result URLs with provider origin</small></span>
+              <span className={unresolvedProposals === 0 ? '' : 'is-pending'}>{unresolvedProposals === 0 ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}<strong>Human review</strong><small>{unresolvedProposals === 0 ? 'No unresolved proposals' : 'Review proposals before final export'}</small></span>
+              <span><ShieldCheck size={16} /><strong>Analysis labelled</strong><small>{detail.aiAnalysis?.status.toLocaleLowerCase() ?? 'No analysis produced'}</small></span>
+            </div>
+            {unresolvedProposals > 0 ? (
+              <Button variant="primary" onClick={() => setView('REVIEW')}>
+                Review {unresolvedProposals} proposal{unresolvedProposals === 1 ? '' : 's'}
+              </Button>
+            ) : (
+              <div className="identity-finish__export">
+                <label className="field">
+                  <span>Final package</span>
+                  <select
+                    className="select"
+                    value={packageFormat}
+                    disabled={packagePending}
+                    onChange={(event) => {
+                      setPackageFormat(event.target.value as IdentityAuditPackageFormat)
+                      setAuditPackage(null)
+                    }}
+                  >
+                    <option value="MARKDOWN">Cited Markdown</option>
+                    <option value="JSON">Structured JSON</option>
+                  </select>
+                </label>
+                <Button variant="primary" disabled={packagePending} onClick={() => void finishAudit()}>
+                  {packagePending ? <LoaderCircle className="spin" size={14} /> : <Download size={14} />}
+                  {packagePending ? 'Building package…' : 'Generate and download'}
+                </Button>
+              </div>
+            )}
+            {auditPackage ? (
+              <div className="identity-finish__artifact" role="status">
+                <FileText size={16} />
+                <div><strong>{auditPackage.filename}</strong><small>{auditPackage.byteCount.toLocaleString()} bytes · SHA-256 {auditPackage.sha256}</small></div>
+                <Button size="compact" variant="secondary" onClick={() => savePackage(auditPackage)}><Download size={13} />Download again</Button>
+              </div>
+            ) : null}
+            <p className="text-muted">The package includes exact result URLs, provider coverage and failures, cited analysis, proposal decisions, and explicit uncertainty. Nothing is uploaded.</p>
+          </div>
+        </Panel>
+      ) : null}
 
       <div className="identity-audit-tabs" role="tablist" aria-label="Audit evidence views">
         {([

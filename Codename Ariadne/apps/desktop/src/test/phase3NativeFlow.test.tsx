@@ -44,14 +44,6 @@ const secondSegmentId = '99999999-9999-4999-8999-999999999999'
 
 const response = (data: unknown) => ({ requestId, data })
 
-const profile = {
-  profileId,
-  displayLabel: 'Local review profile',
-  purpose: 'Authorised local identity review',
-  status: 'ACTIVE',
-  revision: 1,
-}
-
 const receipt = {
   sourceId,
   profileId,
@@ -149,8 +141,8 @@ describe('native Phase 3 UI flow', () => {
 
   it('submits pasted text locally, then releases it without browser persistence', async () => {
     const privateInput = 'Authorised ephemeral source 7f4d8a'
+    usePhase3WorkflowStore.getState().setProfileId(profileId)
     invokeMock.mockImplementation(async (command: string) => {
-      if (command === 'core_create_profile') return response(profile)
       if (command === 'core_intake_paste') return response(receipt)
       throw new Error('Unexpected native command')
     })
@@ -169,13 +161,8 @@ describe('native Phase 3 UI flow', () => {
     expect(
       screen.getAllByRole('link', { name: /Review candidates/ })[0],
     ).toHaveAttribute('href', '/audits/new/entities')
-    expect(invokeMock).toHaveBeenNthCalledWith(1, 'core_create_profile', {
-      request: expect.objectContaining({
-        displayLabel: 'Local review profile',
-        purpose: 'Authorised local identity review',
-      }),
-    })
-    expect(invokeMock).toHaveBeenNthCalledWith(2, 'core_intake_paste', {
+    expect(invokeMock).toHaveBeenCalledTimes(1)
+    expect(invokeMock).toHaveBeenCalledWith('core_intake_paste', {
       request: expect.objectContaining({
         profileId,
         content: privateInput,
@@ -190,6 +177,25 @@ describe('native Phase 3 UI flow', () => {
       profileId,
       sourceId,
     })
+  })
+
+  it('requires an explicitly named profile before intake', () => {
+    render(
+      <MemoryRouter>
+        <IntakePage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', {
+      name: 'Choose where this audit belongs',
+    })).toBeVisible()
+    expect(screen.getByRole('link', {
+      name: /Create or select profile/,
+    })).toHaveAttribute('href', '/audits/new')
+    expect(screen.queryByRole('textbox', {
+      name: 'Local source text',
+    })).not.toBeInTheDocument()
+    expect(invokeMock).not.toHaveBeenCalled()
   })
 
   it('sends one allowed browser-selected file with exact integrity metadata and no path', async () => {

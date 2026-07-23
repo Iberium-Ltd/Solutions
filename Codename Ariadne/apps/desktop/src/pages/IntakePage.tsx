@@ -16,11 +16,7 @@ import {
 } from 'lucide-react'
 import { Badge, Button, PageHeader, Panel } from '../components/Primitives'
 import { nativeRuntimeAvailable } from '../app/coreBoundary'
-import {
-  createProfile,
-  submitFileIntake,
-  submitPastedIntake,
-} from '../app/phase3Boundary'
+import { submitFileIntake, submitPastedIntake } from '../app/phase3Boundary'
 import { prepareSelectedIntakeFile } from '../app/selectedIntakeFile'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import type { IntakeReceipt } from '../../../../packages/contracts/src/generated/api'
@@ -79,25 +75,12 @@ function NativeIntakePage() {
     'NONE',
   )
   const profileId = usePhase3WorkflowStore((state) => state.profileId)
-  const setProfileId = usePhase3WorkflowStore((state) => state.setProfileId)
   const setSourceId = usePhase3WorkflowStore((state) => state.setSourceId)
   const clearSource = usePhase3WorkflowStore((state) => state.clearSource)
-  const profileIdempotencyKey = useRef(crypto.randomUUID())
   const pasteIdempotencyKey = useRef(crypto.randomUUID())
   const fileIntakeRetry = useRef<FileIntakeRetryBinding | null>(null)
   const pending = status === 'PROCESSING'
   const ready = status === 'READY' && receipt !== null
-
-  async function ensureProfile(): Promise<string> {
-    if (profileId !== null) return profileId
-    const profile = await createProfile({
-      idempotencyKey: profileIdempotencyKey.current,
-      displayLabel: 'Local review profile',
-      purpose: 'Authorised local identity review',
-    })
-    setProfileId(profile.profileId)
-    return profile.profileId
-  }
 
   function acceptReceipt(nextReceipt: IntakeReceipt, expectedProfileId: string) {
     if (nextReceipt.profileId !== expectedProfileId) {
@@ -114,7 +97,8 @@ function NativeIntakePage() {
     setStatus('PROCESSING')
     clearSource()
     try {
-      const activeProfileId = await ensureProfile()
+      if (profileId === null) throw new Error('A named profile is required')
+      const activeProfileId = profileId
       const nextReceipt = await submitPastedIntake({
         idempotencyKey: pasteIdempotencyKey.current,
         profileId: activeProfileId,
@@ -149,7 +133,8 @@ function NativeIntakePage() {
     clearSource()
     try {
       const prepared = await prepareSelectedIntakeFile(selectedFiles[0])
-      const activeProfileId = await ensureProfile()
+      if (profileId === null) throw new Error('A named profile is required')
+      const activeProfileId = profileId
       const fingerprint = fileIntakeFingerprint(activeProfileId, prepared)
       const idempotencyKey =
         fileIntakeRetry.current?.fingerprint === fingerprint
@@ -207,6 +192,28 @@ function NativeIntakePage() {
     'Human review',
   ] as const
 
+  if (profileId === null) {
+    return (
+      <div className="page intake-page" data-testid="route-ready">
+        <PageHeader
+          eyebrow="Audit builder · profile required"
+          title="Choose where this audit belongs"
+          description="Ariadne never creates an unnamed generic profile. Create or select a durable profile before importing identifiers."
+        />
+        <Panel className="panel--signal">
+          <div className="empty-state">
+            <LockKeyhole size={24} />
+            <h2>No active profile</h2>
+            <p>The selected profile will retain this intake, review decisions, sources, audit progress, and final package.</p>
+            <Link className="button button--primary" to="/audits/new">
+              Create or select profile <ArrowRight size={14} />
+            </Link>
+          </div>
+        </Panel>
+      </div>
+    )
+  }
+
   return (
     <div className="page intake-page" data-testid="route-ready">
       <PageHeader
@@ -227,7 +234,7 @@ function NativeIntakePage() {
       />
 
       <ol className="wizard-steps" aria-label="Audit creation steps">
-        {['Audit type', 'Intake', 'Entities', 'Transmission', 'Plan', 'Budget', 'Review'].map((step, index) => (
+        {['Profile', 'Intake', 'Entities', 'Discovery', 'AI review', 'Results', 'Report'].map((step, index) => (
           <li className={index < 1 ? 'is-complete' : index === 1 ? 'is-active' : ''} key={step}>
             <span>{index < 1 ? <Check size={11} /> : index + 1}</span>
             <strong>{step}</strong>
@@ -370,7 +377,7 @@ function SimulatedIntakePage() {
       />
 
       <ol className="wizard-steps" aria-label="Audit creation steps">
-        {['Audit type', 'Intake', 'Entities', 'Transmission', 'Plan', 'Budget', 'Review'].map((step, index) => (
+        {['Profile', 'Intake', 'Entities', 'Discovery', 'AI review', 'Results', 'Report'].map((step, index) => (
           <li className={index < 1 ? 'is-complete' : index === 1 ? 'is-active' : ''} key={step}>
             <span>{index < 1 ? <Check size={11} /> : index + 1}</span>
             <strong>{step}</strong>

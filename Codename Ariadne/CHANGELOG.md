@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-23 — Streamlined foreground audit completion
+
+- Made explicit named-profile selection the native entry point and prevented
+  intake from silently creating an anonymous generic profile.
+- Connected the primary journey as profile → intake → entity review → People →
+  full audit → proposal review → final package, while keeping manual discovery
+  screens as optional expert tools.
+- Added deterministic terminal Markdown/JSON audit packages with exact source
+  URLs, provider coverage, failures, proposals, cited AI analysis, receipts,
+  truncation state, byte count, and SHA-256.
+- Passed the focused backend workflow integration, 152/152 frontend tests,
+  typecheck, lint, production build, a fresh 4/4 live `qwen3:30b` schema/
+  summary/connections/gap-analysis run, the 444-file privacy scan, and fresh
+  normal/abrupt packaged-app lifecycle and strict-signature checks.
+
 ## 2026-07-23 — Persistent identity audits and confirmed profile deletion
 
 - Added named-person persistence, durable one-command audits across seven

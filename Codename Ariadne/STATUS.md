@@ -1,14 +1,21 @@
 # Codename Ariadne — Project Status
 
 Last updated: 2026-07-23
-Overall state: **57-operation/55-path persistent identity-audit candidate; complete source, frozen, and packaged lifecycle gates pass; production release readiness remains incomplete**
+Overall state: **streamlined foreground identity-audit workflow complete and packaged at the 57-operation/55-path candidate; production release readiness remains incomplete**
 
 ## Implemented at the current source boundary
 
 - The generated contract contains **57 narrow operations (4 GET, 53 POST; 55 distinct paths)** at schema head `0011_profile_purge`.
-- The current frontend passes typecheck, lint, production build, and **148/148 Vitest tests across 36 files**.
+- The current frontend passes typecheck, lint, production build, and **152/152 Vitest tests across 38 files**.
+- Native vault creation now leads to explicit named-profile creation or
+  selection. Intake refuses to create a hidden generic profile, and the default
+  native route enters the persistent People workspace.
 - People is now the persistent product centre: one named profile retains identifiers, exact sources, audit history, results, cited AI analysis, review proposals, and durable progress without re-entering data in Discovery Console.
 - **Run full audit** snapshots explicit depth/request/time/provider/model settings and automatically works through DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency surfaces. It supports durable crash recovery, pause/resume/cancel, exact terminal outcomes, and progress derived from frontier state rather than animation.
+- A terminal completed or partial audit now ends in a review gate and a
+  deterministic Markdown/JSON download containing exact source URLs, provider
+  results, coverage/failures, proposals, cited AI analysis, receipts,
+  truncation flags, byte count, and SHA-256.
 - Selected local AI runs after the deterministic frontier and stores only source-grounded facts, connections, and next steps with exact result citations. If the selected model is unavailable or changes, Ariadne records an explicit deterministic fallback instead of inventing a model result.
 - Positive proposal decisions promote reviewed knowledge into canonical entities and retain proposal-to-entity exact-source provenance.
 - A native **Delete active local profile** action requires typing the exact profile name, refreshes the profile revision, physically purges all profile-scoped rows and linked jobs/idempotency results in one transaction, uses SQLite secure deletion, and vacuums freed pages. The accidental July 23 workspace was removed from the live app and placed in a recoverable user Trash backup.
@@ -30,9 +37,12 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 - Generated contract: **57 operations / 55 paths (4 GET, 53 POST)**; drift check passes.
 - Python: Ruff passes across **171 files**, strict mypy across **94 source files**, and the full aggregate completes with **498 passed and 4 intentional skips in 473.34 seconds**.
 - Rust: format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual Keychain test in 15.16 seconds.
-- Frontend: typecheck, lint, production build, and **148/148 Vitest tests across 36 files** pass.
-- Privacy: **440 candidate files passed**.
-- Live local Qwen: separate opt-in `qwen3:30b` run **4/4 passed in 125.98 seconds**.
+- Frontend: typecheck, lint, production build, and **152/152 Vitest tests across 38 files** pass.
+- Focused end-to-end backend: the synthetic named-profile → intake → decision →
+  audit execution → cited AI → proposal promotion → reopen workflow passes.
+- Privacy: **444 candidate files passed**.
+- Live local Qwen: fresh opt-in `qwen3:30b` run **4/4 passed in 122.66 seconds**;
+  Ollama reported the 44 GB model at 100% GPU during execution.
 - Targeted Chromium: final gate **2/2 passed in 15.1 seconds**, with no external request, error, failed request, or horizontal overflow; the earlier screenshot capture/review run passed 2/2 in 21.3 seconds, and inspection of only the changed query composer and one Settings image found no blocking defect.
 - HIBP direct official synthetic smoke: `SUCCEEDED`/`COMPLETE`, HTTP 200, one exact breach source.
 - HIBP k-anonymity public-key smoke: HTTP 401 correctly surfaced as an HIBP plan/subscription requirement; no successful result claimed.
@@ -42,8 +52,8 @@ Current 57-operation local package evidence:
 
 - Frozen/staged sidecar: 21,053,600 bytes, arm64/minimum macOS 11.0, SHA-256 `dccaaa5d3c9a60b668ecd85cdd0d00a79c4b16aadd2c02995e43891478a9d7f5`.
 - Signed packaged sidecar: 21,053,584 bytes, SHA-256 `74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`, CDHash `396892d4ec3a4784ceb924ddff682987ac65d852`.
-- Desktop executable: 17,815,088 bytes, arm64/minimum macOS 14.0, SHA-256 `08491aabfc4d61daa61cf7b5137162b9a64403987b63468fa7e5031b19a8f81f`, CDHash `ac7b5fed454dfeaddc391c468aed1fad20232b4f`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 4,942/3,196 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Desktop executable: 17,815,088 bytes, arm64/minimum macOS 14.0, SHA-256 `716052aab25cb30f2784c876e27f17c8ae2664f8b6f688a1db8377a57e06399d`, CDHash `a743997917251694713e1e44494d9aac94a5aa02`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 3,852/2,532 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 
 ### Historical 48- and 45-operation candidate evidence
 
@@ -85,4 +95,8 @@ Those identities remain historical evidence only and are not relabelled as 48-op
 
 ## Next milestone
 
-Finish evidence retention/viewing, scheduled ingestion, authorised connectors, specialist providers, and production release validation. Preserve the 48-operation artifact identities as historical local proof, not evidence for the current source or a distributable release.
+The current scoped goal is complete. Optional follow-on work is evidence
+streaming/retention, authorised connectors, specialist providers, saved-artifact
+management, and production release validation. Background scheduling is not a
+current priority. Preserve earlier artifact identities as historical local
+proof, not evidence for this source or a distributable release.

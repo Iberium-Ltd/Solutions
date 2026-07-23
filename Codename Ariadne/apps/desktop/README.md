@@ -70,7 +70,7 @@ After ad-hoc packaging, the arm64/minimum-macOS-11 sidecar is 21,053,584 bytes
 with SHA-256
 `74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`;
 the arm64/minimum-macOS-14 desktop executable is 17,815,088 bytes with SHA-256
-`08491aabfc4d61daa61cf7b5137162b9a64403987b63468fa7e5031b19a8f81f`.
+`716052aab25cb30f2784c876e27f17c8ae2664f8b6f688a1db8377a57e06399d`.
 This remains a local ad-hoc packaging proof, not a signed/notarised release, and
 no vault key enters the webview boundary. The historical 45-operation and
 earlier identities remain preserved separately.
@@ -101,7 +101,12 @@ The current targeted gate retained four 1440×900 major-screen captures and one 
 
 Production routes are lazy-loaded, and the production build completes without a large-chunk warning. The visual harness uses deterministic local fixtures, blocks external requests, exercises reduced-motion and accessible-name contracts, and verifies that key state evidence remains visible at compact viewports.
 
-At the current 57-operation source head, frontend typecheck, lint, production build, and 148/148 Vitest tests across 36 files pass. The 69-image baseline remains closed unless a functional failure indicates a shared regression.
+At the current 57-operation source head, frontend typecheck, lint, production
+build, and 152/152 Vitest tests across 38 files pass. The primary native journey
+now runs from explicit named-profile selection through intake, review, automatic
+audit execution, proposal review, and a cited Markdown/JSON download. The
+69-image baseline remains closed unless a functional failure indicates a shared
+regression.
 
 ## Source map
 

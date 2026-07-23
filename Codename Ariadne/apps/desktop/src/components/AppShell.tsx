@@ -277,7 +277,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       liveSession.lockState === 'UNLOCKED'
     ) {
       redirectAfterVaultCreation.current = false
-      navigate('/audits/new/intake')
+      navigate('/audits/new')
     }
   }, [liveSession, navigate])
 
@@ -629,7 +629,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       aria-busy={coreBoundary.vaultActionPending}
                     >
                       {liveSession?.vaultState === 'NO_VAULT'
-                        ? 'Create vault and open Intake'
+                        ? 'Create vault and choose profile'
                         : 'Unlock and continue'}
                     </Button>
                     <Link

@@ -11,15 +11,20 @@ command.
 ## First launch
 
 1. Open the native app and select **Create local vault** in the lower-left
-   corner. Ariadne creates the encrypted local workspace and opens **Intake**.
-2. Add one authorised source. For a harmless trial, paste a fictional record
+   corner. Ariadne creates the encrypted local workspace and opens the
+   profile chooser.
+2. Choose **Create a named profile**, enter a local profile label and purpose,
+   then select **Create profile and continue**. To resume later, choose
+   **Continue an existing profile** instead. Intake cannot silently create a
+   generic profile.
+3. Add one authorised source. For a harmless trial, paste a fictional record
    such as `Casey Rowan · casey.rowan@example.invalid`, then select **Extract
    locally**. You can instead choose one TXT, Markdown, CSV, JSON, or vCard file
    up to 1 MiB.
-3. The first successful intake automatically creates a local review profile.
-   Select **Review candidates**, inspect the extracted entities, and record a
-   decision for each one.
-4. The active profile appears in the upper-right profile switcher. On a later
+4. Select **Review candidates**, inspect the extracted entities, and record a
+   decision for each one. Bulk review can apply shared settings to unresolved
+   candidates; use individual review for exceptions.
+5. The active profile appears in the upper-right profile switcher. On a later
    launch, unlock the vault and use this switcher to resume an active or draft
    profile.
 
@@ -29,9 +34,11 @@ The **Getting started** screen remains available while the vault is locked.
 
 | Group | Screen | Practical use |
 | --- | --- | --- |
-| Overview | Mission Control, New Audit, Operations | Synthetic orientation and workflow demonstrations. Use **Add source** for the live native intake path. |
+| Overview | New Audit | Create or resume a named profile and start the live native intake path. |
+| Overview | Mission Control, Operations | Synthetic orientation and workflow demonstrations. |
 | Overview | Findings | Review persisted findings, evidence metadata, assessments, and attribution decisions. |
-| Explore | Discovery Console | Run approved public web, GitHub-user, or HIBP searches; compose exact multi-engine browser queries; combine identifiers into an inspectable plan; or open a reviewed manual research portal. |
+| Explore | People | Review a persistent profile, start or resume a complete audit, inspect run history, and delete the active profile after exact-name confirmation. |
+| Explore | Discovery Console | Optional expert tools for one-off public web, GitHub-user, or HIBP searches, multi-engine browser queries, inspectable plans, and manual portals. |
 | Explore | AI Workspace | Analyse selected parts of the active encrypted profile with exact citations. |
 | Explore | Corpus AI | Analyse several selected local files together without adding them to the profile. |
 | Explore | Link Map | Inspect reviewed entities, relationships, confidence, contradictions, and origins. |
@@ -45,121 +52,78 @@ The **Getting started** screen remains available while the vault is locked.
 
 ## Recommended workflow
 
-### 1. Intake and entity review
+### 1. Choose a durable profile
 
-Open **Add source** or **New Audit → Continue to intake**. Paste text or select
-one supported file, then run local extraction. Ariadne keeps deterministic
-extraction even if optional local-model enrichment is unavailable.
+Open **New Audit**, create a named profile or continue an existing one, and
+confirm that the displayed profile is the intended destination. A profile is
+the long-lived container for identifiers, sources, decisions, audits, results,
+proposals, and citations; each full audit is a separate retained run.
 
-On **Entity Review**, select each candidate and confirm, reject, edit, or retain
-it according to the available decision controls. Selecting an entity also opens
-its **Source origins** panel. Do not treat an extracted candidate as established
-identity until you have reviewed its origin and context.
+### 2. Import once and review
 
-Labelled plain-text rows such as `username,synthetic_alias,current,Primary`
-and `name,Synthetic Person,current,Primary` are recognized alongside ordinary
-email, URL, domain, and `@handle` patterns. The **Bulk review** panel can apply
-one decision, temporal state, search policy, and transmission policy to every
-unresolved candidate while preserving each candidate's own sensitivity. Use
-individual review for exceptions and uncertain or unrelated identifiers.
+Paste text or select one supported local file and run extraction. On **Entity
+Review**, confirm, reject, or edit candidates and inspect source origins when
+needed. Labelled rows such as `username,synthetic_alias,current,Primary` and
+`name,Synthetic Person,current,Primary` are recognized alongside ordinary
+email, URL, domain, and `@handle` patterns.
 
-### 2. Inspect the Link Map
+The **Bulk review** panel applies one decision, temporal state, search policy,
+and transmission policy to every unresolved candidate while preserving
+entity-specific sensitivity. The reviewed identifiers remain attached to the
+profile, so the main workflow does not require retyping them.
 
-Open **Link Map** after entity review. Select a node or edge to inspect why it
-exists. For a persisted edge, expand **Exact source references** to see its
-source, segment, span, support or contradiction disposition, extraction type,
-visibility, and confidence. A graph connection is evidence to review, not an
-automatic identity conclusion.
+### 3. Start the complete audit
 
-### 3. Discover, combine, and capture results
+After review, continue to **People**. In **Run the complete identity audit**:
 
-Open **Discovery Console → Public search** and:
+1. Name the run.
+2. Choose maximum coverage, full rescan, incremental, or retry-blocked mode.
+3. Keep the bounded depth and request budget, or adjust them deliberately.
+4. Enable the selected local model if it is configured.
+5. Enable HIBP only if you accept that its tasks may require a subscription key.
+6. Select **Start full audit**.
 
-1. Choose **Public web search** or **GitHub users**.
-2. Enter the exact query that may be sent, for example
-   `"Casey Rowan" atlas-lab.example.invalid`.
-3. Confirm the authorised self-audit checkbox and run the search.
-4. Review the exact URL, title, snippet, provider, and rank of each result.
-5. Select **Save finding** only for a useful result.
+The durable progress screen advances bounded task batches automatically across
+DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate
+transparency. It shows actual queued/running/terminal task state, supports
+pause/resume/cancel, and survives closing or reopening the view. Blocked,
+empty, partial, and failed checks remain coverage states, not claims of absence.
 
-Saving is atomic: Ariadne retains the reviewed URL reference, a finding, its
-neutral assessment, and their links together in the active profile. The raw
-search query is not stored. A blocked, empty, partial, or failed provider result
-is a coverage state, never proof that something does not exist.
+### 4. Review exact results and AI proposals
 
-Use **Query composer** to combine an exact phrase, alternatives, `site:`,
-excluded sites, `filetype:`, `intitle:`, `inurl:`, excluded terms, date bounds,
-and optional provider-specific syntax. The exact generated query stays visible.
-After confirming authority, either load it into Ariadne's bounded DuckDuckGo
-form or open a user-mediated search in Google, Bing, DuckDuckGo, Brave, Ecosia,
-Startpage, or Mojeek. Those links use your default macOS browser; provider
-operator support varies, and browser results are not imported or saved
-automatically.
+Use the run's **Results**, **AI analysis**, **Frontier**, and **Review** tabs.
+Every retained result includes its exact URL and provider. Local AI output is
+review-only and must cite retained result URLs. Confirm a proposal only when its
+source supports the relationship; use **Search deeper** or **Unrelated** for
+the other cases.
 
-Use **Plan & combine** when you have several email, username, domain, name, or
-URL ideas. Add the identifiers, select the available providers, and compile the
-plan. Compilation is deterministic and makes no network request. Every step
-shows the identifier hash, destination route, transmission mode, and
-prerequisites. Select **Load** to move one step into the relevant search form;
-you still approve and run it separately.
+### 5. Finish and download
 
-Use **Breach exposure** for Have I Been Pwned v3. Enter your subscription key,
-which is held only for that request and then cleared. Email checks default to
-the six-character SHA-1 k-anonymity range API; direct email mode requires a
-second approval. Domain enumeration first confirms that HIBP lists the domain
-as verified for the supplied subscription. Results show the exact request URL,
-HTTP status, observation time, request hash, breach-record URLs, attribution,
-and retry guidance.
+When discovery is terminal, the **Finish this audit** panel shows any remaining
+human reviews. Resolve them, choose Markdown or JSON, and select **Generate and
+download**. Ariadne creates an inert local package containing:
 
-**Manual portals** opens fixed official entry points for services such as
-DeHashed, Spokeo, Intelius, the Wayback Machine, ICANN Lookup, Companies House,
-GitHub Search, and Google's Results about you. These are user-mediated links,
-not automated integrations: subscriptions and provider terms still apply, and
-Ariadne does not automate sign-in or access challenges. Bring back only a
-reviewed source URL or local export through the normal finding/evidence flow;
-never import exposed passwords or secrets.
+- run scope, state, stop reason, task coverage, gaps, and failures;
+- exact result URLs and provider attribution;
+- recursive leads and review decisions;
+- cited AI analysis and limitations; and
+- execution receipts, truncation flags, byte count, and SHA-256.
 
-### 4. Review findings and evidence
+The package is generated from the committed terminal revision and is not stored
+inside Ariadne after download.
 
-Open **Findings**, filter the queue, and open a finding. The detail screen shows
-the outcome separately from visibility, confidence, and human attribution.
-Review the exact source URL and capture metadata when present, attach or import
-an allowed evidence artifact if needed, and record the human decision.
+### Optional advanced tools
 
-Original evidence content remains sealed; the current UI exposes integrity and
-provenance metadata rather than actively rendering untrusted content.
+The Discovery Console, Query Composer, Transmission screen, individual public
+search forms, manual portals, Findings, Link Map, Compare Runs, Removal Tracker,
+and legacy Reports are supplementary tools. They are not required to complete
+the profile-to-audit-to-package journey.
 
-### 5. Compare checkpoints
-
-Open **Compare Runs** and create a local checkpoint. Enter one or more opaque
-provider IDs, such as `provider.synthetic.local`, and describe the coverage and
-run state honestly. This snapshots finding fingerprints and coverage without
-contacting a provider or copying evidence bytes.
-
-Create another checkpoint after the profile changes. With two checkpoints,
-choose the baseline and current run to review new, changed, unchanged, or absent
-finding fingerprints and coverage differences. Absence in one snapshot does
-not by itself prove removal.
-
-### 6. Organise remediation
-
-Create a case from a reviewed finding, then use **Removal Tracker** to maintain
-its local draft, deadline, evidence links, approval state, status, and append-only
-history. Ariadne prepares and tracks work locally; it does not send a request,
-contact a provider, submit a form, or provide legal advice.
-
-### 7. Generate a report
-
-**Reports** requires two checkpoints. Choose baseline and current runs, then:
-
-- use **Redacted** for the default artifact, which preserves opaque source
-  mappings and hashes while omitting revealing values and exact URLs; or
-- use **Full · explicit approval** only when you intend to include the available
-  finding, remediation, and exact-source details.
-
-Choose Markdown or canonical JSON, generate the report, review its preview and
-SHA-256, then explicitly save it. Generated reports are held in memory until you
-save them; Ariadne does not manage the saved file afterward.
+The Discovery Console can still run explicitly approved one-off DuckDuckGo,
+GitHub, or HIBP checks; generate browser handoffs for Google, Bing,
+DuckDuckGo, Brave, Ecosia, Startpage, and Mojeek; and open fixed official
+portals. It does not automate sign-in, scrape browser results, bypass CAPTCHA,
+paywalls, verification, rate limits, or other access controls.
 
 ## AI setup
 
@@ -263,21 +227,23 @@ the browser preview is not a substitute for vault access.
 
 ## Current non-features
 
-- No background scheduler, broad crawler, or guarantee to “find everything.”
+- No background scheduler or guarantee to “find everything.” Full audits run
+  while the native application is open and retain committed progress between
+  sessions.
 - No authenticated Gmail, GitHub, or other account connectors.
-- Automated discovery is limited to DuckDuckGo HTML, unauthenticated GitHub-user
-  search, and authorised HIBP v3 account/domain checks. Multi-engine query links
-  and other listed services are user-mediated browser handoffs or manual
+- Automated full-audit discovery is limited to the seven credential-free
+  surfaces listed above, plus optional authorised HIBP tasks. Multi-engine query
+  links and other listed services are user-mediated browser handoffs or manual
   portals, with no result scraping, login, CAPTCHA, paywall, rate-limit, or
   access-control bypass.
 - No automatic provider contact, takedown submission, message sending, or form
   dispatch.
 - No active evidence-content viewer, malware scanner, OCR, PDF/Office/archive
   intake, bulk intake, or files larger than the documented bounds.
-- Reports are Markdown or JSON only and are not retained by Ariadne after local
-  save.
-- Mission Control, New Audit planning, Operations, Geographic Map, Case Desk,
-  and Source Radar remain synthetic demonstrations.
+- Final audit packages and legacy reports are Markdown or JSON only and are not
+  retained by Ariadne after local save.
+- Mission Control, Operations, Geographic Map, Case Desk, and Source Radar
+  remain synthetic demonstrations in the current native build.
 - Local-model answers remain fallible and do not establish ownership,
   attribution, legal status, or exhaustive coverage.
 

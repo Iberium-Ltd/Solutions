@@ -466,7 +466,7 @@ function NativeEntitiesPage() {
       />
 
       <ol className="wizard-steps" aria-label="Audit creation steps">
-        {['Audit type', 'Intake', 'Entities', 'Transmission', 'Plan', 'Budget', 'Review'].map((step, index) => (
+        {['Profile', 'Intake', 'Entities', 'Discovery', 'AI review', 'Results', 'Report'].map((step, index) => (
           <li className={index < 2 ? 'is-complete' : index === 2 ? 'is-active' : ''} key={step}>
             <span>{index < 2 ? <Check size={11} /> : index + 1}</span><strong>{step}</strong>
           </li>
@@ -765,7 +765,7 @@ function SimulatedEntitiesPage() {
       />
 
       <ol className="wizard-steps" aria-label="Audit creation steps">
-        {['Audit type', 'Intake', 'Entities', 'Transmission', 'Plan', 'Budget', 'Review'].map((step, index) => (
+        {['Profile', 'Intake', 'Entities', 'Discovery', 'AI review', 'Results', 'Report'].map((step, index) => (
           <li className={index < 2 ? 'is-complete' : index === 2 ? 'is-active' : ''} key={step}>
             <span>{index < 2 ? <Check size={11} /> : index + 1}</span><strong>{step}</strong>
           </li>

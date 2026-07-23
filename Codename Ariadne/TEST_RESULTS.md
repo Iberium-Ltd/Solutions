@@ -1,7 +1,7 @@
 # Codename Ariadne — Test Results
 
 Last updated: 2026-07-23
-Current status: **57-operation/55-path complete source aggregate, frozen sidecar, and packaged macOS lifecycle pass**
+Current status: **streamlined foreground workflow, 57-operation/55-path source aggregate, frozen sidecar, and packaged macOS lifecycle pass**
 
 No confidential-reference content, name, or claim is reproduced in these results. Tests use synthetic fixtures except for the aggregate-only, ephemeral local benchmark described below.
 
@@ -18,9 +18,17 @@ operations and one confirmed physical-profile deletion operation.
 | Python full aggregate | **498 passed, 4 intentional skips in 473.34 seconds** |
 | Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **57 operations / 55 paths** |
 | Rust | Format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual macOS Keychain test in **15.16 seconds** |
-| Frontend | **148/148 passed across 36 files**; typecheck, lint, and production build passed |
-| Privacy | **440 candidate files passed** |
+| Frontend | **152/152 passed across 38 files**; typecheck, lint, and production build passed |
+| Focused workflow | **16/16 frontend workflow tests** plus the backend profile-to-audit integration passed |
+| Live local Qwen | Fresh opt-in `qwen3:30b` schema, summary, connections, and gap-analysis run: **4/4 passed in 122.66 seconds**; Ollama reported 44 GB loaded at 100% GPU |
+| Privacy | **444 candidate files passed** |
 | Frozen/package | Schema-0011 frozen/staged inspection, deep strict ad-hoc signature, and normal/abrupt packaged lifecycle passed |
+
+The streamlined-workflow tests verify explicit named-profile routing, refusal
+of anonymous intake, profile-bound extraction, the terminal audit review gate,
+and deterministic cited Markdown/JSON download. The backend integration covers
+synthetic profile creation, intake, decisions, person persistence, automatic
+audit execution, exact results, cited local AI, proposal promotion, and reopen.
 
 The profile-deletion integration test creates a synthetic profile with ingested
 identity data, rejects a mismatched confirmation name, deletes with the current
@@ -46,11 +54,11 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 | Package evidence | Current 57-operation result |
 |---|---|
-| Requested quit | 4,942 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
-| Abrupt parent exit | 3,196 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Requested quit | 3,852 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 2,532 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
 | Runtime permissions | `0700` directory; `0600` socket in both runs |
 | Signed packaged sidecar | 21,053,584 bytes; arm64/minimum macOS 11.0; SHA-256 `74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`; CDHash `396892d4ec3a4784ceb924ddff682987ac65d852` |
-| Desktop executable | 17,815,088 bytes; arm64/minimum macOS 14.0; SHA-256 `08491aabfc4d61daa61cf7b5137162b9a64403987b63468fa7e5031b19a8f81f`; CDHash `ac7b5fed454dfeaddc391c468aed1fad20232b4f` |
+| Desktop executable | 17,815,088 bytes; arm64/minimum macOS 14.0; SHA-256 `716052aab25cb30f2784c876e27f17c8ae2664f8b6f688a1db8377a57e06399d`; CDHash `a743997917251694713e1e44494d9aac94a5aa02` |
 | Bundle | 38,032 KiB allocated; deep strict ad-hoc signature verification passed |
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,
@@ -71,7 +79,7 @@ advanced-query composer and its approved-browser handoff add no API route.
 | Generated contracts | Generator and OpenAPI/TypeScript/Rust drift checks passed at **48 operations / 46 paths** |
 | Rust | Format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual macOS Keychain test in **22.31 seconds** |
 | Frontend | **143/143 passed across 36 files**; typecheck, lint, and production build passed |
-| Live local Qwen | Separate opt-in `qwen3:30b` run: **4/4 passed in 125.98 seconds** |
+| Live local Qwen | Historical opt-in `qwen3:30b` run: **4/4 passed in 125.98 seconds** |
 | Privacy | **425 candidate files passed** |
 | Targeted browser gate | Final Chromium **2/2 passed in 15.1 seconds**; no external request, console/page error, failed request, or horizontal overflow |
 | Frozen/package | Fresh frozen-sidecar inspection/staging and final ad-hoc Tauri package lifecycle/signature gates passed under the identities below |

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
+import { nativeRuntimeAvailable } from './app/coreBoundary'
 
 const DashboardPage = lazy(() =>
   import('./pages/DashboardPage').then((module) => ({
@@ -141,7 +142,7 @@ function RoutedApp() {
         }
       >
         <Routes>
-          <Route path="/" element={<Navigate replace to="/dashboard" />} />
+          <Route path="/" element={<Navigate replace to={nativeRuntimeAvailable() ? '/people' : '/dashboard'} />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/audits/new" element={<NewAuditPage />} />
           <Route path="/audits/new/intake" element={<IntakePage />} />

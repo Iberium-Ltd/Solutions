@@ -5,6 +5,27 @@ Last updated: 2026-07-23
 This list records usability and functional work discovered during a real
 authorised self-audit. It contains no audit subject values.
 
+## Current primary-workflow acceptance
+
+- [x] Native launch enters the named-profile workspace; vault creation routes to
+  profile creation/selection rather than an anonymous intake.
+- [x] Intake refuses to run without an explicitly selected named profile.
+- [x] One import flows through entity review into the persistent People
+  workspace without retyping reviewed identifiers.
+- [x] **Start full audit** creates a durable run and automatically advances its
+  bounded public-provider frontier with honest progress and pause/resume/cancel.
+- [x] Terminal runs expose exact result URLs, cited local-AI output, proposals,
+  failures, gaps, and execution receipts in one place.
+- [x] After human review, a terminal run downloads a deterministic Markdown or
+  JSON audit package with byte count and SHA-256.
+- [x] Multiple named profiles, retained run history, and exact-name-confirmed
+  local profile deletion are available.
+
+Background scheduling is deliberately outside the current completion goal. The
+unchecked sections below are follow-on breadth, specialist integrations,
+release hardening, or advanced-tool improvements; they do not block the tested
+profile → intake → review → full audit → review → package workflow.
+
 ## Completed in the persistent identity-audit restructure
 
 - [x] Add a named People/profile workspace that reuses reviewed identifiers,
@@ -32,7 +53,7 @@ authorised self-audit. It contains no audit subject values.
   import the source once, review only ambiguous items, choose an audit/security
   preset, approve the exact external scope, and let Ariadne complete the
   permitted work.
-- [ ] Treat Discovery Console, Query Composer, Transmission, individual provider
+- [x] Treat Discovery Console, Query Composer, Transmission, individual provider
   forms, and other expert controls as optional **Advanced tools**, not mandatory
   steps in the primary journey.
 - [ ] Offer clear execution presets such as **Local only**, **Approval at each
@@ -46,16 +67,17 @@ authorised self-audit. It contains no audit subject values.
 - [ ] Pause only for meaningful decisions: ambiguous identity attribution,
   missing credentials, provider access requirements, sensitive disclosure,
   contradictory evidence, or final report/remediation approval.
-- [ ] Provide one honest progress view showing completed, running, queued,
+- [x] Provide one honest progress view showing completed, running, queued,
   blocked, failed, skipped, and manual steps. Never represent a compiled plan or
   successful HTTP response as a completed finding.
-- [ ] End with a reviewable audit package: findings, exact sources, connections,
+- [x] End with a reviewable audit package: findings, exact sources, connections,
   uncertainty, coverage gaps, failed/blocked checks, suggested follow-ups,
-  comparison, remediation drafts, and a cited report.
+  review decisions, execution receipts, and a cited report. Comparison and
+  remediation remain optional specialist workflows.
 
 ## Priority 0 — Real profile and audit management
 
-- [ ] Replace the automatically named generic review profile with a proper
+- [x] Replace the automatically named generic review profile with a proper
   **Create profile** step before intake.
 - [ ] Let the user choose and later edit a clear profile name, description,
   purpose, tags, and optional notes without using the subject's sensitive values
@@ -63,14 +85,14 @@ authorised self-audit. It contains no audit subject values.
 - [ ] Support multiple named profiles in one vault with an obvious profile
   switcher, creation flow, archive state, duplicate warning, and deliberate
   merge/copy workflow.
-- [ ] Distinguish a long-lived subject profile from each individual audit run.
+- [x] Distinguish a long-lived subject profile from each individual audit run.
   A profile may contain many dated, named runs with their own scope, policy,
   providers, progress, results, checkpoints, and report.
-- [ ] Show **Create new profile**, **Continue existing profile**, and **Start new
+- [x] Show **Create new profile**, **Continue existing profile**, and **Start new
   run for this profile** as explicit first-launch/intake choices.
 - [ ] Allow safe profile and run renaming without changing immutable IDs,
   provenance, citations, or historical records.
-- [ ] Prevent accidental intake into the wrong active profile and require a clear
+- [x] Prevent accidental intake into the wrong active profile and require a clear
   profile/run confirmation before processing a file.
 
 ## Priority 0 — Durable history with explicit retention controls
