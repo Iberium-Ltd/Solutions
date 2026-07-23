@@ -22,6 +22,31 @@
 .identity-check strong { color: var(--color-text-secondary); font-size: calc(11.5px * var(--font-scale)); }
 .identity-check small { color: var(--color-text-muted); font-size: calc(10px * var(--font-scale)); }
 
+.identity-model-picker {
+  padding: 12px; border: 1px solid rgb(142 116 219 / 30%); border-radius: var(--radius-md);
+  background: linear-gradient(115deg, rgb(142 116 219 / 8%), var(--color-surface)); display: grid; gap: 10px;
+}
+.identity-model-picker__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.identity-model-picker__header > span { min-inline-size: 0; display: flex; align-items: center; gap: 9px; }
+.identity-model-picker__header > span > svg { flex: 0 0 auto; color: var(--color-accent-violet); }
+.identity-model-picker__header > span > span { display: flex; flex-direction: column; gap: 2px; }
+.identity-model-picker__header strong { color: var(--color-text-secondary); }
+.identity-model-picker__header small,
+.identity-model-picker__empty { color: var(--color-text-muted); font-size: calc(10px * var(--font-scale)); }
+.identity-model-picker__empty { padding: 14px; border: 1px dashed var(--color-border); border-radius: var(--radius-sm); text-align: center; }
+.identity-model-rail { overflow-x: auto; padding-block-end: 3px; display: flex; gap: 8px; scrollbar-width: thin; }
+.identity-model-rail > button {
+  min-inline-size: 220px; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface-raised); color: var(--color-text); display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; text-align: start; cursor: pointer;
+}
+.identity-model-rail > button:hover { border-color: rgb(88 223 245 / 42%); }
+.identity-model-rail > button.is-selected { border-color: rgb(142 116 219 / 68%); background: rgb(142 116 219 / 12%); box-shadow: inset 0 0 0 1px rgb(142 116 219 / 18%); }
+.identity-model-rail > button > svg { color: var(--color-accent-violet); }
+.identity-model-rail > button > span { min-inline-size: 0; display: flex; flex-direction: column; gap: 3px; }
+.identity-model-rail > button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.identity-model-rail > button small { color: var(--color-text-muted); font-size: calc(10px * var(--font-scale)); }
+
 .identity-source-list,
 .identity-run-list,
 .identity-result-list,

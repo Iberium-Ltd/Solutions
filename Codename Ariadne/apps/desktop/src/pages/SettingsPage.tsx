@@ -128,14 +128,27 @@ export function SettingsPage() {
       .then((loaded) => {
         if (cancelled) return
         setLocalAI(loaded)
-        setLocalAIModels(
-          loaded.selectedModel === null ? [] : [loaded.selectedModel],
-        )
-        setLocalAIError(null)
+        return discoverLocalAIModels({
+          provider: loaded.provider,
+          endpoint: loaded.endpoint,
+          selectedModel: loaded.selectedModel,
+        }).then((result) => {
+          if (cancelled) return
+          const models = result.models.map((model) => model.modelId)
+          setLocalAIModels(models)
+          setLocalAIError(
+            models.length === 0
+              ? 'The local server responded but reported no served models.'
+              : loaded.selectedModel !== null &&
+                  !models.includes(loaded.selectedModel)
+                ? 'The saved model is not currently served by this runtime.'
+                : null,
+          )
+        })
       })
       .catch(() => {
         if (!cancelled) {
-          setLocalAIError('Unlock the local vault to configure local AI.')
+          setLocalAIError('Unlock the vault and confirm the local model server is running.')
         }
       })
       .finally(() => {
@@ -439,7 +452,7 @@ export function SettingsPage() {
                   <small>HTTP localhost/127.0.0.0/8/::1 only. No API key or cloud fallback exists.</small>
                 </label>
                 <label className="field">
-                  <span>Explicit model</span>
+                  <span>Served model</span>
                   <select
                     className="select"
                     value={localAI.selectedModel ?? ''}
@@ -450,7 +463,7 @@ export function SettingsPage() {
                       setLocalAISaved(false)
                     }}
                   >
-                    <option value="">Choose a served model</option>
+                    <option value="">{localAIModels.length === 0 ? 'Select “Discover served models” first' : 'Choose a served model'}</option>
                     {localAIModels.map((model) => <option key={model} value={model}>{model}</option>)}
                   </select>
                 </label>

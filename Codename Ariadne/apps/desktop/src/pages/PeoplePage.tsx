@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import type {
   AuditMode,
+  LocalAIConnectionStatus,
+  LocalAISettings,
   PersonWorkspace,
 } from '../../../../packages/contracts/src/generated/api'
 import {
@@ -28,6 +30,12 @@ import {
   getIdentityWorkspace,
   updateIdentityPerson,
 } from '../app/identityDiscoveryBoundary'
+import {
+  discoverLocalAIModels,
+  getLocalAISettings,
+  testLocalAIConnection,
+  updateLocalAISettings,
+} from '../app/localAiBoundary'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { Badge, Button, Metric, PageHeader, Panel, Progress } from '../components/Primitives'
 
@@ -69,6 +77,11 @@ export function PeoplePage() {
     displayName: '', purpose: '', notes: '', tags: '',
   })
   const [sourceForm, setSourceForm] = useState({ url: '', title: '', notes: '' })
+  const [localAI, setLocalAI] = useState<LocalAISettings | null>(null)
+  const [localAIModels, setLocalAIModels] = useState<readonly string[]>([])
+  const [localAIStatus, setLocalAIStatus] = useState<LocalAIConnectionStatus | null>(null)
+  const [localAIPending, setLocalAIPending] = useState(false)
+  const [localAIError, setLocalAIError] = useState<string | null>(null)
   const [auditForm, setAuditForm] = useState({
     name: `Full identity audit ${new Date().toLocaleDateString()}`,
     mode: 'MAXIMUM_COVERAGE' as AuditMode,
@@ -77,6 +90,45 @@ export function PeoplePage() {
     useLocalAi: true,
     includeHibp: false,
   })
+
+  async function loadLocalAI() {
+    setLocalAIPending(true)
+    setLocalAIError(null)
+    try {
+      const loaded = await getLocalAISettings()
+      const discovered = await discoverLocalAIModels({
+        provider: loaded.provider,
+        endpoint: loaded.endpoint,
+        selectedModel: loaded.selectedModel,
+      })
+      const models = discovered.models.map((model) => model.modelId)
+      setLocalAI(loaded)
+      setLocalAIModels(models)
+      setAuditForm((current) => ({
+        ...current,
+        useLocalAi: loaded.enabled && loaded.selectedModel !== null,
+      }))
+      if (models.length === 0) {
+        setLocalAIError('Ollama is reachable but is not serving any models.')
+      } else if (
+        loaded.selectedModel !== null &&
+        !models.includes(loaded.selectedModel)
+      ) {
+        setLocalAIError('The saved model is not currently served by Ollama.')
+      }
+    } catch {
+      setLocalAI(null)
+      setLocalAIModels([])
+      setAuditForm((current) => ({ ...current, useLocalAi: false }))
+      setLocalAIError('Local AI is unavailable. Start Ollama, then refresh models.')
+    } finally {
+      setLocalAIPending(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadLocalAI()
+  }, [])
 
   useEffect(() => {
     if (profileId === null) {
@@ -184,6 +236,22 @@ export function PeoplePage() {
     setPending('audit')
     setError(null)
     try {
+      if (auditForm.useLocalAi) {
+        if (!localAI?.enabled || localAI.selectedModel === null) {
+          setError('Choose and enable a local model before starting an AI-assisted audit.')
+          return
+        }
+        const connection = await testLocalAIConnection({
+          provider: localAI.provider,
+          endpoint: localAI.endpoint,
+          selectedModel: localAI.selectedModel,
+        })
+        setLocalAIStatus(connection.status)
+        if (connection.status !== 'AVAILABLE') {
+          setError('The selected local model is not available. Start Ollama or choose another model.')
+          return
+        }
+      }
       const providerIds = [...AUTOMATIC_PROVIDER_IDS]
       if (auditForm.includeHibp) providerIds.push('HAVE_I_BEEN_PWNED_V3')
       const detail = await createIdentityAudit({
@@ -203,6 +271,38 @@ export function PeoplePage() {
       setError(safeMessage(cause))
     } finally {
       setPending(null)
+    }
+  }
+
+  async function selectLocalModel(model: string) {
+    if (localAI === null) return
+    setLocalAIPending(true)
+    setLocalAIError(null)
+    setLocalAIStatus(null)
+    try {
+      const connection = await testLocalAIConnection({
+        provider: localAI.provider,
+        endpoint: localAI.endpoint,
+        selectedModel: model,
+      })
+      setLocalAIStatus(connection.status)
+      if (connection.status !== 'AVAILABLE') {
+        setLocalAIError('That model is listed but could not be activated by Ollama.')
+        return
+      }
+      const saved = await updateLocalAISettings({
+        enabled: true,
+        provider: localAI.provider,
+        endpoint: localAI.endpoint,
+        selectedModel: model,
+        expectedRevision: localAI.revision,
+      })
+      setLocalAI(saved)
+      setAuditForm((current) => ({ ...current, useLocalAi: true }))
+    } catch {
+      setLocalAIError('The model choice could not be saved. Refresh models and retry.')
+    } finally {
+      setLocalAIPending(false)
     }
   }
 
@@ -303,10 +403,54 @@ export function PeoplePage() {
               <label className="field"><span>Recursive depth</span><input className="input" type="number" min={1} max={8} value={auditForm.maxDepth} onChange={(event) => setAuditForm((current) => ({ ...current, maxDepth: Number(event.target.value) }))} /></label>
               <label className="field"><span>Request budget</span><input className="input" type="number" min={1} max={2_000} value={auditForm.requestBudget} onChange={(event) => setAuditForm((current) => ({ ...current, requestBudget: Number(event.target.value) }))} /></label>
             </div>
-            <label className="identity-check"><input type="checkbox" checked={auditForm.useLocalAi} onChange={(event) => setAuditForm((current) => ({ ...current, useLocalAi: event.target.checked }))} /><BrainCircuit size={15} /><span><strong>Use the selected local model when available</strong><small>The model choice is snapshotted with this run; deterministic discovery remains available.</small></span></label>
+            <div className="identity-model-picker">
+              <div className="identity-model-picker__header">
+                <span><BrainCircuit size={16} /><span><strong>AI analysis model</strong><small>Choose the Ollama model that will analyse, connect, and organise this run.</small></span></span>
+                <Button size="compact" variant="ghost" disabled={localAIPending} onClick={() => void loadLocalAI()}><RefreshCw className={localAIPending ? 'spin' : ''} size={13} />Refresh</Button>
+              </div>
+              {localAIModels.length > 0 ? (
+                <div className="identity-model-rail" role="radiogroup" aria-label="Local model for this audit">
+                  {localAIModels.map((model) => {
+                    const selected = localAI?.enabled === true && localAI.selectedModel === model
+                    return (
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        className={selected ? 'is-selected' : ''}
+                        disabled={localAIPending}
+                        key={model}
+                        onClick={() => void selectLocalModel(model)}
+                      >
+                        <BrainCircuit size={16} />
+                        <span><strong>{model}</strong><small>{selected ? 'Selected and ready' : 'Use for this audit'}</small></span>
+                        <Badge tone={selected ? 'violet' : 'neutral'}>{selected ? 'Active' : 'Available'}</Badge>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="identity-model-picker__empty">No served model discovered. Start Ollama and select Refresh.</div>
+              )}
+              <label className="identity-check">
+                <input
+                  type="checkbox"
+                  checked={auditForm.useLocalAi}
+                  disabled={localAI?.enabled !== true || localAI.selectedModel === null}
+                  onChange={(event) => setAuditForm((current) => ({ ...current, useLocalAi: event.target.checked }))}
+                />
+                <BrainCircuit size={15} />
+                <span>
+                  <strong>{auditForm.useLocalAi && localAI?.selectedModel ? `Use ${localAI.selectedModel}` : 'Deterministic audit only'}</strong>
+                  <small>{localAI?.enabled && localAI.selectedModel ? 'AI will run after discovery and remain available during review.' : 'Select a model above to enable AI for this run.'}</small>
+                </span>
+              </label>
+              {localAIError ? <div className="callout callout--danger" role="alert">{localAIError}</div> : null}
+              {localAIStatus === 'AVAILABLE' && !localAIError ? <div className="callout callout--success" role="status">Ollama and the selected model are ready.</div> : null}
+            </div>
             <label className="identity-check"><input type="checkbox" checked={auditForm.includeHibp} onChange={(event) => setAuditForm((current) => ({ ...current, includeHibp: event.target.checked }))} /><FileSearch size={15} /><span><strong>Include Have I Been Pwned checks</strong><small>Tasks will report “authentication required” until an API key is configured.</small></span></label>
             <div className="callout"><div><strong>Seven automatic public surfaces</strong><p>DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback Machine, and certificate-transparency records run from every compatible reviewed identifier. Progress is persisted after every task and survives navigation or restart.</p></div></div>
-            <Button variant="primary" disabled={pending !== null || !auditForm.name.trim()} onClick={() => void startAudit()}>{pending === 'audit' ? <LoaderCircle className="spin" size={14} /> : <FileSearch size={14} />}{pending === 'audit' ? 'Creating durable run…' : 'Start full audit'} <ArrowRight size={14} /></Button>
+            <Button variant="primary" disabled={pending !== null || localAIPending || !auditForm.name.trim()} onClick={() => void startAudit()}>{pending === 'audit' ? <LoaderCircle className="spin" size={14} /> : <FileSearch size={14} />}{pending === 'audit' ? 'Creating durable run…' : auditForm.useLocalAi ? `Start with ${localAI?.selectedModel ?? 'local AI'}` : 'Start deterministic audit'} <ArrowRight size={14} /></Button>
           </div>
         </Panel>
 
