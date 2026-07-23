@@ -16,6 +16,8 @@ from ariadne_core.privacy.validation import safe_field_path
 
 
 def safe_request_id(request: Request) -> str:
+    """Return only a validated request identifier so error paths never echo arbitrary input."""
+
     value = getattr(request.state, "request_id", None)
     if isinstance(value, str):
         try:
@@ -37,6 +39,8 @@ def error_response(
     retryable: bool = False,
     field_errors: Sequence[FieldError] | None = None,
 ) -> JSONResponse:
+    """Build the single redacted error envelope shared by every API failure path."""
+
     body = ApiError(
         error=ApiErrorBody(
             code=code,
@@ -56,6 +60,8 @@ def error_response(
 async def validation_exception_handler(
     request: Request, error: RequestValidationError
 ) -> JSONResponse:
+    """Translate schema failures into stable errors without returning rejected values."""
+
     field_errors = tuple(
         FieldError(
             path=safe_field_path(item.get("loc", ())),
@@ -74,6 +80,8 @@ async def validation_exception_handler(
 
 
 async def http_exception_handler(request: Request, error: StarletteHTTPException) -> JSONResponse:
+    """Preserve safe HTTP status semantics while replacing untrusted detail text."""
+
     if error.status_code == 404:
         return error_response(
             status_code=404,
@@ -107,6 +115,8 @@ async def http_exception_handler(request: Request, error: StarletteHTTPException
 
 
 async def unexpected_exception_handler(request: Request, _error: Exception) -> JSONResponse:
+    """Contain unclassified failures behind a generic response and safe log record."""
+
     structlog.get_logger().error(
         "local_api_internal_error",
         request_id=safe_request_id(request),

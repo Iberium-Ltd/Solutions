@@ -13,6 +13,8 @@ from sqlalchemy.engine import Engine
 
 
 def migration_config() -> Config:
+    """Bind Alembic to the active encrypted database and frozen migration directory."""
+
     frozen_root = getattr(sys, "_MEIPASS", None)
     if isinstance(frozen_root, str):
         service_root = Path(frozen_root) / "ariadne_core_migrations"
@@ -30,6 +32,8 @@ def migration_config() -> Config:
 def upgrade_to_head(engine: Engine) -> None:
     # The caller supplies an already keyed and verified SQLCipher engine. Alembic
     # must never open an independent URL that could fall back to plaintext SQLite.
+    """Advance an encrypted vault through reviewed forward-only migrations."""
+
     config = migration_config()
     with engine.begin() as connection:
         config.attributes["connection"] = connection

@@ -1,3 +1,7 @@
+/**
+ * Proves font-scale and viewport presets remain usable across representative
+ * display sizes because these settings affect the entire shell.
+ */
 import { expect, test } from '@playwright/test'
 
 test.describe('display preferences', () => {

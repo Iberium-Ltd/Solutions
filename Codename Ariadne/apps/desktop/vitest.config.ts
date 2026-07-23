@@ -1,3 +1,7 @@
+/**
+ * Configures deterministic component and boundary tests under jsdom while
+ * browser-level journeys stay in the separate Playwright suite.
+ */
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 

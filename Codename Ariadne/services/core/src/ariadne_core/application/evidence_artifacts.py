@@ -353,8 +353,12 @@ class EvidenceArtifactService:
 
 
 def sha256_hex(content: bytes) -> str:
+    """Provide one canonical digest representation for evidence integrity comparisons."""
+
     return hashlib.sha256(content).hexdigest()
 
 
 def url_reference_sha256(source_url: str) -> str:
+    """Fingerprint a normalized URL without storing another raw reference."""
+
     return hashlib.sha256(source_url.encode("utf-8")).hexdigest()

@@ -20,6 +20,8 @@ class _DynamicStderr(io.TextIOBase):
 
 
 def configure_logging() -> None:
+    """Install redacting structured logging before request or worker code can emit records."""
+
     structlog.configure(
         processors=[
             structlog.processors.add_log_level,

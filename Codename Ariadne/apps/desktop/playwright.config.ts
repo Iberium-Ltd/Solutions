@@ -1,3 +1,7 @@
+/**
+ * Runs browser checks against the local Vite surface with deterministic,
+ * failure-preserving defaults suitable for CI and manual visual review.
+ */
 import { defineConfig } from '@playwright/test'
 import { fileURLToPath } from 'node:url'
 

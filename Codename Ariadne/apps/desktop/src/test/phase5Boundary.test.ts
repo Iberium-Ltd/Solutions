@@ -1,3 +1,4 @@
+/** Validates exact-source evidence and attribution reads before rendering. */
 import { describe, expect, it } from 'vitest'
 import { phase5BoundaryParsers } from '../app/phase5Boundary'
 

@@ -1,3 +1,7 @@
+/**
+ * Supplies a complete fictional audit graph for renderer and package tests;
+ * reserved domains prevent the fixture from representing a real person.
+ */
 import type { AuditDetail } from '../../../../packages/contracts/src/generated/api'
 
 const auditId = '11111111-1111-4111-8111-111111111111'

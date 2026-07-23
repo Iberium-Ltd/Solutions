@@ -1,3 +1,10 @@
+/**
+ * Presents durable audit execution, evidence review, cited AI analysis, and
+ * the terminal export gate for one persisted audit.
+ *
+ * Progress comes from core frontier state; model prose is never displayed as
+ * discovered evidence unless it resolves to an exact retained citation.
+ */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {

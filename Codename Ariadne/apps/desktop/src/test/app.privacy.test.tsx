@@ -1,3 +1,4 @@
+/** Detects accidental personal data, unsafe telemetry claims, and remote assets in UI. */
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import * as syntheticFixtures from '@ariadne/synthetic-data'

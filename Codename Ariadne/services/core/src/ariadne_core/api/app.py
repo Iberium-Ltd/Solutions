@@ -64,6 +64,8 @@ class ApiRuntime:
 
 
 def create_app(runtime: ApiRuntime) -> FastAPI:
+    """Assemble the authenticated FastAPI surface around one explicit runtime."""
+
     app = FastAPI(
         title="Codename Ariadne Local API",
         summary="Authenticated local sidecar contract",

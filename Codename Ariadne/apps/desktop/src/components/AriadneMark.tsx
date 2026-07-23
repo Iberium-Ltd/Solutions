@@ -1,3 +1,7 @@
+/**
+ * Renders the product mark from local SVG primitives, avoiding remote image
+ * requests and preserving sharp output at every display scale.
+ */
 import type { SVGProps } from 'react'
 
 export function AriadneMark(props: SVGProps<SVGSVGElement>) {
@@ -29,4 +33,3 @@ export function AriadneMark(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-

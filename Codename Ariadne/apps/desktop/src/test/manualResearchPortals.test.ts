@@ -1,3 +1,4 @@
+/** Keeps manual portal URLs fixed, visible, and separate from automated evidence. */
 import { describe, expect, it } from 'vitest'
 import {
   isApprovedManualPortalUrl,

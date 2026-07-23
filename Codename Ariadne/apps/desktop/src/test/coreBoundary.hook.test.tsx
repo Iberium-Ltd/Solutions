@@ -1,3 +1,4 @@
+/** Verifies session hooks refresh, lock, and discard stale asynchronous responses. */
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCoreBoundary } from '../app/coreBoundary'

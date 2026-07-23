@@ -204,6 +204,10 @@ def normalise_investigation_identifier(
     kind: InvestigationIdentifierKind,
     value: str,
 ) -> str:
+    """Normalize and reject malformed investigation identifier before it can reach persistence or
+    an external transport.
+    """
+
     if not isinstance(value, str):
         raise ValueError("investigation identifier is invalid")
     if kind is InvestigationIdentifierKind.EMAIL:
@@ -229,6 +233,8 @@ def normalise_investigation_identifier(
 
 
 def deterministic_plan_id(request: InvestigationPlanRequest) -> str:
+    """Derive a stable deterministic plan id so repeated local processing remains deterministic."""
+
     payload = {
         "identifiers": [
             {

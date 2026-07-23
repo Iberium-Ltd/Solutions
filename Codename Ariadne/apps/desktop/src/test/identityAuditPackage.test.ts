@@ -1,3 +1,4 @@
+/** Proves terminal audit exports are deterministic, cited, and state-gated. */
 import { describe, expect, it } from 'vitest'
 import { buildIdentityAuditPackage } from '../app/identityAuditPackage'
 import { completedAuditDetail } from './identityAuditFixture'

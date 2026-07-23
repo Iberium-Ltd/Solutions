@@ -1,3 +1,4 @@
+/** Verifies compiled plans expose exact steps without executing network work. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   compileInvestigationPlan,

@@ -1,3 +1,4 @@
+/** Locks explicit, revision-aware evidence and attribution mutations. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   appendPhase5AttributionDecision,

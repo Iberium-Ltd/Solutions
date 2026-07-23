@@ -1,3 +1,4 @@
+/** Ensures corpus AI cannot escape its selected documents or citation catalog. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   analyzeLocalCorpusAI,

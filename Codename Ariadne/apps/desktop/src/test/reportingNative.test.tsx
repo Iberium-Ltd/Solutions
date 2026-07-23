@@ -1,3 +1,4 @@
+/** Proves reports render exact references and honest incomplete-coverage states. */
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'

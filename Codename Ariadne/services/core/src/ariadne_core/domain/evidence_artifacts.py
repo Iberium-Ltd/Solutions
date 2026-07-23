@@ -45,21 +45,37 @@ class EvidenceCaptureMethod(StrEnum):
 
 
 def validate_opaque_id(value: str, label: str) -> None:
+    """Normalize and reject malformed opaque id before it can reach persistence or an external
+    transport.
+    """
+
     if _OPAQUE_ID.fullmatch(value) is None:
         raise ValueError(f"{label} is invalid")
 
 
 def validate_timestamp(value: int, label: str) -> None:
+    """Normalize and reject malformed timestamp before it can reach persistence or an external
+    transport.
+    """
+
     if type(value) is not int or value < 1 or value > MAX_TIMESTAMP_US:
         raise ValueError(f"{label} is invalid")
 
 
 def validate_sha256(value: str, label: str) -> None:
+    """Normalize and reject malformed sha256 before it can reach persistence or an external
+    transport.
+    """
+
     if _SHA256.fullmatch(value) is None:
         raise ValueError(f"{label} is invalid")
 
 
 def validate_safe_url(value: str) -> str:
+    """Normalize and reject malformed safe url before it can reach persistence or an external
+    transport.
+    """
+
     if not value or len(value) > MAX_URL_LENGTH or any(ord(char) < 33 for char in value):
         raise ValueError("evidence URL is invalid")
     try:

@@ -103,16 +103,28 @@ _ALLOWED_TRANSITIONS: Final = {
 
 
 def validate_opaque_id(value: str, label: str) -> None:
+    """Normalize and reject malformed opaque id before it can reach persistence or an external
+    transport.
+    """
+
     if _OPAQUE_ID.fullmatch(value) is None:
         raise ValueError(f"{label} is invalid")
 
 
 def validate_timestamp(value: int, label: str) -> None:
+    """Normalize and reject malformed timestamp before it can reach persistence or an external
+    transport.
+    """
+
     if type(value) is not int or value < 1 or value > MAX_TIMESTAMP_US:
         raise ValueError(f"{label} is invalid")
 
 
 def validate_text(value: str, label: str, maximum: int) -> None:
+    """Normalize and reject malformed text before it can reach persistence or an external
+    transport.
+    """
+
     if (
         not value
         or len(value) > maximum
@@ -128,6 +140,10 @@ def validate_references(
     maximum: int,
     allow_empty: bool,
 ) -> None:
+    """Normalize and reject malformed references before it can reach persistence or an external
+    transport.
+    """
+
     if type(references) is not tuple or len(references) > maximum:
         raise ValueError(f"{label} are outside the allowed bounds")
     if not allow_empty and not references:
@@ -139,6 +155,8 @@ def validate_references(
 
 
 def default_action_disposition(action: RemediationAction) -> ActionDisposition:
+    """Provide the shared default action disposition operation used by this architectural layer."""
+
     if action in LOCAL_ACTIONS:
         return ActionDisposition.LOCAL_ONLY
     if action is RemediationAction.DELETE_OWNED_ACCOUNT:
@@ -147,6 +165,10 @@ def default_action_disposition(action: RemediationAction) -> ActionDisposition:
 
 
 def validate_transition(current: RemediationStatus, target: RemediationStatus) -> None:
+    """Normalize and reject malformed transition before it can reach persistence or an external
+    transport.
+    """
+
     if target not in _ALLOWED_TRANSITIONS[current]:
         raise ValueError("remediation status transition is invalid")
 

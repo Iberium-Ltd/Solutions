@@ -1,3 +1,7 @@
+/**
+ * Standard accessible boolean control used by settings and policy panels,
+ * centralizing label association and disabled-state behavior.
+ */
 import * as Switch from '@radix-ui/react-switch'
 import clsx from 'clsx'
 
@@ -34,4 +38,3 @@ export function Toggle({
     </label>
   )
 }
-

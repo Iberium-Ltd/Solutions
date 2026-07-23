@@ -1,3 +1,4 @@
+/** Keeps first-run guidance aligned with the actual local workflow and controls. */
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'

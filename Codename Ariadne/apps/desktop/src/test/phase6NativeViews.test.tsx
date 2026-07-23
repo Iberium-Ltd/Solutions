@@ -1,3 +1,4 @@
+/** Exercises comparison, remediation, and report screens with synthetic core state. */
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'

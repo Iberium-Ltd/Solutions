@@ -1,3 +1,4 @@
+/** Locks transparent provider-specific query composition and length bounds. */
 import { describe, expect, it } from 'vitest'
 import {
   buildSearchEngineUrl,

@@ -287,12 +287,20 @@ class HibpDomainSearchResponse:
 
 
 def validate_hibp_api_key(value: str) -> str:
+    """Normalize and reject malformed hibp api key before it can reach persistence or an external
+    transport.
+    """
+
     if not isinstance(value, str) or _API_KEY.fullmatch(value) is None:
         raise ValueError("HIBP API key is invalid")
     return value
 
 
 def normalise_hibp_email(value: str) -> str:
+    """Normalize and reject malformed hibp email before it can reach persistence or an external
+    transport.
+    """
+
     if not isinstance(value, str):
         raise ValueError("HIBP email is invalid")
     normalised = unicodedata.normalize("NFKC", value).strip().casefold()
@@ -316,6 +324,10 @@ def normalise_hibp_email(value: str) -> str:
 
 
 def normalise_hibp_domain(value: str) -> str:
+    """Normalize and reject malformed hibp domain before it can reach persistence or an external
+    transport.
+    """
+
     if not isinstance(value, str):
         raise ValueError("HIBP domain is invalid")
     candidate = unicodedata.normalize("NFKC", value).strip().rstrip(".").casefold()
@@ -336,6 +348,10 @@ def normalise_hibp_domain(value: str) -> str:
 
 
 def normalise_hibp_breach_name(value: object) -> str:
+    """Normalize and reject malformed hibp breach name before it can reach persistence or an
+    external transport.
+    """
+
     return _normalise_provider_text(
         value,
         maximum=MAX_HIBP_BREACH_NAME_CHARS,
@@ -344,6 +360,10 @@ def normalise_hibp_breach_name(value: object) -> str:
 
 
 def normalise_hibp_alias(value: object) -> str:
+    """Normalize and reject malformed hibp alias before it can reach persistence or an external
+    transport.
+    """
+
     alias = _normalise_provider_text(
         value,
         maximum=MAX_HIBP_ALIAS_CHARS,
@@ -355,6 +375,8 @@ def normalise_hibp_alias(value: object) -> str:
 
 
 def hibp_breach_reference(name: object) -> HibpBreachReference:
+    """Provide the shared hibp breach reference operation used by this architectural layer."""
+
     normalised = normalise_hibp_breach_name(name)
     return HibpBreachReference(
         name=normalised,

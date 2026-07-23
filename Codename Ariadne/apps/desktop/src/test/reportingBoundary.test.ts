@@ -1,3 +1,4 @@
+/** Verifies report requests and projections preserve their cited source scope. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   generateLocalReport,

@@ -1,3 +1,4 @@
+/** Proves transient workflow state persists only as intended and clears on lock. */
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   clearPhase3WorkflowMemory,

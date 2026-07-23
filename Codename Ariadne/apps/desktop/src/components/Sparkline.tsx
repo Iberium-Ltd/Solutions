@@ -1,3 +1,7 @@
+/**
+ * Draws compact trend context without a charting dependency. Callers provide
+ * bounded points, while this component remains presentation-only.
+ */
 import clsx from 'clsx'
 
 export function Sparkline({
@@ -50,4 +54,3 @@ export function Sparkline({
     </svg>
   )
 }
-

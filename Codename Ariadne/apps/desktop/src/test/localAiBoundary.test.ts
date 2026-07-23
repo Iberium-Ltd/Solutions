@@ -1,3 +1,4 @@
+/** Locks loopback-only model discovery, settings parsing, and safe failure handling. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   discoverLocalAIModels,

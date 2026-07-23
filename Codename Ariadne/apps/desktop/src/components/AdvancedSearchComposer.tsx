@@ -1,3 +1,9 @@
+/**
+ * Presents a transparent advanced-query builder.
+ *
+ * It shows the exact provider-specific query before browser handoff so expert
+ * syntax remains user-mediated rather than becoming hidden automation.
+ */
 import { useMemo, useState } from 'react'
 import { Copy, ExternalLink, FileSearch, Search, ShieldCheck } from 'lucide-react'
 import {

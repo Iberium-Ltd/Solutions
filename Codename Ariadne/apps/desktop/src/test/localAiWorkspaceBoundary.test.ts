@@ -1,3 +1,4 @@
+/** Ensures workspace AI output remains bounded, review-only, and source-cited. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   analyzeLocalAIWorkspace,

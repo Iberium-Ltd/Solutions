@@ -69,6 +69,8 @@ def _atomic_write(path: Path, content: bytes) -> None:
 
 
 def secrets_token() -> str:
+    """Generate backup envelope entropy independently from database-key material."""
+
     import secrets
 
     return secrets.token_hex(8)
@@ -158,6 +160,8 @@ def create_backup(
 
 
 def decrypt_backup(bundle: Path, backup_key: bytes | bytearray) -> tuple[BackupMetadata, bytes]:
+    """Authenticate and decrypt a bounded backup before any restore-side parsing occurs."""
+
     if len(backup_key) != 32:
         raise BackupError("backup key is unavailable")
     try:

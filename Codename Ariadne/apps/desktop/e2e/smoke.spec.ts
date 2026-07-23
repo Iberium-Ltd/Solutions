@@ -1,3 +1,7 @@
+/**
+ * Provides a fast browser-level sanity check for routing, accessibility, and
+ * shell rendering before the more expensive screenshot matrix is attempted.
+ */
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { majorVisualCases, type VisualCase } from './visual-manifest'

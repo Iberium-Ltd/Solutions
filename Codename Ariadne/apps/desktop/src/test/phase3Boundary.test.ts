@@ -1,3 +1,4 @@
+/** Validates intake, entity-review, and graph payloads at the native bridge. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   deleteProfile,

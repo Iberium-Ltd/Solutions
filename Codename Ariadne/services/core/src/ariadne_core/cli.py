@@ -321,6 +321,8 @@ def _run_sidecar(transport: Literal["tcp", "uds"]) -> int:
 
 
 def main(arguments: Sequence[str] | None = None) -> int:
+    """Provide the process entry point while keeping reusable composition in testable helpers."""
+
     parsed = _parser().parse_args(arguments)
     if parsed.command == "generate-contracts":
         root = Path(__file__).resolve().parents[4]

@@ -1,3 +1,4 @@
+/** Proves public-search responses and exact source URLs are parsed defensively. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   capturePublicDiscovery,

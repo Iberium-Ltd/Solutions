@@ -138,6 +138,8 @@ def _uuid_rfc(value: UUID) -> UUID:
 
 
 def parse_key_reference(value: str) -> UUID:
+    """Validate an opaque key reference received across the native lease channel."""
+
     if not isinstance(value, str) or not value.startswith(REFERENCE_PREFIX):
         raise _fail(KeyLeaseErrorCode.REFERENCE_INVALID)
     encoded = value[len(REFERENCE_PREFIX) :]
@@ -156,6 +158,8 @@ def parse_key_reference(value: str) -> UUID:
 
 
 def format_key_reference(value: UUID) -> str:
+    """Encode a key reference in the only wire representation accepted by the lease protocol."""
+
     value = _uuid_rfc(value)
     if value.version != 4:
         raise _fail(KeyLeaseErrorCode.REFERENCE_INVALID)
@@ -313,6 +317,8 @@ def _encode_binding(binding: LeaseBinding) -> bytearray:
 
 
 def binding_digest(binding: LeaseBinding) -> bytearray:
+    """Bind lease frames to their process and session context to prevent cross-session reuse."""
+
     encoded = _encode_binding(binding)
     try:
         return bytearray(hashlib.sha256(encoded).digest())
@@ -377,6 +383,8 @@ def _encode_payload(frame: KeyLeaseFrame) -> bytearray:
 
 
 def encode_frame(frame: KeyLeaseFrame) -> bytearray:
+    """Serialize a bounded authenticated lease frame without exposing key material in logs."""
+
     payload = _encode_payload(frame)
     try:
         expected_payload = _PAYLOAD_BYTES_BY_KIND[frame.kind]
@@ -519,6 +527,8 @@ def _recv_exact(channel: socket.socket, size: int) -> bytearray:
 
 
 def receive_frame(channel: socket.socket) -> KeyLeaseFrame:
+    """Read exactly one bounded lease frame and reject truncation or trailing ambiguity."""
+
     header = _recv_exact(channel, _HEADER.size)
     try:
         kind, payload_bytes = _decode_header(header)
@@ -532,6 +542,8 @@ def receive_frame(channel: socket.socket) -> KeyLeaseFrame:
 
 
 def send_frame(channel: socket.socket, frame: KeyLeaseFrame) -> None:
+    """Write one complete lease frame so partial transport writes cannot alter protocol meaning."""
+
     encoded = encode_frame(frame)
     try:
         try:

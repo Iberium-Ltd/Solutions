@@ -326,6 +326,8 @@ def score_attribution(
 
 
 def default_attribution_weight_profile() -> AttributionWeightProfile:
+    """Centralize conservative attribution weights so scoring is reproducible and reviewable."""
+
     return AttributionWeightProfile(
         version="ariadne-core-attribution-v1",
         positive_weights={

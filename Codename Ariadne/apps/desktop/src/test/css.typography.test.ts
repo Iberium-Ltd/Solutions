@@ -1,3 +1,4 @@
+/** Enforces the design-system typography floor so compact layouts remain readable. */
 import { describe, it } from 'vitest'
 
 const MINIMUM_EXPLICIT_FONT_SIZE_PX = 10

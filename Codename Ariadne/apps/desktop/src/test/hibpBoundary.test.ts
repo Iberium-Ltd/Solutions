@@ -1,3 +1,4 @@
+/** Locks request-local HIBP authorization and response validation behavior. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   hibpBoundaryParsers,

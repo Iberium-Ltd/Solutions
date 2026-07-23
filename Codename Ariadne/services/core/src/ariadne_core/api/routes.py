@@ -529,6 +529,9 @@ async def get_identity_workspace(
     body: PersonWorkspaceRequest,
     request: Request,
 ) -> PersonWorkspace:
+    # Route purpose: Expose the get identity workspace operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).workspace, body)
     except Exception as error:
@@ -547,6 +550,9 @@ async def update_identity_person(
     body: PersonUpdateRequest,
     request: Request,
 ) -> PersonWorkspace:
+    # Route purpose: Expose the update identity person operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).update_person, body)
     except Exception as error:
@@ -565,6 +571,9 @@ async def create_identity_source(
     body: PersonSourceCreateRequest,
     request: Request,
 ) -> PersonWorkspace:
+    # Route purpose: Expose the create identity source operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).add_source, body)
     except Exception as error:
@@ -583,6 +592,9 @@ async def create_identity_audit(
     body: AuditCreateRequest,
     request: Request,
 ) -> AuditDetail:
+    # Route purpose: Expose the create identity audit operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).create_audit, body)
     except Exception as error:
@@ -601,6 +613,9 @@ async def get_identity_audit(
     body: AuditExecuteRequest,
     request: Request,
 ) -> AuditDetail:
+    # Route purpose: Expose the get identity audit operation through the authenticated, typed
+    # API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).audit_detail, body)
     except Exception as error:
@@ -619,6 +634,9 @@ async def execute_identity_audit_batch(
     body: AuditExecuteRequest,
     request: Request,
 ) -> AuditDetail:
+    # Route purpose: Expose the execute identity audit batch operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).execute_batch, body)
     except Exception as error:
@@ -637,6 +655,9 @@ async def control_identity_audit(
     body: AuditControlRequest,
     request: Request,
 ) -> AuditDetail:
+    # Route purpose: Expose the control identity audit operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).control_audit, body)
     except Exception as error:
@@ -655,6 +676,9 @@ async def decide_identity_proposal(
     body: ProposalDecisionRequest,
     request: Request,
 ) -> AuditDetail:
+    # Route purpose: Expose the decide identity proposal operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_identity_discovery(request).decide_proposal, body)
     except Exception as error:
@@ -674,6 +698,9 @@ async def decide_identity_proposal(
     },
 )
 async def get_system_capabilities(request: Request) -> SystemCapabilities:
+    # Route purpose: Expose the get system capabilities operation through the authenticated,
+    # typed API boundary.
+
     runtime = request.app.state.runtime
     cipher = runtime.cipher_runtime
     vault_foundation_available = (
@@ -761,6 +788,9 @@ async def create_phase5_manual_finding(
     body: Phase5ManualFindingCreateRequest,
     request: Request,
 ) -> Phase5FindingDetailResult:
+    # Route purpose: Expose the create phase5 manual finding operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase5_coordinator(request).create_manual_finding,
@@ -791,6 +821,9 @@ async def list_phase5_findings(
     body: Phase5FindingListRequest,
     request: Request,
 ) -> Phase5FindingListResult:
+    # Route purpose: Expose the list phase5 findings operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase5_coordinator(request).list_findings,
@@ -821,6 +854,9 @@ async def get_phase5_finding(
     body: Phase5FindingDetailRequest,
     request: Request,
 ) -> Phase5FindingDetailResult:
+    # Route purpose: Expose the get phase5 finding operation through the authenticated, typed
+    # API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase5_coordinator(request).finding_detail,
@@ -851,6 +887,9 @@ async def import_phase5_manual_evidence(
     body: Phase5ManualEvidenceImportRequest,
     request: Request,
 ) -> Phase5ManualEvidenceImportResult:
+    # Route purpose: Expose the import phase5 manual evidence operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase5_coordinator(request).manual_evidence_import,
@@ -881,6 +920,9 @@ async def create_phase5_redacted_derivative(
     body: Phase5RedactedDerivativeRequest,
     request: Request,
 ) -> Phase5RedactedDerivativeResult:
+    # Route purpose: Expose the create phase5 redacted derivative operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase5_coordinator(request).create_redacted_derivative,
@@ -911,6 +953,9 @@ async def append_phase5_attribution_decision(
     body: Phase5AttributionDecisionRequest,
     request: Request,
 ) -> Phase5AttributionDecisionResult:
+    # Route purpose: Expose the append phase5 attribution decision operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase5_coordinator(request).append_attribution_decision,
@@ -945,6 +990,9 @@ async def create_phase6_local_checkpoint(
     body: Phase6LocalCheckpointRequest,
     request: Request,
 ) -> Phase6LocalCheckpointResult:
+    # Route purpose: Expose the create phase6 local checkpoint operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).create_local_checkpoint,
@@ -975,6 +1023,9 @@ async def list_phase6_audit_runs(
     body: Phase6AuditRunListRequest,
     request: Request,
 ) -> Phase6AuditRunListResult:
+    # Route purpose: Expose the list phase6 audit runs operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).list_audit_runs,
@@ -1005,6 +1056,9 @@ async def compare_phase6_audit_runs(
     body: Phase6CompareRunsRequest,
     request: Request,
 ) -> Phase6ComparisonResult:
+    # Route purpose: Expose the compare phase6 audit runs operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).compare_runs,
@@ -1035,6 +1089,9 @@ async def list_phase6_remediation_cases(
     body: Phase6RemediationListRequest,
     request: Request,
 ) -> Phase6RemediationListResult:
+    # Route purpose: Expose the list phase6 remediation cases operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).list_remediation_cases,
@@ -1065,6 +1122,9 @@ async def get_phase6_remediation_case(
     body: Phase6RemediationDetailRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the get phase6 remediation case operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).remediation_detail,
@@ -1095,6 +1155,9 @@ async def create_phase6_remediation_case(
     body: Phase6RemediationCreateRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the create phase6 remediation case operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).create_remediation_case,
@@ -1125,6 +1188,9 @@ async def update_phase6_remediation_draft(
     body: Phase6RemediationDraftUpdateRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the update phase6 remediation draft operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).update_remediation_draft,
@@ -1155,6 +1221,9 @@ async def require_phase6_remediation_approval(
     body: Phase6RemediationRequireApprovalRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the require phase6 remediation approval operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).require_remediation_approval,
@@ -1185,6 +1254,9 @@ async def transition_phase6_remediation_status(
     body: Phase6RemediationStatusTransitionRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the transition phase6 remediation status operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).transition_remediation_status,
@@ -1215,6 +1287,9 @@ async def update_phase6_remediation_deadline(
     body: Phase6RemediationDeadlineUpdateRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the update phase6 remediation deadline operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).update_remediation_deadline,
@@ -1245,6 +1320,9 @@ async def link_phase6_remediation_evidence(
     body: Phase6RemediationEvidenceLinkRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the link phase6 remediation evidence operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).link_remediation_evidence,
@@ -1275,6 +1353,9 @@ async def record_phase6_remediation_provider_response(
     body: Phase6RemediationProviderResponseRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the record phase6 remediation provider response operation through
+    # the authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).record_remediation_provider_response,
@@ -1305,6 +1386,9 @@ async def record_phase6_remediation_reappearance(
     body: Phase6RemediationReappearanceRequest,
     request: Request,
 ) -> Phase6RemediationDetailResult:
+    # Route purpose: Expose the record phase6 remediation reappearance operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _phase6_coordinator(request).record_remediation_reappearance,
@@ -1340,6 +1424,9 @@ async def generate_local_report(
     body: ReportGenerateRequest,
     request: Request,
 ) -> ReportGenerateResult:
+    # Route purpose: Expose the generate local report operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _reporting_coordinator(request).generate,
@@ -1370,6 +1457,9 @@ async def get_query_provider_catalog(
     body: ProviderCatalogRequest,
     request: Request,
 ) -> ProviderCatalogResult:
+    # Route purpose: Expose the get query provider catalog operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _query_vertical(request).catalog,
@@ -1397,6 +1487,9 @@ async def get_query_provider_catalog(
     },
 )
 async def create_query_plan(body: QueryPlanRequest, request: Request) -> QueryPlanResult:
+    # Route purpose: Expose the create query plan operation through the authenticated, typed
+    # API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_query_vertical(request).create_plan, body)
     except Exception as error:
@@ -1424,6 +1517,9 @@ async def execute_query_dry_run(
     body: QueryDryRunRequest,
     request: Request,
 ) -> QueryPlanCell:
+    # Route purpose: Expose the execute query dry run operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _query_vertical(request).execute_dry_run,
@@ -1460,6 +1556,9 @@ async def compile_investigation_plan(
     body: InvestigationPlanCompileRequest,
     request: Request,
 ) -> InvestigationPlanResult:
+    # Route purpose: Expose the compile investigation plan operation through the
+    # authenticated, typed API boundary.
+
     try:
         result = _investigation_plan_compiler(request).compile(body.to_domain())
         return InvestigationPlanResult.from_domain(result)
@@ -1494,6 +1593,9 @@ async def search_hibp_account(
     body: HibpAccountRequest,
     request: Request,
 ) -> HibpAccountResult:
+    # Route purpose: Expose the search hibp account operation through the authenticated, typed
+    # API boundary.
+
     try:
         result = await anyio.to_thread.run_sync(
             _hibp(request).search_account,
@@ -1531,6 +1633,9 @@ async def search_hibp_domain(
     body: HibpDomainRequest,
     request: Request,
 ) -> HibpDomainResult:
+    # Route purpose: Expose the search hibp domain operation through the authenticated, typed
+    # API boundary.
+
     try:
         result = await anyio.to_thread.run_sync(
             _hibp(request).search_domain,
@@ -1568,6 +1673,9 @@ async def search_public_discovery(
     body: PublicDiscoverySearchRequest,
     request: Request,
 ) -> PublicDiscoverySearchResult:
+    # Route purpose: Expose the search public discovery operation through the authenticated,
+    # typed API boundary.
+
     try:
         domain_request = body.to_domain(sensitivity=Sensitivity.SENSITIVE)
         result = await anyio.to_thread.run_sync(
@@ -1606,6 +1714,9 @@ async def capture_public_discovery_result(
     body: PublicDiscoveryCaptureRequest,
     request: Request,
 ) -> PublicDiscoveryCaptureResult:
+    # Route purpose: Expose the capture public discovery result operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _public_discovery_capture(request).capture,
@@ -1628,6 +1739,9 @@ async def capture_public_discovery_result(
     },
 )
 async def get_session(request: Request) -> SessionState:
+    # Route purpose: Expose the get session operation through the authenticated, typed API
+    # boundary.
+
     runtime = request.app.state.runtime
     manager = runtime.vault_manager
     if manager is None or not manager.has_manifest:
@@ -1667,6 +1781,9 @@ async def get_session(request: Request) -> SessionState:
     },
 )
 async def get_local_ai_settings(request: Request) -> LocalAISettings:
+    # Route purpose: Expose the get local ai settings operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_local_ai_service(request).get)
     except Exception as error:
@@ -1701,6 +1818,9 @@ async def analyze_local_ai_workspace(
     body: LocalAIWorkspaceRequest,
     request: Request,
 ) -> LocalAIWorkspaceResult:
+    # Route purpose: Expose the analyze local ai workspace operation through the
+    # authenticated, typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _local_ai_workspace(request).analyze,
@@ -1740,6 +1860,9 @@ async def analyze_local_ai_corpus(
     body: LocalCorpusAIRequest,
     request: Request,
 ) -> LocalCorpusAIResult:
+    # Route purpose: Expose the analyze local ai corpus operation through the authenticated,
+    # typed API boundary.
+
     try:
         result = await anyio.to_thread.run_sync(
             _local_corpus_ai(request).analyze,
@@ -1774,6 +1897,9 @@ async def update_local_ai_settings(
     body: LocalAISettingsUpdateRequest,
     request: Request,
 ) -> LocalAISettings:
+    # Route purpose: Expose the update local ai settings operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_local_ai_service(request).update, body)
     except Exception as error:
@@ -1801,6 +1927,9 @@ async def discover_local_ai_models(
     body: LocalAIEndpointRequest,
     request: Request,
 ) -> LocalAIModelDiscoveryResult:
+    # Route purpose: Expose the discover local ai models operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(_local_ai_service(request).discover, body)
     except Exception as error:
@@ -1828,6 +1957,9 @@ async def test_local_ai_connection(
     body: LocalAIEndpointRequest,
     request: Request,
 ) -> LocalAIConnectionResult:
+    # Route purpose: Expose the test local ai connection operation through the authenticated,
+    # typed API boundary.
+
     try:
         return await anyio.to_thread.run_sync(
             _local_ai_service(request).test_connection,
@@ -1855,6 +1987,9 @@ async def test_local_ai_connection(
     },
 )
 async def replay_core_events(body: EventReplayRequest, request: Request) -> EventReplayResult:
+    # Route purpose: Expose the replay core events operation through the authenticated, typed
+    # API boundary.
+
     runtime = request.app.state.runtime
     manager = runtime.vault_manager
     if manager is None or not manager.is_unlocked:
@@ -1900,6 +2035,9 @@ async def replay_core_events(body: EventReplayRequest, request: Request) -> Even
     },
 )
 async def create_vault(body: VaultCreateRequest, request: Request) -> VaultLifecycleResult:
+    # Route purpose: Expose the create vault operation through the authenticated, typed API
+    # boundary.
+
     manager, lease_client = _vault_components(request)
 
     def create() -> VaultManifest:
@@ -1958,6 +2096,9 @@ async def unlock_current_vault(
     body: VaultUnlockRequest,
     request: Request,
 ) -> VaultLifecycleResult:
+    # Route purpose: Expose the unlock current vault operation through the authenticated,
+    # typed API boundary.
+
     manager, lease_client = _vault_components(request)
 
     def unlock() -> VaultManifest:
@@ -2009,6 +2150,9 @@ async def unlock_current_vault(
     },
 )
 async def lock_current_vault(request: Request) -> VaultLifecycleResult:
+    # Route purpose: Expose the lock current vault operation through the authenticated, typed
+    # API boundary.
+
     runtime = request.app.state.runtime
     manager = runtime.vault_manager
     if manager is None or not manager.is_unlocked:
@@ -2043,6 +2187,9 @@ async def lock_current_vault(request: Request) -> VaultLifecycleResult:
     },
 )
 async def list_profiles(request: Request) -> ProfileListResult:
+    # Route purpose: Expose the list profiles operation through the authenticated, typed API
+    # boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.list_profiles)
@@ -2068,6 +2215,9 @@ async def list_profiles(request: Request) -> ProfileListResult:
     },
 )
 async def create_profile(body: ProfileCreateRequest, request: Request) -> ProfileSummary:
+    # Route purpose: Expose the create profile operation through the authenticated, typed API
+    # boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.create_profile, body)
@@ -2096,6 +2246,9 @@ async def delete_profile(
     body: ProfileDeleteRequest,
     request: Request,
 ) -> ProfileDeleteResult:
+    # Route purpose: Expose the delete profile operation through the authenticated, typed API
+    # boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.delete_profile, body)
@@ -2124,6 +2277,9 @@ async def create_paste_intake(
     body: PasteIntakeRequest,
     request: Request,
 ) -> IntakeReceipt:
+    # Route purpose: Expose the create paste intake operation through the authenticated, typed
+    # API boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.ingest_paste, body)
@@ -2152,6 +2308,9 @@ async def create_file_intake(
     body: FileIntakeRequest,
     request: Request,
 ) -> IntakeReceipt:
+    # Route purpose: Expose the create file intake operation through the authenticated, typed
+    # API boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.ingest_file, body)
@@ -2180,6 +2339,9 @@ async def review_intake_entities(
     body: EntityReviewRequest,
     request: Request,
 ) -> EntityReviewResult:
+    # Route purpose: Expose the review intake entities operation through the authenticated,
+    # typed API boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.review_entities, body)
@@ -2208,6 +2370,9 @@ async def list_entity_origins(
     body: EntityOriginPageRequest,
     request: Request,
 ) -> EntityOriginPageResult:
+    # Route purpose: Expose the list entity origins operation through the authenticated, typed
+    # API boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.list_entity_origins, body)
@@ -2236,6 +2401,9 @@ async def decide_entity(
     body: EntityDecisionRequest,
     request: Request,
 ) -> EntitySummary:
+    # Route purpose: Expose the decide entity operation through the authenticated, typed API
+    # boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.decide_entity, body)
@@ -2264,6 +2432,9 @@ async def get_graph_snapshot(
     body: GraphSnapshotRequest,
     request: Request,
 ) -> GraphSnapshot:
+    # Route purpose: Expose the get graph snapshot operation through the authenticated, typed
+    # API boundary.
+
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.graph_snapshot, body)

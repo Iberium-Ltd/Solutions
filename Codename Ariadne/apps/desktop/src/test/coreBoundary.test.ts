@@ -1,3 +1,4 @@
+/** Verifies hostile or incompatible core responses are rejected at the webview boundary. */
 import { describe, expect, it } from 'vitest'
 import { coreBoundaryParsers } from '../app/coreBoundary'
 

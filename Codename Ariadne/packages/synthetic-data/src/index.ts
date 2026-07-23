@@ -1,3 +1,9 @@
+/**
+ * Central synthetic fixture catalog used by prototype routes and tests.
+ *
+ * Values are fictional and reserved-domain based so demo content never copies
+ * confidential reference material or a real person's identifiers.
+ */
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info'
 export type Health = 'operational' | 'degraded' | 'blocked' | 'offline'
 

@@ -1,3 +1,7 @@
+/**
+ * Focused visual regression coverage for surfaces changed after the accepted
+ * baseline, avoiding an expensive recapture of unrelated screens.
+ */
 import { expect, test, type Page } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'

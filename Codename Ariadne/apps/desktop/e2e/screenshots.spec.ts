@@ -1,3 +1,7 @@
+/**
+ * Captures the deterministic visual contract declared by visual-manifest.ts.
+ * Network blocking and fixed fixtures make each image reproducible evidence.
+ */
 import { chromium, expect, test, type Locator, type Page } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'

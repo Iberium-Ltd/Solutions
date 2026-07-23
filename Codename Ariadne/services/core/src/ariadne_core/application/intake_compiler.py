@@ -238,6 +238,8 @@ def prepare_pasted_intake(
     display_name: str,
     semantic_enrichment_enabled: bool = True,
 ) -> PreparedIntake:
+    """Apply the complete local intake pipeline to user-approved pasted text."""
+
     source = decode_pasted_text(text, limits=PHASE3_PARSER_LIMITS)
     return _prepare(
         source,
@@ -254,6 +256,8 @@ def prepare_file_intake(
     declared_media_type: str,
     semantic_enrichment_enabled: bool = True,
 ) -> PreparedIntake:
+    """Apply the same bounded intake pipeline to brokered local file bytes."""
+
     source = decode_selected_bytes(
         display_name,
         content,

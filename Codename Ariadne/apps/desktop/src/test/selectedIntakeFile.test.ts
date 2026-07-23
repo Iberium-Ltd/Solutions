@@ -1,3 +1,4 @@
+/** Proves selected file bytes remain bounded and transient until explicit intake. */
 import { describe, expect, it } from 'vitest'
 import {
   prepareSelectedIntakeFile,

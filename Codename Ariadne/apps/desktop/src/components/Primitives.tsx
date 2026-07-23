@@ -1,3 +1,9 @@
+/**
+ * Supplies consistent presentation primitives shared by route components.
+ *
+ * These components intentionally hold no business authority; they centralize
+ * layout, semantics, focus behavior, and visual status vocabulary.
+ */
 import clsx from 'clsx'
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react'
 import { ArrowUpRight, ShieldCheck } from 'lucide-react'

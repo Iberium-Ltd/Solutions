@@ -1,3 +1,9 @@
+/**
+ * Holds the navigation state shared by intake, review, and profile selection.
+ *
+ * Durable records stay in the encrypted core; lock handling clears transient
+ * identifiers so stale workflow context cannot survive in webview memory.
+ */
 import { create } from 'zustand'
 
 const ACTIVE_PROFILE_STORAGE_KEY = 'ariadne.active-profile-id.v1'

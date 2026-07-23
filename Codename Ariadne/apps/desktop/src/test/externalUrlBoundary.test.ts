@@ -1,3 +1,4 @@
+/** Proves only allowlisted browser destinations can cross the native URL boundary. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { isApprovedExternalUrl, openApprovedExternalUrl } from '../app/externalUrlBoundary'
 

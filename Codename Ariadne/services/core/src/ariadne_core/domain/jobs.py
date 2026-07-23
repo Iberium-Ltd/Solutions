@@ -88,6 +88,8 @@ class JobStateConflict(ValueError):
 
 
 def require_job_transition(current: JobState, requested: JobState) -> None:
+    """Enforce the job transition state invariant at one shared boundary."""
+
     if requested not in ALLOWED_JOB_TRANSITIONS[current]:
         raise JobStateConflict(
             f"job transition {current.value} -> {requested.value} is not allowed"
@@ -95,6 +97,8 @@ def require_job_transition(current: JobState, requested: JobState) -> None:
 
 
 def require_job_recovery_transition(current: JobState, requested: JobState) -> None:
+    """Enforce the job recovery transition state invariant at one shared boundary."""
+
     if requested not in ALLOWED_RECOVERY_TRANSITIONS.get(current, frozenset()):
         raise JobStateConflict(
             f"job recovery transition {current.value} -> {requested.value} is not allowed"

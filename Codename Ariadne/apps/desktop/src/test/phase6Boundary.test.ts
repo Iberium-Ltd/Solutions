@@ -1,3 +1,4 @@
+/** Validates comparison, remediation, checkpoint, and report projections. */
 import { describe, expect, it } from 'vitest'
 import { phase6BoundaryParsers } from '../app/phase6Boundary'
 

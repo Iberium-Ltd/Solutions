@@ -322,11 +322,15 @@ def build_corpus_analysis_projection(
 
 
 def corpus_entity_id(entity_type: str, canonical_key: str) -> str:
+    """Derive a stable corpus entity id so repeated local processing remains deterministic."""
+
     digest = hashlib.sha256(f"{entity_type}\0{canonical_key}".encode()).hexdigest()
     return f"corpus-entity:{digest}"
 
 
 def corpus_id(documents: tuple[CorpusDocument, ...]) -> str:
+    """Derive a stable corpus id so repeated local processing remains deterministic."""
+
     material = "\n".join(
         "\0".join(
             (

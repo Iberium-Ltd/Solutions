@@ -105,6 +105,8 @@ PUBLIC_DISCOVERY_PROVIDERS = (
 def public_discovery_provider_metadata(
     provider: PublicDiscoveryProvider,
 ) -> PublicDiscoveryProviderMetadata:
+    """Expose the fixed provider catalog without granting execution authority."""
+
     try:
         return next(item for item in PUBLIC_DISCOVERY_PROVIDERS if item.provider is provider)
     except StopIteration as error:
@@ -291,6 +293,10 @@ class PublicDiscoveryResponse:
 
 
 def normalise_discovery_query(value: str) -> str:
+    """Normalize and reject malformed discovery query before it can reach persistence or an
+    external transport.
+    """
+
     if not isinstance(value, str):
         raise ValueError("public discovery query is invalid")
     query = " ".join(unicodedata.normalize("NFKC", value).split())
@@ -304,6 +310,10 @@ def normalise_discovery_query(value: str) -> str:
 
 
 def normalise_result_text(value: object, *, maximum: int, required: bool) -> str | None:
+    """Normalize and reject malformed result text before it can reach persistence or an external
+    transport.
+    """
+
     if not isinstance(value, str):
         if required:
             raise ValueError("public discovery result text is invalid")

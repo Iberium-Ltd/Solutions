@@ -1,3 +1,7 @@
+/**
+ * Defines the canonical route, state, and viewport matrix used by screenshot
+ * tests; keeping it declarative makes missing visual coverage detectable.
+ */
 export const VISUAL_CLOCK = '2034-06-15T12:00:00.000Z'
 export const VISUAL_FIXTURE_VERSION = 'ariadne-visual-v1'
 export const VISUAL_RANDOM_SEED = 'ariadne-visual-v1'

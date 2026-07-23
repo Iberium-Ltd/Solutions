@@ -1,3 +1,8 @@
+/**
+ * Exercises the complete native-shaped foreground journey with a closed,
+ * synthetic Tauri runtime so route handoffs, citations, and export are tested
+ * without transmitting real identity data.
+ */
 import { expect, test, type Page } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'

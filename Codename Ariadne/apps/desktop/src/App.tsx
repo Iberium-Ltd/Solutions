@@ -1,3 +1,9 @@
+/**
+ * Defines the desktop route graph and the vault/profile gates around it.
+ *
+ * Pages own presentation, while native boundaries and the Python core retain
+ * authority over persistence, policy, and external execution.
+ */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'

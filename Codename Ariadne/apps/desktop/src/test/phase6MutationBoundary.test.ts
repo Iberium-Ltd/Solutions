@@ -1,3 +1,4 @@
+/** Locks revision and authorization requirements on monitoring-era mutations. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createPhase6RemediationCase,

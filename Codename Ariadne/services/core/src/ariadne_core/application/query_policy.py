@@ -387,4 +387,6 @@ class QueryPolicyService:
 
 
 def local_policy(revision: int = 1) -> ProviderPolicy:
+    """Return the non-network policy used when a workflow must remain entirely local."""
+
     return ProviderPolicy(mode=PolicyMode.LOCAL_ONLY, revision=revision)

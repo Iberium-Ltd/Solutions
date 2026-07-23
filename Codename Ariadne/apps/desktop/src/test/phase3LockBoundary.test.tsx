@@ -1,3 +1,4 @@
+/** Ensures locking immediately removes intake and entity material from the DOM. */
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'

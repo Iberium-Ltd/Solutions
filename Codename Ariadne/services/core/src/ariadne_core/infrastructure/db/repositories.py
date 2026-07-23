@@ -46,10 +46,14 @@ MAX_JOB_DEPENDENCIES = 64
 
 
 def now_us() -> int:
+    """Use one integer timestamp representation across persistence and optimistic concurrency."""
+
     return time.time_ns() // 1_000
 
 
 def canonical_json(value: object) -> str:
+    """Serialize persisted structured values deterministically for hashing and comparison."""
+
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
 

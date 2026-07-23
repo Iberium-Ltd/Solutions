@@ -1,3 +1,9 @@
+/**
+ * Acts as the persistent home for a named identity profile.
+ *
+ * It joins reviewed identifiers, exact sources, history, and one-command audit
+ * setup so users do not repeatedly re-enter the same identity clues.
+ */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {

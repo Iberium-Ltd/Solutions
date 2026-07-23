@@ -109,6 +109,8 @@ def _apply_key(connection: Any, key: bytes | bytearray) -> None:
 
 
 def verify_connection(connection: Any) -> CipherRuntime:
+    """Prove SQLCipher and required connection invariants before repositories use the database."""
+
     try:
         sqlite_version = str(connection.execute("SELECT sqlite_version()").fetchone()[0])
         cipher_row = connection.execute("PRAGMA cipher_version").fetchone()
