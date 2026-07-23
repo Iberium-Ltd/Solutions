@@ -1,6 +1,13 @@
 # Codename Ariadne Desktop
 
-The desktop workspace began as the accepted synthetic Phase 1 interface and now includes narrow native workflows for vault/profile lifecycle, intake/review, graph, selectable local or optional OpenAI Responses analysis, network-free query planning, bounded public/HIBP discovery, deterministic investigation planning, a local advanced query composer with browser handoffs, atomic exact-URL capture, findings/evidence decisions, audit checkpoints/comparison, remediation, and local reports. Browser mode remains explicitly synthetic. Broader external providers, authorised account connectors, scheduled audit ingestion, and outbound remediation actions remain absent.
+The desktop workspace began as the accepted synthetic Phase 1 interface and now
+includes native vault/profile lifecycle, confirmed profile deletion,
+intake/review, persistent named-person audits, real frontier-derived progress,
+seven bounded public discovery surfaces, cited selected-local-AI analysis,
+reviewed exact-source promotion, findings/evidence decisions, comparison,
+remediation, and local reports. Browser mode remains explicitly synthetic.
+Credentialed specialist providers, authorised account connectors, scheduled
+audit ingestion, and outbound remediation actions remain absent.
 
 For the practical vault-to-report workflow, see the [desktop user guide](../../docs/user-guide.md).
 
@@ -55,15 +62,15 @@ the uv-managed service over authenticated random loopback and validates its
 capabilities handshake. Pages without a native workflow keep an explicit synthetic fallback.
 
 Packaged Rust mode never starts the uv/Homebrew development service. The latest
-verified local packaging spike is the current 48-operation/46-path PyInstaller
-artifact, staged as an ignored Tauri external binary. The staged sidecar is
-20,946,896 bytes with SHA-256
-`5ca6b790878cc7f77b99cc21e75e49c2febf8208dccbf87cb523669515262df3`.
-After ad-hoc packaging, the arm64/minimum-macOS-11 sidecar is 20,946,880 bytes
+verified local packaging spike is the current 57-operation/55-path PyInstaller
+artifact at `0011_profile_purge`, staged as an ignored Tauri external binary.
+The staged sidecar is 21,053,600 bytes with SHA-256
+`dccaaa5d3c9a60b668ecd85cdd0d00a79c4b16aadd2c02995e43891478a9d7f5`.
+After ad-hoc packaging, the arm64/minimum-macOS-11 sidecar is 21,053,584 bytes
 with SHA-256
-`4ba7fd0a6f99135b96f412a4371c5f7783ffb6c4ae5cbe6ac1f8fd82d36d324b`;
-the arm64/minimum-macOS-14 desktop executable is 16,979,744 bytes with SHA-256
-`ca68fdd4957c7540716f4e7a9b0d54cea657e44cb2bdf68cc012d67cada3d3ec`.
+`74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`;
+the arm64/minimum-macOS-14 desktop executable is 17,815,088 bytes with SHA-256
+`08491aabfc4d61daa61cf7b5137162b9a64403987b63468fa7e5031b19a8f81f`.
 This remains a local ad-hoc packaging proof, not a signed/notarised release, and
 no vault key enters the webview boundary. The historical 45-operation and
 earlier identities remain preserved separately.
@@ -94,7 +101,7 @@ The current targeted gate retained four 1440×900 major-screen captures and one 
 
 Production routes are lazy-loaded, and the production build completes without a large-chunk warning. The visual harness uses deterministic local fixtures, blocks external requests, exercises reduced-motion and accessible-name contracts, and verifies that key state evidence remains visible at compact viewports.
 
-At the current 48-operation source head, frontend typecheck, lint, production build, and 143/143 Vitest tests across 36 files pass. The final targeted Chromium gate passed 2/2; the 69-image baseline remains closed unless a functional failure indicates a shared regression.
+At the current 57-operation source head, frontend typecheck, lint, production build, and 148/148 Vitest tests across 36 files pass. The 69-image baseline remains closed unless a functional failure indicates a shared regression.
 
 ## Source map
 
@@ -116,9 +123,9 @@ typed Rust boundary; they must not be added directly to page components.
 
 ## Current desktop boundary
 
-- Current Rust source exposes only the generated route-specific 48-operation/46-path
+- Current Rust source exposes only the generated route-specific 57-operation/55-path
   allowlist and independently validates native responses; there is no generic core proxy.
-  The latest completed packaged lifecycle is the current 48-operation build; every earlier build retains its own historical identity.
+  The latest completed packaged lifecycle is the current 57-operation build; every earlier build retains its own historical identity.
 - The debug supervisor owns the one-shot bootstrap token, child process,
   bounded readiness, authenticated requests, and shutdown.
 - A macOS Keychain custodian is wired to the anonymous FD-198 key lease; the

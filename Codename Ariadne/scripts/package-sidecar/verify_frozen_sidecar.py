@@ -851,7 +851,7 @@ def _exercise(binary: Path, transport: str) -> dict[str, object]:
                 finally:
                     connection.close()
                 if (
-                    migration_revision != "0008_phase6_audit_remediation"
+                    migration_revision != "0011_profile_purge"
                     or dependency_table != 1
                     or intake_identity_tables != 13
                     or phase5_tables != 9

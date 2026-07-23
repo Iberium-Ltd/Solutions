@@ -1,13 +1,34 @@
 # Codename Ariadne — Next Steps
 
-Last updated: 2026-07-14
+Last updated: 2026-07-23
 
 This list records usability and functional work discovered during a real
 authorised self-audit. It contains no audit subject values.
 
+## Completed in the persistent identity-audit restructure
+
+- [x] Add a named People/profile workspace that reuses reviewed identifiers,
+  exact sources, prior runs, results, proposals, and citations without manual
+  re-entry.
+- [x] Add a one-command **Run full audit** journey with explicit mode, depth,
+  request, time, provider, and selected-local-model settings.
+- [x] Persist frontier tasks, results, leads, proposals, receipts, terminal
+  outcomes, stop reasons, and progress; support reload, pause, resume, cancel,
+  and crash recovery.
+- [x] Execute seven credential-free public surfaces automatically in one run:
+  DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate
+  transparency.
+- [x] Run selected local AI after deterministic discovery and retain only cited
+  facts, connections, and next steps with exact source URLs and an honest
+  fallback when the model is unavailable.
+- [x] Promote positively reviewed proposals into canonical entities while
+  retaining proposal-to-entity source provenance.
+- [x] Add confirmed physical profile deletion across the Python API, generated
+  contracts, Rust/Tauri bridge, and desktop UI.
+
 ## Product direction — Audit-first, tools second
 
-- [ ] Make the default experience a single guided **Run full audit** workflow:
+- [x] Make the default experience a single guided **Run full audit** workflow:
   import the source once, review only ambiguous items, choose an audit/security
   preset, approve the exact external scope, and let Ariadne complete the
   permitted work.
@@ -18,7 +39,7 @@ authorised self-audit. It contains no audit subject values.
   disclosure**, and **Maximum authorised coverage**. Always show the exact data,
   providers, expected requests, and remaining manual prerequisites before the
   run begins.
-- [ ] Automatically perform deterministic extraction, eligible query planning,
+- [x] Automatically perform deterministic extraction, eligible query planning,
   approved provider execution, result deduplication, exact-source capture,
   finding triage, cited AI analysis, gap analysis, follow-up planning,
   checkpoints, comparison, and report preparation as one resumable audit run.

@@ -3,7 +3,7 @@
 Last updated: 2026-07-14  
 Applies to: completed Phase 0–3 gates, the 48-operation local candidate, and every separately identified historical package
 
-Codename Ariadne is not release-ready. Phase 3 remains historically verified through `0005_graph_edge_origins`; preserved `0006_query_policy_core`, `0007_phase5_evidence_attribution`, and 37-/40-/45-operation `0008_phase6_audit_remediation` packages each retain separately identified local evidence. The current 48-operation candidate completed its full aggregate/frozen/package gate under new identities, and no earlier artifact is relabelled as its evidence. This is local ad-hoc proof, not production signing, notarisation, clean-machine, or release approval.
+Codename Ariadne is not release-ready. Historical `0005`–`0008` packages retain separately identified local evidence. The current 57-operation candidate at `0011_profile_purge` completed its full aggregate/frozen/package gate under new identities, and no earlier artifact is relabelled as its evidence. This is local ad-hoc proof, not production signing, notarisation, clean-machine, or release approval.
 
 ## Functional limitations
 
@@ -26,7 +26,7 @@ Codename Ariadne is not release-ready. Phase 3 remains historically verified thr
 ## Security and privacy limitations
 
 - Browser-selected intake and Phase 5 evidence/derivative file bytes are read into WKWebView memory, base64-encoded, and sent through typed Tauri commands. Intake is capped at 1 MiB and evidence at 10 MiB; bounds/encoding are revalidated, persisted evidence receives a core-computed SHA-256, and no arbitrary path is exposed. Transient raw and base64 copies broaden the webview memory boundary, so an opaque native file-broker handle is preferred before real-data use.
-- SQLCipher and migrations through `0005_graph_edge_origins` pass the historical Phase 3 frozen/package gates. `0006_query_policy_core`, `0007_phase5_evidence_attribution`, and the historical 37-/40-/45-operation `0008` builds separately retain their aggregate, frozen UDS, and packaged-app milestones under distinct identities. The current 48-operation aggregate/frozen/package gate also passes under `5ca6b790…` staged, `4ba7fd0…` packaged-sidecar, and `ca68fdd4…` desktop identities. None is a penetration test or fuzzing certification.
+- SQLCipher and migrations through `0008` retain historical frozen/package proof. The current 57-operation `0011` aggregate/frozen/package gate passes under `dccaaa5…` staged, `74325b3…` packaged-sidecar, and `08491aa…` desktop identities. None is a penetration test or fuzzing certification.
 - The parser worker has strict resource, descriptor, IPC, and network bounds, but is not a complete macOS sandbox against every file readable by the same user account.
 - Same-user malware or an unlocked account can inspect process memory or displayed data. The application cannot defend against a fully compromised OS.
 - Auto-lock remains fixed at 300 seconds in the native shell. Physical sleep/wake and the real platform Keychain prompt remain Phase 9 manual validation gates.
@@ -38,7 +38,7 @@ Codename Ariadne is not release-ready. Phase 3 remains historically verified thr
 
 ## UI and validation limitations
 
-- The accepted Phase 1 `pass-02b` matrix contains 69/69 synthetic screenshots with no open Critical or Major defect. The current 48-operation source passes 143/143 Vitest tests across 36 files plus typecheck/lint/build and a final 2/2 targeted Chromium gate. Only the changed query composer and one Settings presentation were inspected; no blocking defect was found. The historical 45-operation targeted gate remains separate, and the broad screenshot matrix will not be recaptured unless a later check reveals a shared regression.
+- The accepted Phase 1 `pass-02b` matrix contains 69/69 synthetic screenshots with no open Critical or Major defect. The current source passes 148/148 Vitest tests across 36 files plus typecheck/lint/build. The broad screenshot matrix will not be recaptured unless a later check reveals a shared regression.
 - Native Graph uses a deterministic bounded Cytoscape layout over persisted data; it is not production-scale graph analytics.
 - The geographic surface is a schematic local vector view, not a geocoder or authoritative map.
 - macOS is the only target; the configured minimum window is 1000×700. Browser distribution and mobile are out of scope.

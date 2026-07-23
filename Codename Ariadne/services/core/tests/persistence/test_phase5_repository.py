@@ -83,7 +83,7 @@ def test_phase5_schema_upgrades_forward_from_query_policy_head(tmp_path: Path) -
     with engine.connect() as connection:
         assert (
             connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar_one()
-            == "0008_phase6_audit_remediation"
+            == "0011_profile_purge"
         )
         tables = {
             str(row[0])

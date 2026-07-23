@@ -1,7 +1,7 @@
 # Codename Ariadne — Local Data Model
 
-- Status: target architecture contract plus 45-operation source candidate at schema `0008_phase6_audit_remediation`; newest workflows add no migration and final package verification is pending
-- Date: 2026-07-13
+- Status: target architecture contract plus tested and locally packaged 57-operation candidate at schema `0011_profile_purge`
+- Date: 2026-07-23
 - Storage target: SQLCipher Community 4.17+ with SQLite 3.51.3 or newer, managed by SQLAlchemy 2 and Alembic
 - Scope: single-device, multi-profile encrypted vault; target model plus implemented Phase 3–6 local cuts
 
@@ -9,7 +9,7 @@
 
 This schema supports the complete local-first lifecycle: authorised intake, reviewed identity data, jurisdiction-aware query planning, durable execution, explicit coverage outcomes, immutable evidence, explainable attribution, audit comparison, remediation, exports, and privacy governance.
 
-The complete catalog remains a target design. Phase 3 is historically verified at `0005_graph_edge_origins`; network-free `0006_query_policy_core`, Phase 5 `0007_phase5_evidence_attribution`, and the 37-/40-operation `0008_phase6_audit_remediation` packages remain separately verified. Public discovery/capture, entity-origin pagination, and corpus/workspace local-AI reasoning use the existing `0008` schema or in-memory projections and add no migration. Their 45-operation source package gate is pending. Later target tables described here are not claimed as present unless included in an implemented cut below.
+The complete catalog remains a target design. Phase 3 is historically verified at `0005_graph_edge_origins`; network-free `0006_query_policy_core`, Phase 5 `0007_phase5_evidence_attribution`, and the 37-/40-/48-operation `0008_phase6_audit_remediation` packages remain separately verified. Revisions `0009` and `0010` add the persistent identity-audit engine, while `0011_profile_purge` adds the controlled physical-profile deletion boundary. The 57-operation source aggregate and refreshed local package gate pass. Later target tables described here are not claimed as present unless included in an implemented cut below.
 
 ### 1.1 Implemented schema cut through Phase 3
 
@@ -73,6 +73,25 @@ All child relationships include vault/profile scope and reference existing Phase
 Run comparison is derived deterministically rather than stored as a separate mutable result. The repository validates that baseline precedes current and loads the complete persisted interval through the selected current run. Thus a nonadjacent comparison retains intervening observations needed for lifecycle and REAPPEARED classification instead of comparing only two endpoints. The current package can append a user-triggered checkpoint from contentless Phase 5 materials and explicit provider coverage; canonical fingerprints include finding state, evidence/derivative metadata hashes, and latest assessment/decision state. This reuses the three audit tables and is not adapter-driven or scheduled. Remediation routes create/update local records only and define no send, submit, dispatch, or provider-contact operation.
 
 Deterministic report generation is presently a read projection, not a schema cut. It reads bounded profile-scoped Phase 5/6 repositories and returns one in-memory JSON or Markdown artifact plus an exact manifest. No `reports`, `report_approvals`, or `report_artifacts` target table below is created or populated. Full-explicit approval is a request-bound UUID rather than a durable/expiring approval record; saving the artifact is a UI-owned local download outside the core transaction and retention model.
+
+### 1.5 Persistent identity audits and confirmed profile purge
+
+Revisions `0009_identity_discovery_engine` and `0010_identity_ai_provenance`
+extend a named profile with durable audit configuration, frontier tasks,
+attempts, results, leads, proposals, tool receipts, AI analyses, and exact
+proposal-to-entity origin links. Audit progress and terminal state are derived
+from persisted frontier state, so route changes and process restart do not reset
+work. Selected local-AI analysis stores bounded source citations and remains
+review-only.
+
+Revision `0011_profile_purge` preserves the normal immutable Phase 5/6 triggers
+but permits their deletion only after the owning profile enters
+`PURGE_PENDING`. The delete operation requires the current profile revision and
+an exact-name confirmation, then removes all installed profile-scoped rows and
+linked extraction jobs/idempotency results in foreign-key order inside one
+transaction. SQLite secure deletion is enabled and the database is vacuumed
+after commit. Normal application paths still cannot update or delete immutable
+evidence, snapshots, or remediation history.
 
 These implemented cuts are intentionally narrower than the final catalog:
 
@@ -1566,7 +1585,15 @@ The verified Phase 3 migration tests upgrade encrypted `0001`/`0002` vaults thro
 
 The preserved `0006` migration tests extend that path through the six Phase 4 tables and remain paired with their own aggregate/frozen/package identities. Verified `0007` migration tests add the nine-table immutable profile-scoped Phase 5 cut, encrypted-repository requirement, cross-profile rejection, dedup/link integrity, assessment evidence linkage, and append-only decision revisions; its separately identified frozen PyInstaller UDS/package evidence passes under its own identities.
 
-Current migration tests retain source head `0008_phase6_audit_remediation`, require exactly the ten Phase 6 tables, and cover forward `0007` → `0008` migration, immutable and bounded snapshot/remediation storage, canonical payload replay, full selected-run lifecycle intervals, exact revision/history continuity, stale CAS, and cross-profile references. The historical 40-operation frozen UDS/package proof passes under its own identities. The five newer routes add no migration; their replacement package proof remains pending. No historical `0005`, `0006`, `0007`, or 37-/40-operation `0008` hash is reused.
+Current migration tests retain source head `0011_profile_purge`. They cover the
+historical forward `0007` → `0008` path, the `0009`/`0010` persistent
+identity-audit and cited-AI tables, exact provenance promotion, interrupted-task
+recovery, and the `0011` purge-only immutable-trigger transition. The deletion
+integration test rejects an incorrect name, requires the current profile
+revision, and verifies that no installed table retains the deleted
+vault/profile scope. Fresh frozen UDS and packaged lifecycle proof passes under
+new 57-operation identities. No historical `0005`, `0006`, `0007`, or `0008`
+hash is reused.
 
 ## 10. Retention and minimisation
 

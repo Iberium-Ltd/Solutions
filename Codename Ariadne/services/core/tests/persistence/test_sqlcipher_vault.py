@@ -82,7 +82,7 @@ def test_migration_creates_phase3_intake_identity_schema(tmp_path) -> None:
             str(row[1])
             for row in connection.exec_driver_sql("PRAGMA table_info(entity_decisions)").all()
         }
-    assert revision == "0008_phase6_audit_remediation"
+    assert revision == "0011_profile_purge"
     assert {
         "vaults",
         "vault_crypto",
@@ -169,6 +169,19 @@ def test_0005_backfills_only_verifiable_existing_graph_edge_origins(tmp_path) ->
     with manager.engine.begin() as connection:
         edge_count = connection.exec_driver_sql("SELECT count(*) FROM graph_edges").scalar_one()
         assert edge_count > 0
+        for drop_identity_table in (
+            "DROP TABLE identity_entity_origins",
+            "DROP TABLE identity_ai_analyses",
+            "DROP TABLE identity_tool_receipts",
+            "DROP TABLE identity_proposals",
+            "DROP TABLE identity_results",
+            "DROP TABLE identity_frontier_tasks",
+            "DROP TABLE identity_leads",
+            "DROP TABLE identity_audit_runs",
+            "DROP TABLE identity_sources",
+            "DROP TABLE identity_people",
+        ):
+            connection.exec_driver_sql(drop_identity_table)
         for drop_phase6_table in (
             "DROP TABLE phase6_remediation_history_evidence",
             "DROP TABLE phase6_remediation_history",
@@ -216,7 +229,7 @@ def test_0005_backfills_only_verifiable_existing_graph_edge_origins(tmp_path) ->
         origin_count = connection.exec_driver_sql(
             "SELECT count(*) FROM graph_edge_origins"
         ).scalar_one()
-    assert revision == "0008_phase6_audit_remediation"
+    assert revision == "0011_profile_purge"
     assert origin_count == edge_count
     manager.lock()
 
@@ -265,7 +278,7 @@ def test_existing_phase2_foundation_upgrades_forward_to_intake_identity_head(tmp
     with engine.connect() as connection:
         assert (
             connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar_one()
-            == "0008_phase6_audit_remediation"
+            == "0011_profile_purge"
         )
         assert (
             connection.exec_driver_sql(
@@ -319,7 +332,7 @@ def test_existing_query_policy_schema_upgrades_forward_to_current_head(tmp_path)
                 "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'phase6_%'"
             ).all()
         }
-    assert revision == "0008_phase6_audit_remediation"
+    assert revision == "0011_profile_purge"
     assert phase5_tables == {
         "phase5_findings",
         "phase5_evidence_originals",
@@ -425,7 +438,7 @@ def test_existing_0003_decision_table_upgrades_without_double_adding_columns(tmp
             FROM entity_decisions WHERE id = 'legacy-decision'
             """
         ).one()
-    assert revision == "0008_phase6_audit_remediation"
+    assert revision == "0011_profile_purge"
     assert {
         "before_sensitivity",
         "after_sensitivity",

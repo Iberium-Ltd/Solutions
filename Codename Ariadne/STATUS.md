@@ -1,12 +1,17 @@
 # Codename Ariadne — Project Status
 
-Last updated: 2026-07-14  
-Overall state: **48-operation/46-path local candidate with aggregate, frozen-sidecar, packaged-app lifecycle, and targeted visual gates passed; production release readiness remains incomplete**
+Last updated: 2026-07-23
+Overall state: **57-operation/55-path persistent identity-audit candidate; complete source, frozen, and packaged lifecycle gates pass; production release readiness remains incomplete**
 
 ## Implemented at the current source boundary
 
-- The generated contract contains **48 narrow operations (4 GET, 44 POST; 46 distinct paths)** at schema head `0008_phase6_audit_remediation`.
-- The current frontend passes typecheck, lint, production build, and **143/143 Vitest tests across 36 files**.
+- The generated contract contains **57 narrow operations (4 GET, 53 POST; 55 distinct paths)** at schema head `0011_profile_purge`.
+- The current frontend passes typecheck, lint, production build, and **148/148 Vitest tests across 36 files**.
+- People is now the persistent product centre: one named profile retains identifiers, exact sources, audit history, results, cited AI analysis, review proposals, and durable progress without re-entering data in Discovery Console.
+- **Run full audit** snapshots explicit depth/request/time/provider/model settings and automatically works through DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency surfaces. It supports durable crash recovery, pause/resume/cancel, exact terminal outcomes, and progress derived from frontier state rather than animation.
+- Selected local AI runs after the deterministic frontier and stores only source-grounded facts, connections, and next steps with exact result citations. If the selected model is unavailable or changes, Ariadne records an explicit deterministic fallback instead of inventing a model result.
+- Positive proposal decisions promote reviewed knowledge into canonical entities and retain proposal-to-entity exact-source provenance.
+- A native **Delete active local profile** action requires typing the exact profile name, refreshes the profile revision, physically purges all profile-scoped rows and linked jobs/idempotency results in one transaction, uses SQLite secure deletion, and vacuums freed pages. The accidental July 23 workspace was removed from the live app and placed in a recoverable user Trash backup.
 - The Discovery Console combines bounded DuckDuckGo HTML and unauthenticated GitHub-user search, official HIBP account/domain checks, a deterministic multi-identifier planner, fixed manual portals, and a local advanced query composer. The composer shows the exact query assembled from `site`, `filetype`, `intitle`, `inurl`, exclusion, date, and optional raw provider-specific operators; it can create user-opened handoffs for Google, Bing, DuckDuckGo, Brave, Ecosia, Startpage, and Mojeek or load the query into the bounded DuckDuckGo form. It does not scrape, import evidence automatically, or bypass controls.
 - HIBP keys are supplied only for the request. Direct email transmission requires explicit self-audit and direct-transmission authorization; domain enumeration requires provider verification. The planner is deterministic and non-executing, and exposes exact routes, transmission classes, ordering, and unmet prerequisites.
 - An official HIBP direct synthetic live smoke returned `SUCCEEDED`/`COMPLETE`, HTTP 200, and exactly one breach with an exact source. The official k-anonymity endpoint returned HTTP 401 for the public test key because that capability is plan/subscription gated; no k-anonymity success is claimed.
@@ -20,27 +25,27 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 ## Verification state
 
-### Current 48-operation source evidence
+### Current 57-operation source evidence
 
-- Generated contract: **48 operations / 46 paths (4 GET, 44 POST)**.
-- Python: **493 passed, 4 intentional live-provider skips in 1,694.11 seconds**; Ruff passed across 162 files, strict mypy across 90 files, and generated-contract checks passed.
-- Rust: format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual Keychain test in 22.31 seconds.
-- Frontend: typecheck, lint, production build, and **143/143 Vitest tests across 36 files** pass.
+- Generated contract: **57 operations / 55 paths (4 GET, 53 POST)**; drift check passes.
+- Python: Ruff passes across **171 files**, strict mypy across **94 source files**, and the full aggregate completes with **498 passed and 4 intentional skips in 473.34 seconds**.
+- Rust: format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual Keychain test in 15.16 seconds.
+- Frontend: typecheck, lint, production build, and **148/148 Vitest tests across 36 files** pass.
+- Privacy: **440 candidate files passed**.
 - Live local Qwen: separate opt-in `qwen3:30b` run **4/4 passed in 125.98 seconds**.
-- Privacy: **425 candidate files passed**.
 - Targeted Chromium: final gate **2/2 passed in 15.1 seconds**, with no external request, error, failed request, or horizontal overflow; the earlier screenshot capture/review run passed 2/2 in 21.3 seconds, and inspection of only the changed query composer and one Settings image found no blocking defect.
 - HIBP direct official synthetic smoke: `SUCCEEDED`/`COMPLETE`, HTTP 200, one exact breach source.
 - HIBP k-anonymity public-key smoke: HTTP 401 correctly surfaced as an HIBP plan/subscription requirement; no successful result claimed.
 - OpenAI Responses: implementation and automated provider/citation tests pass; **no real paid-key live test**.
 
-The fresh 48-operation package gate passes under these exact identities:
+Current 57-operation local package evidence:
 
-- Frozen/staged sidecar: 20,946,896 bytes, arm64/minimum macOS 11.0, SHA-256 `5ca6b790878cc7f77b99cc21e75e49c2febf8208dccbf87cb523669515262df3`.
-- Signed packaged sidecar: 20,946,880 bytes, SHA-256 `4ba7fd0a6f99135b96f412a4371c5f7783ffb6c4ae5cbe6ac1f8fd82d36d324b`, CDHash `bac9d49b49c770a460ddae9698a4e39a12a4b92c`.
-- Desktop executable: 16,979,744 bytes, arm64/minimum macOS 14.0, SHA-256 `ca68fdd4957c7540716f4e7a9b0d54cea657e44cb2bdf68cc012d67cada3d3ec`, CDHash `f096565871d279b40f5196c51ae40a3e94cf9f3c`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 3,290/2,550 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Frozen/staged sidecar: 21,053,600 bytes, arm64/minimum macOS 11.0, SHA-256 `dccaaa5d3c9a60b668ecd85cdd0d00a79c4b16aadd2c02995e43891478a9d7f5`.
+- Signed packaged sidecar: 21,053,584 bytes, SHA-256 `74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`, CDHash `396892d4ec3a4784ceb924ddff682987ac65d852`.
+- Desktop executable: 17,815,088 bytes, arm64/minimum macOS 14.0, SHA-256 `08491aabfc4d61daa61cf7b5137162b9a64403987b63468fa7e5031b19a8f81f`, CDHash `ac7b5fed454dfeaddc391c468aed1fad20232b4f`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 4,942/3,196 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 
-### Historical 45-operation candidate evidence
+### Historical 48- and 45-operation candidate evidence
 
 The historical **45-operation/43-path** candidate remains preserved separately:
 
@@ -68,7 +73,7 @@ Those identities remain historical evidence only and are not relabelled as 48-op
 | Phase 6 — Monitoring and remediation | **Comparison, remediation, checkpoints, and exact-source reports implemented**; scheduling, operational ingestion, durable report lifecycle, and retention remain incomplete |
 | Phase 7 — Authorised account connectors | **Not started**; OAuth credentials and Gmail/GitHub connector isolation remain follow-on work |
 | Phase 8 — Global provider expansion | **Not started** beyond the bounded current discovery providers |
-| Phase 9 — Hardening and release | **In progress**; current local package proof passed, while production signing/notarisation, signed updates, physical lifecycle, and clean-machine validation remain |
+| Phase 9 — Hardening and release | **In progress**; current 57-operation local package proof passed, while production signing/notarisation, signed updates, physical lifecycle, and clean-machine validation remain |
 
 ## Important boundaries
 
@@ -80,4 +85,4 @@ Those identities remain historical evidence only and are not relabelled as 48-op
 
 ## Next milestone
 
-Finish evidence retention/viewing, scheduled ingestion, authorised connectors, broader providers, and production release validation. Preserve the current 48-operation artifact identities as a local ad-hoc candidate, not a distributable release.
+Finish evidence retention/viewing, scheduled ingestion, authorised connectors, specialist providers, and production release validation. Preserve the 48-operation artifact identities as historical local proof, not evidence for the current source or a distributable release.

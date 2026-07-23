@@ -1366,7 +1366,7 @@ def test_dependency_schema_upgrades_forward_to_intake_identity_graph_head(tmp_pa
                 "SELECT name FROM sqlite_master WHERE type='table'"
             ).all()
         }
-    assert revision == "0008_phase6_audit_remediation"
+    assert revision == "0011_profile_purge"
     assert {
         "intake_sources",
         "intake_segments",

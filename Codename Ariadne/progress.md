@@ -1,7 +1,7 @@
 # Codename Ariadne — Progress Estimate
 
-Last updated: 2026-07-14  
-Estimated overall completion: **95%**  
+Last updated: 2026-07-23
+Estimated overall completion: **96%**
 Confidence: **moderate**
 
 This is a planning estimate, not a release claim. It may move up or down when testing exposes additional work.
@@ -13,27 +13,27 @@ This is a planning estimate, not a release claim. It may move up or down when te
 | Phase 0 — Discovery and architecture | Complete and tested | 100% |
 | Phase 1 — UI system and interactive prototype | Complete and tested | 100% |
 | Phase 2 — Local foundation | Complete and tested | 100% |
-| Phase 3 — Intake and identity compiler | Complete and tested at the synthetic local gate | 100% |
-| Phase 4 — Search compiler and initial adapters | Public search, HIBP, deterministic planning, manual portals, and local advanced query composition implemented; wider providers/retry orchestration remain | 88% |
-| Phase 5 — Evidence and attribution | Atomic exact-source capture and provenance implemented; retention/purge and broader ingestion remain | 93% |
-| Phase 6 — Monitoring and remediation | Comparison/remediation, local checkpoints, and reports implemented; scheduling and durable report lifecycle remain | 90% |
+| Phase 3 — Intake and identity compiler | Complete, persistent, and tested; named profiles now support confirmed physical deletion | 100% |
+| Phase 4 — Search compiler and initial adapters | Durable one-command audit plus seven automatic public surfaces, HIBP state, retry/frontier orchestration, manual portals, and advanced query composition implemented | 95% |
+| Phase 5 — Evidence and attribution | Exact result URLs, cited local-AI analysis, proposal review/promotion, and whole-profile purge implemented; general evidence streaming/retention remains | 96% |
+| Phase 6 — Monitoring and remediation | Durable audit progress/history, pause/resume/cancel, comparison/remediation, checkpoints, and reports implemented; background scheduling and durable report lifecycle remain | 93% |
 | Phase 7 — Authorised account connectors | Not started | 0% |
-| Phase 8 — Global provider expansion | Not started beyond current bounded discovery providers | 8% |
-| Phase 9 — Hardening and release | Current local package/lifecycle proof passes; production signing, notarisation, physical lifecycle, and clean-machine release work remain | 35% |
+| Phase 8 — Global provider expansion | Seven credential-free public surfaces execute automatically; credentialed and specialist provider coverage remains | 42% |
+| Phase 9 — Hardening and release | Current schema-0011 local package/lifecycle proof passes; production signing, notarisation, physical lifecycle, and clean-machine release work remain | 45% |
 
-The active source candidate contains **48 operations across 46 paths (4 GET, 44 POST)**. The local advanced query composer adds no route: it shows the exact query, uses a TypeScript-and-Rust-validated native browser handoff, and performs no scraping or automatic evidence import. Generated contracts pass; the current gate includes **493 Python passes plus 4 intentional live-provider skips**, **95 Rust passes plus one manual Keychain ignore**, **143/143 frontend tests across 36 files**, a separate 4/4 live `qwen3:30b` run, and a 425-candidate privacy scan. Official HIBP direct synthetic live verification succeeded with one exact source; a public test key correctly encountered the k-anonymity endpoint's plan requirement. Optional OpenAI Responses support is implemented and automated-tested with an ephemeral per-request key, explicit model choice, `store: false`, strict structured output, and citation remapping, but has no real paid-key live test.
+The active source candidate contains **57 operations across 55 paths (4 GET, 53 POST)** at schema head `0011_profile_purge`. A named person profile now retains reviewed identifiers, exact sources, audit history, durable frontier state, results, cited AI analysis, and review proposals. **Run full audit** executes DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency checks automatically within explicit budgets; optional HIBP remains authentication-gated. Positive proposal review can promote knowledge into canonical entities with exact source provenance. Profile deletion requires an exact-name confirmation, erases every profile-owned table in dependency order, removes linked jobs/idempotency records, enables SQLite secure deletion, and vacuums freed pages.
 
-The complete current aggregate, frozen/staged inspection, ad-hoc packaged lifecycle, signature, zero-TCP, permission, cleanup, and targeted Chromium gates pass under the exact 48-operation identities recorded in `TEST_RESULTS.md`. Every 45-operation and earlier identity remains historical evidence and has not been relabelled.
+The current gate has passed strict Python formatting/lint/type checking, the full Python aggregate (**498 passed, 4 intentional skips**), **95 Rust tests plus one manual Keychain ignore**, **148/148 frontend tests across 36 files**, production build, generated-contract drift, a **440-file privacy scan**, fresh schema-0011 frozen/staged inspection, and normal/abrupt packaged-app lifecycle verification. Every 48-operation and earlier package identity remains historical evidence and has not been relabelled.
 
 ## What remains most significant
 
 - Complete evidence viewing/streaming, retention/purge, and broader operational finding ingestion.
 - Connect operational adapters and a scheduler to the durable Phase 6 checkpoint boundary.
 - Add durable report/approval/artifact records, destination brokering, and release-grade export validation.
-- Add minimum-scope authorised connectors and broader provider coverage.
+- Add minimum-scope authorised connectors and specialist/credentialed provider coverage.
 - Complete production key rotation, physical lifecycle/Keychain exercises, Developer ID signing, hardened runtime, notarisation, signed updates, and clean-machine release validation.
 
-The estimate is **95%** because the current local aggregate and package gate now closes in addition to the core workflows, exact-source handling, bounded discovery, HIBP checks, selectable AI, and desktop interface. The remaining work is narrower but release-critical: connectors, scheduler, retention, durable reporting, and production distribution. This is not 100% and not release readiness.
+The estimate is **96%** for the intended single-user local product: the primary persistent person/audit journey, real progress, automatic public-provider fleet, citations, selectable local AI, exact sources, and deletion are implemented. The remaining work is narrower but release-critical: connectors, a background scheduler, general retention/streaming, durable reporting, and production distribution. This is not 100% and not public release readiness.
 
 ## Update policy
 

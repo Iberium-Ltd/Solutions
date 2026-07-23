@@ -60,6 +60,7 @@ grep -Fq 'ariadne_core_migrations/migrations/versions/0005_graph_edge_origins.py
 grep -Fq 'ariadne_core_migrations/migrations/versions/0006_query_policy_core.py' <<<"$archive_listing" || fail "query policy migration is absent"
 grep -Fq 'ariadne_core_migrations/migrations/versions/0007_phase5_evidence_attribution.py' <<<"$archive_listing" || fail "Phase 5 evidence and attribution migration is absent"
 grep -Fq 'ariadne_core_migrations/migrations/versions/0008_phase6_audit_remediation.py' <<<"$archive_listing" || fail "Phase 6 audit and remediation migration is absent"
+grep -Fq 'ariadne_core_migrations/migrations/versions/0011_profile_purge.py' <<<"$archive_listing" || fail "profile purge migration is absent"
 
 binary_bytes="$(stat -f '%z' "$BINARY")"
 (( binary_bytes > 1000000 && binary_bytes < 67108864 )) || fail "binary size is outside the approved bound"

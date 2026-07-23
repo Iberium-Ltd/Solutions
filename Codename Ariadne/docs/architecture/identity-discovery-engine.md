@@ -1,6 +1,6 @@
 # Identity Discovery Engine
 
-- Status: Accepted target architecture; first backend vertical slice implemented
+- Status: Accepted architecture; persistent identity-audit vertical implemented and tested
 - Date: 2026-07-22
 - Scope: persistent people, durable audits, recursive discovery, proposals, evidence, and AI-directed tools
 
@@ -21,18 +21,20 @@ claim that every page on the internet can be found. Authentication, challenges,
 paywalls, robots rules, and provider access controls remain visible stop reasons;
 Ariadne does not bypass them.
 
-## Implemented backend slice (migration 0009)
+## Implemented backend slice (migrations 0009–0011)
 
-This section describes the code as it exists after migration 0009. It is not a
-description of the eventual full engine. The implemented slice provides a
+This section describes the code as it exists after migration
+`0011_profile_purge`. It is not a description of the eventual full engine. The
+implemented slice provides a
 persistent person workspace, durable recursive audit frontier, bounded public
-search and page-fetch tools, deterministic extraction proposals, explicit
-progress, and human proposal decisions.
+provider tools, deterministic extraction proposals, exact source URLs, explicit
+progress, cited selected-model analysis, canonical promotion after human review,
+crash reconciliation, and confirmed whole-profile purge.
 
-It does **not** yet provide a background worker, automatic crash reconciliation,
-model-directed planning, accepted-proposal promotion into canonical entities,
-full evidence captures, or most registered tools. The target architecture after
-this section remains the direction for those follow-up slices.
+Execution is still user-session driven rather than an OS-level background
+scheduler. Full immutable content captures, credentialed account connectors,
+and several specialist tools remain future slices. The target architecture
+after this section remains the direction for those follow-up capabilities.
 
 ### Person and Profile relationship
 
@@ -71,6 +73,8 @@ erDiagram
     identity_leads ||--o{ identity_proposals : supports
     identity_frontier_tasks o|--o{ identity_tool_receipts : attempts
     identity_sources o|--o{ identity_leads : anchors
+    identity_audit_runs ||--o| identity_ai_analyses : explains
+    identity_proposals ||--o{ identity_entity_origins : promotes
 ```
 
 | Table | Implemented responsibility |
@@ -83,11 +87,15 @@ erDiagram
 | `identity_results` | Deduplicated public results with the producing task, provider, rank, category, exact canonical URL, title, snippet, optional content hash, observation time, and review state. |
 | `identity_proposals` | Extracted candidate knowledge with lead, value fingerprint, masked display, exact source URL/span, support, contradictions, confidence, temporal/review states, recommendations, and optional model attribution. |
 | `identity_tool_receipts` | One record per completed broker attempt with task, tool, argument SHA-256, authorization/execution states, result code/count, optional model attribution, and timestamps. |
+| `identity_ai_analyses` | One cited selected-model or deterministic-fallback analysis per completed audit, with bounded facts, connections, next steps, limitations, model identity, and exact result references. |
+| `identity_entity_origins` | Exact proposal/source URL provenance retained when positive review promotes a proposal into canonical profile knowledge. |
 
 There is no separate audit-seed table in this slice. Reviewed entities and
 person sources are converted atomically into root leads and frontier tasks when
-an audit is created. There is also no separate model tool-invocation table;
-`identity_tool_receipts` currently records deterministic broker attempts.
+an audit is created. There is no autonomous model tool-invocation table.
+`identity_tool_receipts` records deterministic broker attempts, while
+`identity_ai_analyses` records the single bounded, cited analysis produced after
+frontier exhaustion.
 
 Every new table includes vault/profile scope in its ownership constraints.
 Within an audit, task identity is unique by task type, provider, and keyed
@@ -135,10 +143,15 @@ An explicit execute request performs this sequence:
    derived leads/proposals, child tasks, final task state, and a tool receipt.
 4. `refresh_audit` recomputes counters, progress, stage, and terminal status from
    durable rows.
+5. When the frontier is exhausted, the selected local model receives a bounded
+   projection of retained public results. References are validated against that
+   projection before one analysis is persisted; an unavailable or changed model
+   produces an explicit deterministic fallback.
 
 No database transaction spans provider or page network I/O. The UI or another
-controller must explicitly request later batches; there is no autonomous
-background audit loop in this slice.
+controller requests later batches. The desktop audit page runs that bounded
+batch loop automatically while open and resumes from durable state after reload
+or restart; there is no OS-level background scheduler.
 
 ### Exact frontier task state machine
 
@@ -181,10 +194,9 @@ PAUSED          --RESUME-> READY
 READY | RUNNING | PAUSED --CANCEL--> CANCELLED
 ```
 
-The current code writes audit stages `PLANNING`, `SEARCHING`, `REVIEW`, and
-`COMPLETE`. Other declared stages are reserved for later extraction,
-correlation, AI, and checkpoint slices. `DRAFT` and `FAILED` audit states are
-also defined but not currently produced.
+The current code writes audit stages `PLANNING`, `SEARCHING`, `CORRELATING`,
+`AI_ANALYSIS`, `REVIEW`, and `COMPLETE`. `DRAFT` and `FAILED` audit states remain
+defined for lifecycle completeness.
 
 ### Seed selection and recursive expansion
 
@@ -232,20 +244,26 @@ be represented and rejected truthfully; it does not mean an adapter exists.
 | --- | --- | --- |
 | `SEARCH_WEB` / `DUCKDUCKGO_HTML` | Implemented | Existing bounded public-discovery DuckDuckGo adapter. |
 | `QUERY_GITHUB` / `GITHUB_USERS` | Implemented | Existing bounded GitHub public-user adapter. |
+| `QUERY_GITLAB` / `GITLAB_USERS` | Implemented | Bounded GitLab public-user adapter. |
+| `QUERY_REGISTRY` / `NPM_REGISTRY` | Implemented | Bounded npm registry lookup. |
+| `QUERY_RDAP` / `RDAP_DOMAIN` | Implemented | Bounded RDAP domain-registration lookup. |
+| `QUERY_ARCHIVE` / `WAYBACK_CDX` | Implemented | Bounded Wayback CDX history lookup. |
+| `QUERY_CERTIFICATE_TRANSPARENCY` / `CERTIFICATE_TRANSPARENCY` | Implemented | Bounded crt.sh certificate-transparency lookup. |
 | `FETCH_URL` / `DIRECT_PUBLIC_WEB` | Implemented | Bounded direct page GET plus deterministic parsing/extraction. |
 | `SEARCH_PROVIDER` / `HAVE_I_BEEN_PWNED_V3` | Represented, not executable | Seed starts `AUTH_REQUIRED`; this slice has no audit credential handoff. |
 | `MANUAL_BROWSER_HANDOFFS` | Selectable, no seed generator | Persisted in the provider snapshot but creates no task. |
 | `SEARCH_SITE`, `SEARCH_DOMAIN`, `SEARCH_USERNAME` | Registered, not implemented | Broker returns `REVIEW_REQUIRED` / `TOOL_NOT_IMPLEMENTED` if such a task is introduced. |
 | `PARSE_HTML`, `EXTRACT_LINKS`, `EXTRACT_IDENTIFIERS` | Registered as standalone tools, not implemented | Equivalent deterministic work currently occurs only inside `FETCH_URL`. |
-| `QUERY_ARCHIVE`, `QUERY_REGISTRY`, `QUERY_DNS`, `QUERY_CERTIFICATE_TRANSPARENCY` | Registered, not implemented | Review-required non-execution. |
+| `QUERY_DNS` | Registered, not implemented | Review-required non-execution. |
 | `RUN_USERNAME_ENUMERATION`, `RUN_METADATA_EXTRACTION`, `RUN_OCR`, `HASH_IMAGE`, `COMPARE_IMAGES` | Registered, not implemented | Review-required non-execution. |
 | `CAPTURE_SCREENSHOT`, `CAPTURE_HTML`, `CAPTURE_DOCUMENT` | Registered, not implemented | Review-required non-execution; no evidence capture is implied. |
 | `GENERATE_QUERY_VARIANTS`, `ANALYSE_DOCUMENT`, `COMPARE_SOURCES` | Registered, not implemented | Review-required non-execution. |
 
 The broker receives typed `FrontierTaskRecord` values and returns typed transient
-`ToolExecution` values. It has no database, filesystem, shell, or arbitrary tool
-dispatch interface. Model settings and a selected model ID are snapshotted on an
-audit, but no model planner or model tool call executes in this backend slice.
+`ToolExecution` values. It has no filesystem, shell, or arbitrary tool dispatch
+interface. Model settings and a selected model ID are snapshotted on an audit;
+the model performs cited post-discovery analysis and cannot control broker
+dispatch, approve evidence, or create uncited facts.
 
 ### Implemented progress and stop semantics
 
@@ -282,12 +300,12 @@ leads, proposals, receipts, and progress survive UI route changes and process
 restart because SQLite is authoritative. Retryable failures can be reclaimed by
 a later explicit batch after their durable retry timestamp.
 
-The current slice does **not** implement task leases, claim expiry, or startup
-reconciliation. A process crash after `READY -> RUNNING`, an unexpected broker
-exception, or a failure while committing later results can leave a task in
-`RUNNING`. Such a task is not currently reclaimed automatically. Therefore the
-slice provides durable continuation for safely committed states, but it must not
-yet be described as fully crash-recovering or unattended.
+At the next serialized claim boundary, any remaining `RUNNING` row is classified
+as an interrupted attempt and moved to `FAILED_RETRYABLE` or
+`FAILED_TERMINAL` according to its durable retry count. This recovers process
+loss without pretending the interrupted provider call succeeded. The engine
+does not yet use time-based leases for multiple concurrent worker processes;
+one sidecar coordinator owns execution.
 
 Pause and cancel are also batch-boundary controls. The process-local execution
 lock means a control request does not interrupt a currently executing batch; it
@@ -319,32 +337,25 @@ upserts do not yet populate it; task and lead parents carry the crawl chain.
 Before this slice can satisfy the full target architecture, the following are
 required:
 
-1. Recover stale `RUNNING` tasks with durable leases/attempt records and startup
-   reconciliation; make partial result-commit failures explicitly retryable.
-2. Make terminal audit refresh monotonic and preserve explicit stop reasons.
+1. Make terminal audit refresh monotonic and preserve explicit stop reasons.
    The current refresh can overwrite `NO_ELIGIBLE_KNOWLEDGE` and
    `TIME_BUDGET_EXHAUSTED` with `FRONTIER_EXHAUSTED`.
-3. Count only unresolved proposals when deciding `REVIEW_REQUIRED`. The current
-   refresh uses the total proposal count, so reviewed proposals can keep a run
-   in `PARTIAL`/`REVIEW`.
-4. Enforce cost budgets and implement the distinct semantics of selected,
+2. Enforce cost budgets and implement the distinct semantics of selected,
    monitoring, new-identifier, and maximum-coverage modes.
-5. Connect the selected model through a bounded planner/tool-proposal loop; the
-   current model fields are configuration snapshots only.
-6. Add credentialed HIBP execution, manual-handoff receipts, and adapters for the
+3. Add credentialed HIBP execution, manual-handoff receipts, and adapters for the
    registered-but-unimplemented tools without weakening the broker boundary.
-7. Bind public DNS validation to the actual connection or use a transport that
+4. Bind public DNS validation to the actual connection or use a transport that
    prevents DNS rebinding between preflight resolution and urllib connection.
-8. Record actual attempt start/finish, authorization provenance, adapter version,
+5. Record actual attempt start/finish, authorization provenance, adapter version,
    retry/rate metadata, cost, and evidence/capture references in receipts.
-9. Persist immutable fetched-page evidence and connect accepted proposals to
-   canonical entities/origins; rejection should feed reusable exclusions.
-10. Populate source parentage during crawl and retain every result-to-source and
+6. Persist immutable fetched-page bodies/screenshots where policy permits and
+   feed rejection decisions into reusable exclusions.
+7. Populate source parentage during crawl and retain every result-to-source and
    proposal-to-evidence edge needed for end-to-end provenance.
-11. Integrate the frontier with the existing durable job/outbox/policy layers or
-    provide equivalent leases, idempotency, disclosure accounting, and recovery.
-12. Enforce declared response-size limits at runtime and add pagination cursors
-    rather than relying only on capped aggregate projections.
+8. Integrate the frontier with the existing durable job/outbox/policy layers or
+   provide equivalent leases, idempotency, disclosure accounting, and recovery.
+9. Enforce declared response-size limits at runtime and add pagination cursors
+   rather than relying only on capped aggregate projections.
 
 ## Target architecture beyond the implemented slice
 

@@ -92,17 +92,17 @@ use super::contract::{
     CorePhase6RemediationReappearanceRequest, CorePhase6RemediationRequireApprovalRequest,
     CorePhase6RemediationStatus, CorePhase6RemediationStatusTransitionRequest,
     CorePhase6SnapshotRunState, CorePhase6UnresolvedAbsence, CoreProfileCreateRequest,
-    CoreProfileListResult, CoreProfileSummary, CoreProviderCatalogRequest,
-    CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest, CorePublicDiscoveryCaptureResult,
-    CorePublicDiscoveryProvider, CorePublicDiscoveryReason, CorePublicDiscoverySearchRequest,
-    CorePublicDiscoverySearchResult, CorePublicDiscoveryState, CoreQueryCheckState,
-    CoreQueryCoverageOutcome, CoreQueryDryRunRequest, CoreQueryPlanCell, CoreQueryPlanRequest,
-    CoreQueryPlanResult, CoreQueryPolicyMode, CoreReportArtifactFormat, CoreReportExportMode,
-    CoreReviewState, CoreRoute, CoreSearchPolicy, CoreSensitivity, CoreSession,
-    CoreTransmissionPolicy, CoreVaultLifecycleResult, EventReplayRequest, EventReplayResult,
-    MAX_BOOTSTRAP_BYTES, MAX_READINESS_BYTES, MAX_RESPONSE_BYTES, ReadinessMessage,
-    ReadinessTransport, SessionCredential, SessionLockState, VaultCreateRequest, VaultState,
-    VaultUnlockRequest, encode_json_line_bounded,
+    CoreProfileDeleteRequest, CoreProfileDeleteResult, CoreProfileListResult, CoreProfileSummary,
+    CoreProviderCatalogRequest, CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest,
+    CorePublicDiscoveryCaptureResult, CorePublicDiscoveryProvider, CorePublicDiscoveryReason,
+    CorePublicDiscoverySearchRequest, CorePublicDiscoverySearchResult, CorePublicDiscoveryState,
+    CoreQueryCheckState, CoreQueryCoverageOutcome, CoreQueryDryRunRequest, CoreQueryPlanCell,
+    CoreQueryPlanRequest, CoreQueryPlanResult, CoreQueryPolicyMode, CoreReportArtifactFormat,
+    CoreReportExportMode, CoreReviewState, CoreRoute, CoreSearchPolicy, CoreSensitivity,
+    CoreSession, CoreTransmissionPolicy, CoreVaultLifecycleResult, EventReplayRequest,
+    EventReplayResult, MAX_BOOTSTRAP_BYTES, MAX_READINESS_BYTES, MAX_RESPONSE_BYTES,
+    ReadinessMessage, ReadinessTransport, SessionCredential, SessionLockState, VaultCreateRequest,
+    VaultState, VaultUnlockRequest, encode_json_line_bounded,
 };
 use super::key_lease::{KeyLeaseBroker, KeyLeaseError, KeyLeaseHandle, LeaseOperation};
 use super::vault_manifest::{VaultManifest, VaultManifestError, validate_create_destination};
@@ -747,6 +747,18 @@ impl CoreSupervisor {
     ) -> Result<CoreCommandResponse<CoreProfileListResult>, CoreCommandError> {
         self.execute_unlocked(CoreRoute::ListProfiles, validate_profile_list_result)
             .await
+    }
+
+    pub async fn delete_profile(
+        &self,
+        request: CoreProfileDeleteRequest,
+    ) -> Result<CoreCommandResponse<CoreProfileDeleteResult>, CoreCommandError> {
+        validate_profile_delete_request(&request)?;
+        let profile_id = request.profile_id;
+        self.execute_unlocked_with_json(CoreRoute::DeleteProfile, &request, move |result| {
+            validate_profile_delete_result(result, profile_id)
+        })
+        .await
     }
 
     pub async fn intake_paste(
@@ -2329,6 +2341,13 @@ fn validate_profile_create_request(request: &CoreProfileCreateRequest) -> Result
     if !is_safe_bounded_text(&request.display_label, 1, 80)
         || !is_safe_bounded_text(&request.purpose, 1, 240)
     {
+        return Err(CoreError::InvalidPhase3Request);
+    }
+    Ok(())
+}
+
+fn validate_profile_delete_request(request: &CoreProfileDeleteRequest) -> Result<(), CoreError> {
+    if request.expected_revision == 0 || !is_safe_bounded_text(&request.confirmation_label, 1, 80) {
         return Err(CoreError::InvalidPhase3Request);
     }
     Ok(())
@@ -7108,6 +7127,16 @@ fn validate_profile_list_result(result: &CoreProfileListResult) -> Result<(), Co
         if !profile_ids.insert(profile.profile_id) {
             return Err(CoreError::InvalidPhase3Response);
         }
+    }
+    Ok(())
+}
+
+fn validate_profile_delete_result(
+    result: &CoreProfileDeleteResult,
+    profile_id: Uuid,
+) -> Result<(), CoreError> {
+    if result.profile_id != profile_id || result.deleted_rows == 0 {
+        return Err(CoreError::InvalidPhase3Response);
     }
     Ok(())
 }

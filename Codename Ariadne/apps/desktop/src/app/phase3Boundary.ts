@@ -16,6 +16,8 @@ import type {
   IntakeReceipt,
   PasteIntakeRequest,
   ProfileCreateRequest,
+  ProfileDeleteRequest,
+  ProfileDeleteResult,
   ProfileListResult,
   ProfileSummary,
 } from '../../../../packages/contracts/src/generated/api'
@@ -223,6 +225,20 @@ function parseProfileList(value: unknown): ProfileListResult {
     throw new Error('Phase 3 profile list response is invalid')
   }
   return data as unknown as ProfileListResult
+}
+
+function parseProfileDeleteResult(value: unknown): ProfileDeleteResult {
+  const data = commandData(value)
+  if (
+    !isRecord(data) ||
+    !hasExactKeys(data, ['profileId', 'deletedRows']) ||
+    !UUID_PATTERN.test(String(data.profileId)) ||
+    !Number.isSafeInteger(data.deletedRows) ||
+    Number(data.deletedRows) < 1
+  ) {
+    throw new Error('Phase 3 profile deletion response is invalid')
+  }
+  return data as unknown as ProfileDeleteResult
 }
 
 function parseIntakeReceipt(value: unknown): IntakeReceipt {
@@ -600,6 +616,7 @@ function parseGraphSnapshot(value: unknown): GraphSnapshot {
 async function invokePhase3(
   command:
     | 'core_create_profile'
+    | 'core_delete_profile'
     | 'core_intake_paste'
     | 'core_intake_file'
     | 'core_review_entities'
@@ -621,6 +638,18 @@ export async function createProfile(
 export async function listProfiles(): Promise<ProfileListResult> {
   const { invoke } = await loadNativeCore()
   return parseProfileList(await invoke<unknown>('core_list_profiles'))
+}
+
+export async function deleteProfile(
+  request: ProfileDeleteRequest,
+): Promise<ProfileDeleteResult> {
+  const result = parseProfileDeleteResult(
+    await invokePhase3('core_delete_profile', request),
+  )
+  if (result.profileId !== request.profileId) {
+    throw new Error('Phase 3 profile deletion scope mismatch')
+  }
+  return result
 }
 
 export async function submitPastedIntake(
@@ -672,6 +701,7 @@ export async function loadGraphSnapshot(
 
 export const phase3BoundaryParsers = {
   profile: parseProfileSummary,
+  profileDelete: parseProfileDeleteResult,
   profiles: parseProfileList,
   intake: parseIntakeReceipt,
   entity: parseEntitySummary,

@@ -37,6 +37,7 @@ ROUTE_POLICIES: Final = {
     ("POST", "/v1/vaults/current/lock"): RoutePolicy(0),
     ("GET", "/v1/profiles"): RoutePolicy(0),
     ("POST", "/v1/profiles"): RoutePolicy(1024),
+    ("POST", "/v1/profiles/delete"): RoutePolicy(512),
     ("POST", "/v1/intake/paste"): RoutePolicy(1_052_672),
     ("POST", "/v1/intake/file"): RoutePolicy(1_402_880),
     ("POST", "/v1/intake/review"): RoutePolicy(512),

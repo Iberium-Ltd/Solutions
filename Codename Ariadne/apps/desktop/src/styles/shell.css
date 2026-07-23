@@ -382,6 +382,12 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
 .profile-chip strong { font-size: calc(11px * var(--font-scale)); font-weight: 620; }
 .profile-chip small { margin-block-start: 2px; color: var(--color-text-muted); font-size: calc(10px * var(--font-scale)); }
 
+.profile-switcher-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .profile-switcher {
   position: relative;
   min-inline-size: 150px;
@@ -441,6 +447,27 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
 .profile-switcher:has(select:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 .profile-switcher:has(select:disabled) { cursor: default; opacity: .72; }
 .profile-switcher--protected { opacity: .72; }
+
+.profile-delete-button {
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.profile-delete-button:hover:not(:disabled) {
+  border-color: rgb(255 105 125 / 34%);
+  background: rgb(255 105 125 / 9%);
+  color: var(--color-danger);
+}
+
+.profile-delete-button:disabled { opacity: .36; cursor: default; }
+.profile-delete-button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 
 .contextbar {
   padding-inline: 22px 17px;

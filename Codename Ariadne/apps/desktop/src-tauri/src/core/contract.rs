@@ -206,6 +206,7 @@ pub(super) enum CoreRoute {
     UnlockCurrentVault,
     ListProfiles,
     CreateProfile,
+    DeleteProfile,
     IntakePaste,
     IntakeFile,
     ReviewEntities,
@@ -270,6 +271,7 @@ impl CoreRoute {
             Self::UnlockCurrentVault => "vault.current.unlock",
             Self::ListProfiles => "profiles.list",
             Self::CreateProfile => "profile.create",
+            Self::DeleteProfile => "profile.delete",
             Self::IntakePaste => "intake.paste",
             Self::IntakeFile => "intake.file",
             Self::ReviewEntities => "entities.review",
@@ -346,6 +348,7 @@ impl CoreRoute {
             "vault.current.unlock" => Some(Self::UnlockCurrentVault),
             "profiles.list" => Some(Self::ListProfiles),
             "profile.create" => Some(Self::CreateProfile),
+            "profile.delete" => Some(Self::DeleteProfile),
             "intake.paste" => Some(Self::IntakePaste),
             "intake.file" => Some(Self::IntakeFile),
             "entities.review" => Some(Self::ReviewEntities),
@@ -467,6 +470,21 @@ pub struct CoreProfileCreateRequest {
     pub idempotency_key: String,
     pub display_label: String,
     pub purpose: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreProfileDeleteRequest {
+    pub profile_id: Uuid,
+    pub expected_revision: u64,
+    pub confirmation_label: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreProfileDeleteResult {
+    pub profile_id: Uuid,
+    pub deleted_rows: u64,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -3991,6 +4009,10 @@ mod tests {
             Some(CoreRoute::CreateProfile)
         );
         assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/profiles/delete"),
+            Some(CoreRoute::DeleteProfile)
+        );
+        assert_eq!(
             CoreRoute::from_method_and_path("POST", "/v1/intake/paste"),
             Some(CoreRoute::IntakePaste)
         );
@@ -4233,6 +4255,7 @@ mod tests {
             CoreRoute::UnlockCurrentVault,
             CoreRoute::ListProfiles,
             CoreRoute::CreateProfile,
+            CoreRoute::DeleteProfile,
             CoreRoute::IntakePaste,
             CoreRoute::IntakeFile,
             CoreRoute::ReviewEntities,
@@ -4300,6 +4323,7 @@ mod tests {
                 route,
                 CoreRoute::ListProfiles
                     | CoreRoute::CreateProfile
+                    | CoreRoute::DeleteProfile
                     | CoreRoute::IntakePaste
                     | CoreRoute::IntakeFile
                     | CoreRoute::ReviewEntities

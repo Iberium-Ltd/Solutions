@@ -1,17 +1,18 @@
 # Ariadne Core
 
-Status: The current source contains 48 operations across 46 paths. Its full aggregate, frozen-sidecar, local package lifecycle, and targeted browser gates pass under fresh identities; production signing remains release work.
+Status: The current source contains 57 operations across 55 paths at `0011_profile_purge`. Its full aggregate, frozen-sidecar, and local package lifecycle pass under fresh identities; production signing remains release work.
 
 This package contains the Python 3.12 sidecar, authenticated local transport,
-generated contracts, SQLCipher persistence through schema `0008`, durable job
+generated contracts, SQLCipher persistence through schema `0011`, durable job
 foundations, vault-key lease, deterministic intake/graph/query-policy workflows,
 selectable loopback local AI plus optional OpenAI Responses with cited corpus/
-workspace reasoning, bounded public/HIBP discovery, deterministic non-executing
-investigation planning, atomic capture, exact provenance, Phase 5 findings/evidence/
-attribution, Phase 6 audit/remediation/checkpoints, and local report generation.
+workspace reasoning, persistent named-person audits, a seven-provider public
+frontier, atomic capture, exact provenance and reviewed promotion, confirmed
+profile purge, Phase 5 findings/evidence/attribution, Phase 6
+audit/remediation/checkpoints, and local report generation.
 
-It does not implement broad operational providers, authorised account
-connectors, scheduled snapshot ingestion, retention/purge, or durable report
+It does not implement authorised account connectors, specialist credentialed
+providers, scheduled snapshot ingestion, selective retention, or durable report
 retention/destination handling. Discovery is limited to the explicit current
 providers and cannot bypass authentication, CAPTCHA, paywalls, plan gates,
 domain verification, rate limits, or other access controls.
@@ -22,9 +23,10 @@ automatically import their results or evidence.
 
 ## Current API surface
 
-The CLI exposes exactly 48 authenticated route-specific operations (4 GET,
-44 POST; 46 paths): foundation/session/vault/event replay, profile/intake/entity/
-graph, local/optional OpenAI analysis, network-free query planning, public/HIBP
+The CLI exposes exactly 57 authenticated route-specific operations (4 GET,
+53 POST; 55 paths): foundation/session/vault/event replay,
+profile/intake/entity/graph/purge, persistent identity audits,
+local/optional OpenAI analysis, network-free query planning, public/HIBP
 discovery, deterministic investigation planning, public capture,
 Phase 5 findings/evidence/attribution, Phase 6 audit/remediation/checkpoints,
 and local report generation.
@@ -91,7 +93,7 @@ exports locked runtime dependencies, substitutes the verified driver, freezes
 capabilities, session, replay denial, wrong-token denial, Origin denial,
 shutdown, and UDS cleanup.
 
-The result is accepted only after its own gate. The current 48-operation source
+The result is accepted only after its own gate. The current 57-operation source
 completed this workflow under the exact identities below. See
 `scripts/package-sidecar/README.md` for pinned inputs and measured evidence.
 

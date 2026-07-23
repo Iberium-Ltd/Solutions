@@ -44,6 +44,8 @@ from ariadne_core.api.intake_schemas import (
     IntakeReceipt,
     PasteIntakeRequest,
     ProfileCreateRequest,
+    ProfileDeleteRequest,
+    ProfileDeleteResult,
     ProfileListResult,
     ProfileSummary,
 )
@@ -230,6 +232,7 @@ COMMON_CAPABILITY = {
 }
 
 PROFILE_CREATE_BODY_BYTES = 1024
+PROFILE_DELETE_BODY_BYTES = 512
 PASTE_INTAKE_BODY_BYTES = 1_052_672
 FILE_INTAKE_BODY_BYTES = 1_402_880
 PROFILE_QUERY_BODY_BYTES = 512
@@ -2068,6 +2071,34 @@ async def create_profile(body: ProfileCreateRequest, request: Request) -> Profil
     coordinator = _phase3_coordinator(request)
     try:
         return await anyio.to_thread.run_sync(coordinator.create_profile, body)
+    except Exception as error:
+        _raise_phase3(error)
+
+
+@router.post(
+    "/profiles/delete",
+    response_model=ProfileDeleteResult,
+    responses=ERROR_RESPONSES,
+    operation_id="deleteProfile",
+    openapi_extra={
+        "x-ariadne-capability": {
+            "routeId": "profile.delete",
+            "maxRequestBytes": PROFILE_DELETE_BODY_BYTES,
+            "maxResponseBytes": 2048,
+            "requiredLockState": "UNLOCKED",
+            "scopeClass": "PROFILE",
+            "revealClass": "NONE",
+            "authorizationClass": "USER_GESTURE",
+        }
+    },
+)
+async def delete_profile(
+    body: ProfileDeleteRequest,
+    request: Request,
+) -> ProfileDeleteResult:
+    coordinator = _phase3_coordinator(request)
+    try:
+        return await anyio.to_thread.run_sync(coordinator.delete_profile, body)
     except Exception as error:
         _raise_phase3(error)
 

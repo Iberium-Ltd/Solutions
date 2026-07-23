@@ -43,6 +43,8 @@ from ariadne_core.api.intake_schemas import (
     IntakeReceipt,
     PasteIntakeRequest,
     ProfileCreateRequest,
+    ProfileDeleteRequest,
+    ProfileDeleteResult,
     ProfileListResult,
     ProfileSummary,
     ReviewState,
@@ -381,6 +383,18 @@ class Phase3Coordinator:
                 ),
                 has_more=len(profiles) > MAX_PROFILE_SUMMARIES,
             )
+
+    def delete_profile(self, body: ProfileDeleteRequest) -> ProfileDeleteResult:
+        """Physically purge one confirmed profile and its profile-scoped records."""
+
+        with self._side_effect_lock, self._repository() as (repository, _key):
+            deleted_rows = repository.delete_profile(
+                vault_id=self._vault.manifest.vault_id,
+                profile_id=body.profile_id,
+                expected_revision=body.expected_revision,
+                confirmation_label=body.confirmation_label,
+            )
+        return ProfileDeleteResult(profile_id=body.profile_id, deleted_rows=deleted_rows)
 
     def ingest_paste(self, body: PasteIntakeRequest) -> IntakeReceipt:
         with self._side_effect_lock, self._repository() as (repository, key):

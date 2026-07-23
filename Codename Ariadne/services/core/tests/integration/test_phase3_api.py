@@ -121,6 +121,86 @@ async def test_profiles_can_be_listed_for_explicit_native_resume(tmp_path: Path)
 
 
 @pytest.mark.anyio
+async def test_profile_delete_requires_exact_confirmation_and_purges_profile_data(
+    tmp_path: Path,
+) -> None:
+    manager = VaultManager(tmp_path / "vault", MemoryKeyCustodian())
+    manager.create(display_name="Synthetic profile deletion vault")
+    app = _app(manager)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url=f"http://{HOST}",
+    ) as client:
+        profile = await _create_profile(client, "Synthetic disposable profile")
+        profile_id = str(profile["profileId"])
+        intake = await client.post(
+            "/v1/intake/paste",
+            json={
+                "idempotencyKey": _idempotency_key(),
+                "profileId": profile_id,
+                "displayName": "Synthetic disposable source",
+                "content": "Synthetic Person uses @synthetic_disposable.",
+                "consentConfirmed": True,
+                "retainRawSource": False,
+                "semanticEnrichmentEnabled": True,
+            },
+            headers=_headers(),
+        )
+        assert intake.status_code == 200
+        refreshed_profiles = await client.get("/v1/profiles", headers=_headers())
+        assert refreshed_profiles.status_code == 200
+        refreshed_profile = refreshed_profiles.json()["profiles"][0]
+
+        rejected = await client.post(
+            "/v1/profiles/delete",
+            json={
+                "profileId": profile_id,
+                "expectedRevision": refreshed_profile["revision"],
+                "confirmationLabel": "Wrong synthetic label",
+            },
+            headers=_headers(),
+        )
+        assert rejected.status_code == 400
+
+        deleted = await client.post(
+            "/v1/profiles/delete",
+            json={
+                "profileId": profile_id,
+                "expectedRevision": refreshed_profile["revision"],
+                "confirmationLabel": profile["displayLabel"],
+            },
+            headers=_headers(),
+        )
+        assert deleted.status_code == 200
+        assert deleted.json()["profileId"] == profile_id
+        assert deleted.json()["deletedRows"] > 1
+
+        listed = await client.get("/v1/profiles", headers=_headers())
+        assert listed.status_code == 200
+        assert listed.json() == {"profiles": [], "hasMore": False}
+
+        with manager.engine.connect() as connection:
+            profile_owned_rows = 0
+            for (table_name,) in connection.exec_driver_sql(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+            ).all():
+                quoted = '"' + str(table_name).replace('"', '""') + '"'
+                columns = {
+                    str(item[1])
+                    for item in connection.exec_driver_sql(f"PRAGMA table_info({quoted})").all()
+                }
+                if {"vault_id", "profile_id"} <= columns:
+                    profile_owned_rows += int(
+                        connection.exec_driver_sql(
+                            f"SELECT count(*) FROM {quoted} WHERE vault_id = ? AND profile_id = ?",
+                            (manager.manifest.vault_id, profile_id),
+                        ).scalar_one()
+                    )
+        assert profile_owned_rows == 0
+
+
+@pytest.mark.anyio
 async def test_paste_review_decision_and_graph_are_profile_scoped_and_idempotent(
     tmp_path: Path,
 ) -> None:

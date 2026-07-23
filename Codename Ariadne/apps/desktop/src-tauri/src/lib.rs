@@ -40,11 +40,11 @@ use core::{
     CorePhase6RemediationListRequest, CorePhase6RemediationListResult,
     CorePhase6RemediationProviderResponseRequest, CorePhase6RemediationReappearanceRequest,
     CorePhase6RemediationRequireApprovalRequest, CorePhase6RemediationStatusTransitionRequest,
-    CoreProfileCreateRequest, CoreProfileListResult, CoreProfileSummary,
-    CoreProviderCatalogRequest, CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest,
-    CorePublicDiscoveryCaptureResult, CorePublicDiscoverySearchRequest,
-    CorePublicDiscoverySearchResult, CoreQueryDryRunRequest, CoreQueryPlanCell,
-    CoreQueryPlanRequest, CoreQueryPlanResult, CoreSession, CoreSupervisor,
+    CoreProfileCreateRequest, CoreProfileDeleteRequest, CoreProfileDeleteResult,
+    CoreProfileListResult, CoreProfileSummary, CoreProviderCatalogRequest,
+    CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest, CorePublicDiscoveryCaptureResult,
+    CorePublicDiscoverySearchRequest, CorePublicDiscoverySearchResult, CoreQueryDryRunRequest,
+    CoreQueryPlanCell, CoreQueryPlanRequest, CoreQueryPlanResult, CoreSession, CoreSupervisor,
     CoreVaultLifecycleResult, spawn_auto_lock, spawn_event_relay,
 };
 use security::KeyCustody;
@@ -110,6 +110,14 @@ async fn core_list_profiles(
     supervisor: tauri::State<'_, CoreSupervisor>,
 ) -> Result<CoreCommandResponse<CoreProfileListResult>, CoreCommandError> {
     supervisor.list_profiles().await
+}
+
+#[tauri::command]
+async fn core_delete_profile(
+    request: CoreProfileDeleteRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreProfileDeleteResult>, CoreCommandError> {
+    supervisor.delete_profile(request).await
 }
 
 #[tauri::command]
@@ -531,6 +539,7 @@ pub fn run() {
             core_lock_current_vault,
             core_list_profiles,
             core_create_profile,
+            core_delete_profile,
             core_intake_paste,
             core_intake_file,
             core_review_entities,

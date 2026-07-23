@@ -137,6 +137,32 @@ class ProfileListResult(ApiModel):
     has_more: bool
 
 
+class ProfileDeleteRequest(ApiModel):
+    profile_id: str
+    expected_revision: int = Field(ge=1)
+    confirmation_label: str = Field(min_length=1, max_length=80, repr=False)
+
+    @field_validator("profile_id")
+    @classmethod
+    def validate_profile_id(cls, value: str) -> str:
+        return _uuid(value, label="profile id")
+
+    @field_validator("confirmation_label")
+    @classmethod
+    def validate_confirmation_label(cls, value: str) -> str:
+        return _safe_label(value, label="confirmation label")
+
+
+class ProfileDeleteResult(ApiModel):
+    profile_id: str
+    deleted_rows: int = Field(ge=1)
+
+    @field_validator("profile_id")
+    @classmethod
+    def validate_profile_id(cls, value: str) -> str:
+        return _uuid(value, label="profile id")
+
+
 class PasteIntakeRequest(ApiModel):
     idempotency_key: str = Field(
         min_length=16,

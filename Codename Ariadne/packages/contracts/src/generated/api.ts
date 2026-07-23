@@ -1384,6 +1384,17 @@ export interface ProfileCreateRequest {
   readonly purpose: string
 }
 
+export interface ProfileDeleteRequest {
+  readonly profileId: string
+  readonly expectedRevision: number
+  readonly confirmationLabel: string
+}
+
+export interface ProfileDeleteResult {
+  readonly profileId: string
+  readonly deletedRows: number
+}
+
 export interface ProfileListResult {
   readonly profiles: ReadonlyArray<ProfileSummary>
   readonly hasMore: boolean
@@ -2331,6 +2342,19 @@ export const ROUTE_CAPABILITIES = [
     "revealClass": "NONE",
     "routeId": "profile.create",
     "scopeClass": "VAULT"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 512,
+    "maxResponseBytes": 2048,
+    "method": "POST",
+    "path": "/v1/profiles/delete",
+    "requestSchemaSha256": "b0439f3a1c2bbd91267b39f9c77bec34782ea92162b290365a48a11cb2743b8b",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "b27de3736d5d631ba8eb8500e0d40655f6edc6feb94f6e2fc5677f00d6186f59",
+    "revealClass": "NONE",
+    "routeId": "profile.delete",
+    "scopeClass": "PROFILE"
   },
   {
     "authorizationClass": "USER_GESTURE",

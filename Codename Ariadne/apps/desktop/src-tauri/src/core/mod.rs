@@ -36,11 +36,12 @@ pub use contract::{
     CorePhase6RemediationListRequest, CorePhase6RemediationListResult,
     CorePhase6RemediationProviderResponseRequest, CorePhase6RemediationReappearanceRequest,
     CorePhase6RemediationRequireApprovalRequest, CorePhase6RemediationStatusTransitionRequest,
-    CoreProfileCreateRequest, CoreProfileListResult, CoreProfileSummary,
-    CoreProviderCatalogRequest, CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest,
-    CorePublicDiscoveryCaptureResult, CorePublicDiscoverySearchRequest,
-    CorePublicDiscoverySearchResult, CoreQueryDryRunRequest, CoreQueryPlanCell,
-    CoreQueryPlanRequest, CoreQueryPlanResult, CoreSession, CoreVaultLifecycleResult,
+    CoreProfileCreateRequest, CoreProfileDeleteRequest, CoreProfileDeleteResult,
+    CoreProfileListResult, CoreProfileSummary, CoreProviderCatalogRequest,
+    CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest, CorePublicDiscoveryCaptureResult,
+    CorePublicDiscoverySearchRequest, CorePublicDiscoverySearchResult, CoreQueryDryRunRequest,
+    CoreQueryPlanCell, CoreQueryPlanRequest, CoreQueryPlanResult, CoreSession,
+    CoreVaultLifecycleResult,
 };
 pub(crate) use event_relay::spawn_event_relay;
 pub use supervisor::CoreSupervisor;

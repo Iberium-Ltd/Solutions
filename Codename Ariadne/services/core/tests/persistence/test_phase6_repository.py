@@ -153,7 +153,7 @@ def test_phase6_schema_upgrades_forward_from_phase5_head(tmp_path: Path) -> None
                 "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'phase6_%'"
             ).all()
         }
-    assert revision == "0008_phase6_audit_remediation"
+    assert revision == "0011_profile_purge"
     assert tables == {
         "phase6_audit_snapshots",
         "phase6_audit_snapshot_findings",

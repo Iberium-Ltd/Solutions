@@ -1,6 +1,6 @@
 # Reproducible macOS arm64 sidecar packaging
 
-Status: The current 48-operation/46-path local candidate is verified through the aggregate, frozen-sidecar, and packaged-app lifecycle at `0008_phase6_audit_remediation`. Every earlier artifact remains separately identified; production signing remains Phase 9 work.
+Status: The 57-operation/55-path aggregate, frozen sidecar, and packaged-app lifecycle pass at `0011_profile_purge`. The verified 48-operation `0008` artifact remains historical and separately identified; production signing remains Phase 9 work.
 
 This spike builds the Python DB-API extension used by the local core without
 linking to Homebrew SQLCipher, OpenSSL, or the system SQLite library. It fetches
@@ -186,10 +186,10 @@ bootstrap, a user-triggered local checkpoint, and deterministic local report
 generation. The next historical source/package milestone has 45 operations
 (4 GET, 41 POST) across 43 paths and adds bounded public discovery/capture,
 corpus AI, workspace AI, and complete entity-origin pagination without a
-generic proxy or external-dispatch route. The current source candidate has
+generic proxy or external-dispatch route. The next historical source candidate has
 48 operations (4 GET, 44 POST) across 46 paths, adding official HIBP account/
 domain checks and deterministic investigation-plan compilation. Its aggregate,
-frozen-sidecar, and packaged-app lifecycle results pass under the current
+frozen-sidecar, and packaged-app lifecycle results pass under the historical
 identities recorded below.
 
 The historical 37-operation `0008` frozen output at
@@ -246,10 +246,10 @@ both used two sidecar processes, cleaned up the processes, socket, and runtime
 directory, exposed zero TCP listeners, and preserved `0700`/`0600` runtime
 modes. Deep bundle and strict main/sidecar ad-hoc signature verification
 passed. These are conservative local workflow measurements and exact historical
-45-operation artifact identities, not evidence for the current 48-operation
-source, release startup guarantees, or release binaries.
+45-operation artifact identities, not evidence for the later 48- or
+57-operation sources, release startup guarantees, or release binaries.
 
-The current 48-operation frozen/staged arm64/minimum-macOS-11 sidecar is
+The historical 48-operation frozen/staged arm64/minimum-macOS-11 sidecar is
 20,946,896 bytes with SHA-256
 `5ca6b790878cc7f77b99cc21e75e49c2febf8208dccbf87cb523669515262df3`.
 Initial frozen TCP/UDS verification completed in 3,686/45,743 ms and staging
@@ -264,6 +264,22 @@ parent exit started in 3,290/2,550 ms and exited 0/-9; both used two sidecars,
 cleaned up, exposed zero TCP listeners, and preserved `0700`/`0600` modes.
 Deep strict ad-hoc bundle verification passed, and the bundle allocated 37,108
 KiB. This proves a local candidate package, not a production release.
+
+The current 57-operation/55-path frozen and staged sidecar reaches exact schema
+head `0011_profile_purge`. It is a 21,053,600-byte
+arm64/minimum-macOS-11 executable with SHA-256
+`dccaaa5d3c9a60b668ecd85cdd0d00a79c4b16aadd2c02995e43891478a9d7f5`.
+Fresh frozen and staged inspections passed authenticated TCP/UDS workflows.
+Ad-hoc packaging produced a 21,053,584-byte sidecar with SHA-256
+`74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`
+and CDHash `396892d4ec3a4784ceb924ddff682987ac65d852`. The
+17,815,088-byte arm64/minimum-macOS-14 desktop has SHA-256
+`08491aabfc4d61daa61cf7b5137162b9a64403987b63468fa7e5031b19a8f81f`
+and CDHash `ac7b5fed454dfeaddc391c468aed1fad20232b4f`. Requested quit
+and abrupt parent exit started in 4,942/3,196 ms and exited 0/-9; both used two
+sidecars, cleaned up, exposed zero TCP listeners, and preserved `0700`/`0600`
+modes. Deep strict ad-hoc bundle verification passed, and the bundle allocated
+38,032 KiB. This is local candidate proof, not a production release.
 
 Developer-ID signing, notarisation, stapling, and a clean macOS 14 launch remain
 release gates. Local Tauri resource integration and release-mode launch over a

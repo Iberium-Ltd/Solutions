@@ -1,11 +1,62 @@
 # Codename Ariadne — Test Results
 
-Last updated: 2026-07-14  
-Current status: **48-operation/46-path source aggregate, frozen sidecar, local package, lifecycle, and targeted visual candidate gates verified; production release readiness remains incomplete**
+Last updated: 2026-07-23
+Current status: **57-operation/55-path complete source aggregate, frozen sidecar, and packaged macOS lifecycle pass**
 
 No confidential-reference content, name, or claim is reproduced in these results. Tests use synthetic fixtures except for the aggregate-only, ephemeral local benchmark described below.
 
-## Current 48-operation source candidate
+## Current 57-operation source candidate
+
+The schema head is `0011_profile_purge`. The generated contract has **57
+operations (4 GET, 53 POST; 55 distinct paths)**. The nine operations added
+after the last packaged candidate are eight persistent identity-discovery
+operations and one confirmed physical-profile deletion operation.
+
+| Category | Current result |
+|---|---|
+| Python quality | Ruff passed across **171 files**; strict mypy passed across **94 source files** |
+| Python full aggregate | **498 passed, 4 intentional skips in 473.34 seconds** |
+| Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **57 operations / 55 paths** |
+| Rust | Format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual macOS Keychain test in **15.16 seconds** |
+| Frontend | **148/148 passed across 36 files**; typecheck, lint, and production build passed |
+| Privacy | **440 candidate files passed** |
+| Frozen/package | Schema-0011 frozen/staged inspection, deep strict ad-hoc signature, and normal/abrupt packaged lifecycle passed |
+
+The profile-deletion integration test creates a synthetic profile with ingested
+identity data, rejects a mismatched confirmation name, deletes with the current
+revision and exact name, and confirms that no row with that vault/profile scope
+remains in any installed table. Renderer tests verify the fixed native command,
+response scope, exact-name prompt, and navigation-memory reset.
+
+## Current 57-operation frozen/package verification
+
+```text
+Schema/archive:   0011_profile_purge
+Architecture:     arm64
+Minimum macOS:    11.0
+Frozen/staged:    21,053,600 bytes
+Staged SHA-256:   dccaaa5d3c9a60b668ecd85cdd0d00a79c4b16aadd2c02995e43891478a9d7f5
+```
+
+Fresh frozen and staged inspections both passed authenticated development TCP
+and packaged-style UDS workflows. Each reported exact schema head
+`0011_profile_purge`; the UDS flow returned 200 for vault, profile, intake,
+review, manual-finding, two-checkpoint, and report operations, while wrong-token
+401, denied-origin 403, and replay 409 checks remained enforced.
+
+| Package evidence | Current 57-operation result |
+|---|---|
+| Requested quit | 4,942 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 3,196 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Runtime permissions | `0700` directory; `0600` socket in both runs |
+| Signed packaged sidecar | 21,053,584 bytes; arm64/minimum macOS 11.0; SHA-256 `74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`; CDHash `396892d4ec3a4784ceb924ddff682987ac65d852` |
+| Desktop executable | 17,815,088 bytes; arm64/minimum macOS 14.0; SHA-256 `08491aabfc4d61daa61cf7b5137162b9a64403987b63468fa7e5031b19a8f81f`; CDHash `ac7b5fed454dfeaddc391c468aed1fad20232b4f` |
+| Bundle | 38,032 KiB allocated; deep strict ad-hoc signature verification passed |
+
+This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,
+notarisation, signed-update, clean-machine, or public-release proof.
+
+## Historical 48-operation source candidate
 
 The schema remains `0008_phase6_audit_remediation`. The generated contract has
 **48 operations (4 GET, 44 POST; 46 distinct paths)**. The three operations added
@@ -297,7 +348,10 @@ The repository contains the following tested slices. Package evidence applies on
 
 | Area | Candidate behavior | Evidence state |
 |---|---|---|
-| Schema | Forward-only `0008_phase6_audit_remediation` after verified `0007`, packaged `0006`, and historical `0005` | Current contract, full aggregate, frozen sidecar, and package gates pass at 48 operations/46 paths |
+| Schema | Forward-only `0011_profile_purge` after persistent identity-audit/AI revisions `0009`/`0010` and historical `0008` | Current contract, full aggregate, frozen sidecar, and package gates pass at 57 operations/55 paths |
+| Persistent identity audits | Named profiles retain knowledge, configuration, frontier tasks, exact results/sources, proposals, receipts, progress, and cited selected-local-AI analyses across routes/restarts | Repository/API/Rust/frontend tests, full aggregate, frozen UDS, and package gates pass |
+| Automatic provider fleet | One explicit run works through bounded DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency tasks with honest failure/coverage states | Provider unit/integration tests, durable frontier tests, complete source aggregate, and packaged candidate pass |
+| Profile deletion | Exact-name and revision-confirmed native action physically removes all profile-scoped rows plus linked jobs/idempotency state, with secure delete and vacuum | Backend whole-schema deletion integration, generated/Rust boundary validation, renderer interaction test, full aggregate, and package build pass |
 | Native Graph | Persisted snapshot/provenance through Python → Rust → Tauri → Graph screen; bounded evidence/truncation and lock clearing | Focused, aggregate, and packaged candidate gates passed |
 | Local-AI settings | Encrypted selectable Ollama/OpenAI-compatible loopback settings, model discovery, connection test, exact generated/Rust/UI boundary | Focused, aggregate, and packaged candidate gates passed |
 | Selected-model intake | Restricted-value-redacted model input, review-only probable suggestions, provenance, deterministic fallback on disabled/error/timeout/invalid response | Focused, aggregate, and packaged candidate gates passed |
@@ -318,11 +372,27 @@ The repository contains the following tested slices. Package evidence applies on
 | Local checkpoints | User-triggered contentless Phase 5 projection, canonical fingerprint, explicit coverage, monotonic sequence/time, immutable snapshot | Full source aggregate, focused tests, two ordered frozen UDS 200 responses, and current package lifecycle pass; no adapter or scheduler |
 | Local reports | Selected-run JSON/inert Markdown, deterministic default redaction, full-explicit approval binding, exact manifest/hash/source mappings, no evidence bytes/network/send | Current aggregate, exact-provenance, frozen UDS, and package gates pass; durable report catalog/retention remains pending |
 
-The 48-operation source, aggregate, frozen sidecar, local package, and targeted visual gates pass. None of these results proves operational assessment recalculation, evidence streaming/viewing, retention/purge, provider-scheduled snapshot ingestion, durable report retention/destination handling, authorised account connectors, or an outbound remediation action.
+The 57-operation source, aggregate, frozen sidecar, and local package gates pass.
+None of these results proves operational assessment recalculation, general
+evidence streaming/viewing, scheduled ingestion, durable report
+retention/destination handling, authorised account connectors, or an outbound
+remediation action. Whole-profile purge is implemented; policy-scheduled
+selective retention remains target work.
 
 ## Artifact interpretation
 
-The `0006` candidate artifact gate remains complete for its explicit synthetic, local, network-free scope. The `c4a779…` sidecar is historical Phase 3 evidence; `bd522b…` and its packaged identities prove `0006`; `5d4856…` plus `fe0e7d…`/`2cd7cc…` prove `0007`; `e156e9…` plus `359fd0…`/`fc02da…` prove the historical 37-operation `0008`; `96c368…` plus `77338e…`/`214ccd…` prove the historical 40-operation milestone; and `b33e411e…` plus `536c16a8…`/`d3eef7ba…` prove the historical 45-operation candidate. Current `5ca6b790…` staged, `4ba7fd0…` packaged-sidecar, and `ca68fdd4…` desktop identities prove the 48-operation local candidate. No identity has been relabelled.
+The `0006` candidate artifact gate remains complete for its explicit synthetic,
+local, network-free scope. The `c4a779…` sidecar is historical Phase 3 evidence;
+`bd522b…` and its packaged identities prove `0006`; `5d4856…` plus
+`fe0e7d…`/`2cd7cc…` prove `0007`; `e156e9…` plus
+`359fd0…`/`fc02da…` prove the historical 37-operation `0008`;
+`96c368…` plus `77338e…`/`214ccd…` prove the historical 40-operation
+milestone; `b33e411e…` plus `536c16a8…`/`d3eef7ba…` prove the
+historical 45-operation candidate; and `5ca6b790…` plus
+`4ba7fd0…`/`ca68fdd4…` prove the historical 48-operation candidate. Current
+`dccaaa5…` staged, `74325b3…` packaged-sidecar, and `08491aa…` desktop
+identities prove the 57-operation local candidate. No identity has been
+relabelled.
 
 ## Visual evidence
 
@@ -331,6 +401,13 @@ The accepted Phase 1 69-image matrix remains the broad synthetic visual baseline
 ## Interpretation
 
 - Phase 3 remains closed for its historical explicit synthetic local scope.
-- Two bounded public-search adapters and atomic exact-URL capture are now implemented; broader providers, retry/resume workflows, and authorised account connectors remain incomplete.
-- Phase 5 now has exact-source public capture and provenance traversal in addition to the historical durable storage/write milestones, but evidence viewing/streaming and retention/purge remain. Phase 6 comparison/remediation/checkpoint/reporting remains implemented; scheduling and a durable release-grade report lifecycle remain pending.
+- Seven bounded public surfaces, durable retry/restart state, atomic exact-URL
+  capture, and cited selected-local-AI analysis are implemented; credentialed
+  specialist providers and authorised account connectors remain incomplete.
+- Phase 5 now has exact-source public capture, provenance traversal, canonical
+  proposal promotion, and confirmed whole-profile purge in addition to its
+  historical durable storage/write milestones. General evidence
+  viewing/streaming and selective retention remain. Phase 6
+  comparison/remediation/checkpoint/reporting remains implemented; scheduling
+  and a durable release-grade report lifecycle remain pending.
 - Passing tests do not authorize bypassing access controls, external legal action, or release distribution.

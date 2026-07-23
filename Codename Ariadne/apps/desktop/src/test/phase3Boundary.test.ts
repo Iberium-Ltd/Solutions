@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  deleteProfile,
   loadEntityOrigins,
   loadGraphSnapshot,
   listProfiles,
@@ -113,6 +114,27 @@ describe('typed native Phase 3 boundary', () => {
         commandResponse({ profiles: [profiles[0], profiles[0]], hasMore: false }),
       ),
     ).toThrow('profile list response is invalid')
+  })
+
+  it('deletes only through the fixed profile command and validates scope', async () => {
+    const request = {
+      profileId,
+      expectedRevision: 3,
+      confirmationLabel: 'Synthetic resumable profile',
+    }
+    invokeMock.mockResolvedValue(commandResponse({ profileId, deletedRows: 18 }))
+
+    await expect(deleteProfile(request)).resolves.toEqual({
+      profileId,
+      deletedRows: 18,
+    })
+    expect(invokeMock).toHaveBeenCalledWith('core_delete_profile', { request })
+
+    invokeMock.mockResolvedValue(commandResponse({
+      profileId: sourceId,
+      deletedRows: 1,
+    }))
+    await expect(deleteProfile(request)).rejects.toThrow('scope mismatch')
   })
 
   it('accepts only a complete bounded entity review response', () => {

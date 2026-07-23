@@ -1,7 +1,7 @@
 # Codename Ariadne — Typed Local API
 
-- Status: target contract plus implemented 48-operation/46-path local candidate; full aggregate and native package verification passed, production release verification pending
-- Date: 2026-07-14
+- Status: target contract plus implemented 57-operation/55-path local candidate; source aggregate and native package verification passed, production release verification pending
+- Date: 2026-07-23
 - Contract source: Python 3.12, FastAPI, Pydantic 2, OpenAPI 3.1, generated TypeScript
 - Scope: planned full API plus generated foundation, intake/identity, local/optional OpenAI reasoning, query planning, public/HIBP discovery and capture, evidence/attribution, monitoring/remediation, and reporting surface
 
@@ -71,7 +71,7 @@ Generated files are checked for drift in CI. Handwritten TypeScript may narrow p
 
 ### 3.1 Implemented current candidate boundary
 
-The generated source contract contains **48 operations (4 GET, 44 POST; 46 distinct paths)**: six foundation routes, eight Phase 3/profile routes, six AI routes, three query-planning routes, five discovery routes, six Phase 5 routes, thirteen Phase 6 routes, and one reporting route. Contract generation, the complete Python/Rust/privacy aggregate, frontend typecheck/lint/build plus 143/143 tests across 36 files, frozen/staged inspection, and the local packaged lifecycle pass. Current identities are `5ca6b790…` staged, `4ba7fd0…` packaged-sidecar, and `ca68fdd4…` desktop. The historical 45-/40-/37-operation and `0005`/`0006`/`0007` identities remain separate and are not relabelled. This is local ad-hoc package proof, not production release approval. The remainder of this document is the broader target API and must not be read as implemented.
+The generated source contract contains **57 operations (4 GET, 53 POST; 55 distinct paths)**: six foundation routes, nine Phase 3/profile routes, eight persistent identity-audit routes, six AI routes, three query-planning routes, five discovery routes, six Phase 5 routes, thirteen Phase 6 routes, and one reporting route. The complete source aggregate passes with 498 Python tests plus four intentional skips, 95 Rust tests plus one manual Keychain ignore, 148/148 frontend tests, generated-contract drift, and the 440-file privacy scan. Fresh frozen/staged inspection and normal/abrupt packaged lifecycle verification also pass at schema head `0011_profile_purge`; the recorded 48-operation package identities remain historical and are not relabelled. This is a local candidate, not production release approval. The remainder of this document is the broader target API and must not be read as implemented.
 
 | Method and path | Request → response | Scope and boundary |
 |---|---|---|
@@ -83,12 +83,21 @@ The generated source contract contains **48 operations (4 GET, 44 POST; 46 disti
 | `POST /v1/vaults/current/lock` | none → `VaultLifecycleResult` | user gesture; unlocked vault |
 | `GET /v1/profiles` | none → `ProfileListResult` | vault; unlocked; shell-internal bounded resume list |
 | `POST /v1/profiles` | `ProfileCreateRequest` → `ProfileSummary` | vault; unlocked; idempotent |
+| `POST /v1/profiles/delete` | `ProfileDeleteRequest` → `ProfileDeleteResult` | vault; unlocked; user gesture; expected-revision CAS and exact-name confirmation; physical local purge |
 | `POST /v1/intake/paste` | `PasteIntakeRequest` → `IntakeReceipt` | profile; unlocked; consent; idempotent |
 | `POST /v1/intake/file` | `FileIntakeRequest` → `IntakeReceipt` | profile; unlocked; file-picker gesture; idempotent |
 | `POST /v1/intake/review` | `EntityReviewRequest` → `EntityReviewResult` | profile; unlocked; maximum 100 entities |
 | `POST /v1/entities/decision` | `EntityDecisionRequest` → `EntitySummary` | profile; unlocked; idempotent revision CAS |
 | `POST /v1/entities/origins` | `EntityOriginPageRequest` → `EntityOriginPageResult` | profile; unlocked; user gesture; stable exact-source pagination; at most 12 origins per page |
 | `POST /v1/graph/snapshot` | `GraphSnapshotRequest` → `GraphSnapshot` | profile; unlocked; at most 500 nodes/250 edges; bounded evidence samples |
+| `POST /v1/identity/people/overview` | `IdentityPersonOverviewRequest` → `IdentityPersonOverviewResult` | profile; unlocked; durable identifiers, audit summaries, results, proposals, and AI summary |
+| `POST /v1/identity/audits/create` | `IdentityAuditCreateRequest` → `IdentityAuditSummary` | profile; unlocked; snapshots explicit self-audit policy and bounded provider/model configuration |
+| `POST /v1/identity/audits/list` | `IdentityAuditListRequest` → `IdentityAuditListResult` | profile; unlocked; bounded persistent run history |
+| `POST /v1/identity/audits/detail` | `IdentityAuditDetailRequest` → `IdentityAuditDetailResult` | profile; unlocked; frontier-derived progress, exact results/sources, proposals, receipts, and cited AI analysis |
+| `POST /v1/identity/audits/execute` | `IdentityAuditExecuteRequest` → `IdentityAuditDetailResult` | profile; unlocked; explicit user gesture; bounded automatic provider frontier and selected local AI |
+| `POST /v1/identity/audits/control` | `IdentityAuditControlRequest` → `IdentityAuditDetailResult` | profile; unlocked; pause, resume, or cancel at a durable batch boundary |
+| `POST /v1/identity/audits/proposals/decide` | `IdentityProposalDecisionRequest` → `IdentityProposalDecisionResult` | profile; unlocked; review decision and optional exact-source canonical promotion |
+| `POST /v1/identity/knowledge/manual` | `IdentityManualKnowledgeRequest` → `IdentityManualKnowledgeResult` | profile; unlocked; typed local knowledge with provenance and no network |
 | `GET /v1/local-ai/settings` | none → `LocalAISettings` | vault; unlocked; endpoint/model settings only |
 | `POST /v1/local-ai/settings` | `LocalAISettingsUpdateRequest` → `LocalAISettings` | vault; unlocked; expected-revision CAS |
 | `POST /v1/local-ai/models` | `LocalAIEndpointRequest` → `LocalAIModelDiscoveryResult` | vault; unlocked; exact loopback endpoint |
@@ -124,7 +133,7 @@ The generated source contract contains **48 operations (4 GET, 44 POST; 46 disti
 | `POST /v1/phase6/remediation/reappearance` | `Phase6RemediationReappearanceRequest` → `Phase6RemediationDetailResult` | profile; unlocked; user gesture; same-profile finding/evidence; revision CAS |
 | `POST /v1/reports/generate` | `ReportGenerateRequest` → `ReportGenerateResult` | profile; unlocked; selected ordered runs; JSON/Markdown; REDACTED or approval-bound FULL_EXPLICIT; one in-memory artifact; local only |
 
-All 48 method/path operations (46 distinct paths) carry generated request/response byte caps, exact lock state, scope class, reveal class, and authorization class. Rust permits only this generated route allowlist and independently validates profile, entity-origin, Graph, AI, query, discovery/HIBP/planner, Phase 5, Phase 6, and reporting payloads before exposing data to Tauri.
+All 57 method/path operations (55 distinct paths) carry generated request/response byte caps, exact lock state, scope class, reveal class, and authorization class. Rust permits only this generated route allowlist and independently validates profile, profile-deletion, entity-origin, Graph, identity-audit, AI, query, discovery/HIBP/planner, Phase 5, Phase 6, and reporting payloads before exposing data to Tauri.
 
 The four implemented Phase 3 side effects use durable vault-keyed idempotency records. The raw key is memory-only; the database stores its HMAC, a canonical request digest, reservation state, safe response JSON, and expiry. A digest mismatch conflicts, a completed result replays for 24 hours, and a reservation interrupted before completion remains ambiguous for at most 60 seconds. File retry binds the digest to metadata/hash rather than retaining file bytes. The webview keeps retry keys only in memory, so reload cannot automatically resume an earlier key.
 

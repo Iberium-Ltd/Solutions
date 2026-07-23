@@ -80,6 +80,14 @@ def test_openapi_is_offline_only_and_has_exact_route_capabilities() -> None:
             "VAULT",
             "USER_GESTURE",
         ),
+        ("post", "/v1/profiles/delete"): (
+            "profile.delete",
+            512,
+            2048,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
         ("post", "/v1/intake/paste"): (
             "intake.paste",
             1_052_672,
@@ -238,6 +246,70 @@ def test_openapi_is_offline_only_and_has_exact_route_capabilities() -> None:
             262_144,
             "ANY",
             "NONE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/workspace"): (
+            "identity.workspace.read",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/person"): (
+            "identity.person.update",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/source"): (
+            "identity.source.create",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/audits"): (
+            "identity.audit.create",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/audits/detail"): (
+            "identity.audit.read",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/audits/execute"): (
+            "identity.audit.execute",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/audits/control"): (
+            "identity.audit.control",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
+            "USER_GESTURE",
+        ),
+        ("post", "/v1/identity/proposals/decision"): (
+            "identity.proposal.decision",
+            32_768,
+            4_194_304,
+            "UNLOCKED",
+            "PROFILE",
             "USER_GESTURE",
         ),
         ("post", "/v1/phase5/findings/list"): (
@@ -462,6 +534,7 @@ def test_generated_allowlists_contain_only_route_specific_boundaries() -> None:
         "/v1/vaults/current/unlock",
         "/v1/vaults/current/lock",
         "/v1/profiles",
+        "/v1/profiles/delete",
         "/v1/intake/paste",
         "/v1/intake/file",
         "/v1/intake/review",
@@ -481,6 +554,14 @@ def test_generated_allowlists_contain_only_route_specific_boundaries() -> None:
         "/v1/discovery/hibp/account",
         "/v1/discovery/hibp/domain",
         "/v1/discovery/investigation/plan",
+        "/v1/identity/workspace",
+        "/v1/identity/person",
+        "/v1/identity/source",
+        "/v1/identity/audits",
+        "/v1/identity/audits/detail",
+        "/v1/identity/audits/execute",
+        "/v1/identity/audits/control",
+        "/v1/identity/proposals/decision",
         "/v1/phase5/findings/list",
         "/v1/phase5/findings/detail",
         "/v1/phase5/findings/manual",
@@ -506,7 +587,7 @@ def test_generated_allowlists_contain_only_route_specific_boundaries() -> None:
         assert route in rust
     assert typescript.count('"method": "GET"') == 4
     assert rust.count('method: "GET"') == 4
-    assert typescript.count('"method": "POST"') == 44
-    assert rust.count('method: "POST"') == 44
+    assert typescript.count('"method": "POST"') == 53
+    assert rust.count('method: "POST"') == 53
     assert "/v1/vaults/current/descriptor" not in typescript
     assert "/v1/providers" not in rust

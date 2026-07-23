@@ -1,6 +1,6 @@
 # Repository Structure
 
-Status: Phase 3 verified at `0005_graph_edge_origins`; distinct local package milestones preserved; 45-operation/43-path source candidate implemented with final aggregate/package verification in progress.
+Status: Complete 57-operation/55-path source, frozen, and packaged lifecycle gates pass at `0011_profile_purge`; distinct historical package milestones are preserved.
 
 The repository is created incrementally. This tree describes the current
 tracked implementation boundaries, not the larger Phase 4+ target and not a
@@ -21,7 +21,7 @@ production personal-data or operational-audit release.
 │       ├── e2e/                        # Chromium/WebKit and visual contracts
 │       ├── public/                     # packaged local assets
 │       ├── src/
-│       │   ├── app/                    # synthetic prototype state
+│       │   ├── app/                    # native boundaries and durable workspace coordination
 │       │   ├── components/
 │       │   ├── pages/                  # 17 accepted Phase 1 routes
 │       │   ├── styles/
@@ -45,12 +45,12 @@ production personal-data or operational-audit release.
 ├── services/
 │   └── core/
 │       ├── migrations/
-│       │   └── versions/               # forward-only foundation through candidate 0008
+│       │   └── versions/               # forward-only foundation through candidate 0011
 │       ├── src/ariadne_core/
-│       │   ├── api/                    # forty generated local operations at source head
-│       │   ├── application/            # vault/intake/query, Phase 5/6, and local reporting
-│       │   ├── domain/                 # identity/query/evidence/attribution/diff/remediation/reporting
-│       │   ├── infrastructure/         # SQLCipher profile/query/Phase 5/6 repositories and logging
+│       │   ├── api/                    # 57 generated local operations at source head
+│       │   ├── application/            # vault/intake/identity/query, Phase 5/6, and reporting
+│       │   ├── domain/                 # identity/audit/query/evidence/attribution/diff/remediation/reporting
+│       │   ├── infrastructure/         # SQLCipher identity/query/Phase 5/6 repositories and logging
 │       │   ├── intake/                 # bounded parsers and restricted-value gate
 │       │   ├── local_ai/               # disabled loopback-only local-model foundation
 │       │   ├── privacy/
@@ -160,6 +160,16 @@ production personal-data or operational-audit release.
   reads plus local revision-CAS remediation mutations. The current package adds
   a user-triggered contentless checkpoint route; there is still no scheduled or
   provider-driven snapshot ingestion and no outbound send/submit/dispatch command.
+- Candidate `0009_identity_discovery_engine` and
+  `0010_identity_ai_provenance` add persistent named-person knowledge, audit
+  configurations, durable frontier tasks/attempts/results, exact-source leads,
+  review proposals, receipts, cited AI analyses, and canonical promotion
+  origins. The People workflow resumes from SQLite rather than route-local form
+  state and executes seven bounded public surfaces automatically.
+- Candidate `0011_profile_purge` retains normal Phase 5/6 immutability while
+  permitting one exact-name/revision-confirmed whole-profile purge. The
+  repository deletes profile-scoped rows and linked jobs/idempotency results
+  transactionally, enables secure deletion, and vacuums after commit.
 - `domain/reporting.py`, `application/reporting.py`, and
   `application/reporting_projection.py` generate bounded deterministic JSON and
   inert Markdown from persisted profile-scoped Phase 5/6 state. The strict
@@ -239,15 +249,14 @@ aggregate, frozen UDS, deep strict signature, zero-TCP, and packaged normal/
 SIGKILL gates pass under new identities rather than relabelled `0005` or `0006`
 artifacts. The earlier packaged 37-operation source reaches
 `0008_phase6_audit_remediation`; its identities remain historical evidence.
-The historical 40-operation manual-finding/checkpoint/report source still uses
 schema `0008` and passes source, frozen UDS, and packaged normal/SIGKILL gates
 under `96c368…` staged-sidecar, `77338e…` signed-sidecar, and `214ccd…` desktop
-identities. The current source adds five operations for public search/capture,
-entity-origin pagination, and corpus/workspace local-AI reasoning without a new
-migration. Static/privacy/contracts, focused Rust/Clippy, and 122 frontend tests
-across 29 files pass. A fresh frozen sidecar is built; the full Python/clean
-Rust aggregate and final sidecar/package verification remain pending. No earlier
-artifact is relabelled.
+identities. The later 48-operation package identities remain historical. The
+current source reaches `0011_profile_purge` with 57 operations and passes 498
+Python tests plus four intentional skips, 95 Rust tests plus one manual
+Keychain ignore, 148 frontend tests, generated-contract drift, and the 440-file
+privacy scan, fresh frozen/staged inspection, and packaged normal/abrupt
+lifecycle verification. No earlier artifact is relabelled.
 Physical power/Keychain validation, production key rotation, one-Developer-ID
 hardened-runtime signing, notarisation, and clean macOS 14 testing remain Phase
 9 release work. Native idle/system-lock dispatch

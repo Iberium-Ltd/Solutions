@@ -69,12 +69,16 @@ describe('native profile resume boundary', () => {
       if (command === 'core_capabilities') return capabilities
       if (command === 'core_session') return session
       if (command === 'core_list_profiles') return profiles
+      if (command === 'core_delete_profile') {
+        return response({ profileId: firstProfileId, deletedRows: 12 })
+      }
       throw new Error('Unexpected native command')
     })
   })
 
   afterEach(() => {
     Reflect.deleteProperty(globalThis, 'isTauri')
+    vi.unstubAllGlobals()
     usePhase3WorkflowStore.getState().reset()
   })
 
@@ -122,5 +126,38 @@ describe('native profile resume boundary', () => {
       await screen.findByRole('textbox', { name: 'Local source text' }),
     ).toHaveValue('')
     expect(document.body).not.toHaveTextContent(privateInput)
+  })
+
+  it('requires the exact profile name and clears navigation after deletion', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal('prompt', vi.fn(() => 'Synthetic primary profile'))
+    vi.stubGlobal('alert', vi.fn())
+    render(
+      <MemoryRouter initialEntries={['/audits/new/intake']}>
+        <AppShell>
+          <IntakePage />
+        </AppShell>
+      </MemoryRouter>,
+    )
+
+    const selector = await screen.findByRole('combobox', {
+      name: 'Active local profile',
+    })
+    await waitFor(() => expect(selector).toBeEnabled())
+    await user.selectOptions(selector, firstProfileId)
+    await user.click(screen.getByRole('button', {
+      name: 'Delete active local profile',
+    }))
+
+    await waitFor(() => {
+      expect(usePhase3WorkflowStore.getState().profileId).toBeNull()
+      expect(invokeMock).toHaveBeenCalledWith('core_delete_profile', {
+        request: {
+          profileId: firstProfileId,
+          expectedRevision: 1,
+          confirmationLabel: 'Synthetic primary profile',
+        },
+      })
+    })
   })
 })

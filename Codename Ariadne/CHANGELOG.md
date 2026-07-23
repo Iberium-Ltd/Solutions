@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-07-23 — Persistent identity audits and confirmed profile deletion
+
+- Added named-person persistence, durable one-command audits across seven
+  bounded public surfaces, restart recovery, exact result URLs, cited selected
+  local-AI analysis, and reviewed canonical proposal promotion.
+- Added exact-name/revision-confirmed local profile deletion across Python,
+  generated contracts, Rust/Tauri, and the native profile switcher. The purge
+  removes every profile-scoped row plus linked jobs/idempotency state,
+  preserves normal immutable-record protection, enables secure deletion, and
+  vacuums after commit.
+- Removed the accidental live vault from the application data directory into a
+  recoverable user Trash backup. No private-reference material was copied.
+- The 57-operation/55-path schema-0011 candidate passes 498 Python tests with
+  four skips, 95 Rust tests with one manual Keychain ignore, 148 frontend
+  tests, the 440-file privacy scan, fresh frozen/staged inspection, and normal
+  plus abrupt packaged lifecycle verification.
+
 ## 2026-07-14 — Labelled intake and bulk review usability correction
 
 - Added deterministic recognition for labelled bare-username rows and bounded

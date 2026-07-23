@@ -16,7 +16,7 @@ from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass, field
 
-from sqlalchemy import Connection, and_, exists, func, insert, or_, select, update
+from sqlalchemy import Connection, and_, delete, exists, func, insert, or_, select, update
 from sqlalchemy.engine import Engine, RowMapping
 from sqlalchemy.sql import FromClause
 from uuid6 import uuid7
@@ -657,6 +657,175 @@ class IntakeIdentityRepository:
             )
             for row in rows
         )
+
+    def delete_profile(
+        self,
+        *,
+        vault_id: str,
+        profile_id: str,
+        expected_revision: int,
+        confirmation_label: str,
+    ) -> int:
+        """Securely erase a profile after an exact label/revision confirmation.
+
+        Profile-owned tables are discovered from the installed schema so newer
+        migrations cannot accidentally leave data behind. They are erased in
+        child-before-parent foreign-key order in one transaction; immutable
+        Phase 5/6 delete triggers open only for ``PURGE_PENDING``.
+        """
+
+        deleted_rows = 0
+        with self.engine.connect() as connection:
+            connection.exec_driver_sql("PRAGMA secure_delete = ON")
+            connection.commit()
+            with connection.begin():
+                row = (
+                    connection.execute(
+                        select(profiles).where(
+                            and_(
+                                profiles.c.vault_id == vault_id,
+                                profiles.c.id == profile_id,
+                            )
+                        )
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if row is None:
+                    raise LookupError("profile is unavailable in this vault")
+                if int(row["revision"]) != expected_revision:
+                    raise RevisionConflict("profile revision is stale")
+                if not hmac.compare_digest(str(row["display_label"]), confirmation_label):
+                    raise ValueError("profile confirmation label does not match")
+
+                changed = connection.execute(
+                    update(profiles)
+                    .where(
+                        and_(
+                            profiles.c.vault_id == vault_id,
+                            profiles.c.id == profile_id,
+                            profiles.c.revision == expected_revision,
+                        )
+                    )
+                    .values(status="PURGE_PENDING", revision=expected_revision + 1)
+                )
+                if changed.rowcount != 1:
+                    raise RevisionConflict("profile revision is stale")
+
+                table_names = tuple(
+                    str(item[0])
+                    for item in connection.exec_driver_sql(
+                        "SELECT name FROM sqlite_master "
+                        "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+                    ).all()
+                )
+                profile_tables: list[str] = []
+                job_ids: set[str] = set()
+                result_ids = {profile_id}
+                table_parents: dict[str, set[str]] = {}
+                for table_name in table_names:
+                    quoted = '"' + table_name.replace('"', '""') + '"'
+                    columns = {
+                        str(item[1])
+                        for item in connection.exec_driver_sql(f"PRAGMA table_info({quoted})").all()
+                    }
+                    if {"vault_id", "profile_id"} <= columns and table_name != "profiles":
+                        profile_tables.append(table_name)
+                        table_parents[table_name] = {
+                            str(item[2])
+                            for item in connection.exec_driver_sql(
+                                f"PRAGMA foreign_key_list({quoted})"
+                            ).all()
+                            if str(item[2]) != table_name
+                        }
+                        if "id" in columns:
+                            result_ids.update(
+                                str(item[0])
+                                for item in connection.exec_driver_sql(
+                                    f"SELECT id FROM {quoted} "
+                                    "WHERE vault_id = ? AND profile_id = ?",
+                                    (vault_id, profile_id),
+                                ).all()
+                            )
+                        if table_name == "extraction_runs" and "job_id" in columns:
+                            job_ids.update(
+                                str(item[0])
+                                for item in connection.exec_driver_sql(
+                                    f"SELECT job_id FROM {quoted} "
+                                    "WHERE vault_id = ? AND profile_id = ?",
+                                    (vault_id, profile_id),
+                                ).all()
+                            )
+
+                profile_table_set = set(profile_tables)
+                descendants: dict[str, set[str]] = {
+                    table_name: set() for table_name in profile_tables
+                }
+                incoming = {table_name: 0 for table_name in profile_tables}
+                for child, parents in table_parents.items():
+                    for parent in parents & profile_table_set:
+                        descendants[child].add(parent)
+                        incoming[parent] += 1
+                ready = sorted(table_name for table_name, count in incoming.items() if count == 0)
+                deletion_order: list[str] = []
+                while ready:
+                    child = ready.pop(0)
+                    deletion_order.append(child)
+                    for parent in sorted(descendants[child]):
+                        incoming[parent] -= 1
+                        if incoming[parent] == 0:
+                            ready.append(parent)
+                            ready.sort()
+                if len(deletion_order) != len(profile_tables):
+                    raise RuntimeError("profile schema contains a purge dependency cycle")
+
+                for table_name in deletion_order:
+                    quoted = '"' + table_name.replace('"', '""') + '"'
+                    result = connection.exec_driver_sql(
+                        f"DELETE FROM {quoted} WHERE vault_id = ? AND profile_id = ?",
+                        (vault_id, profile_id),
+                    )
+                    deleted_rows += max(result.rowcount, 0)
+
+                if job_ids:
+                    placeholders = ",".join("?" for _ in job_ids)
+                    parameters = (vault_id, *sorted(job_ids))
+                    for statement in (
+                        f"DELETE FROM job_dependencies WHERE vault_id = ? AND "
+                        f"(job_id IN ({placeholders}) OR depends_on_job_id IN ({placeholders}))",
+                        "DELETE FROM job_attempts WHERE vault_id = ? "
+                        f"AND job_id IN ({placeholders})",
+                        f"DELETE FROM jobs WHERE vault_id = ? AND id IN ({placeholders})",
+                    ):
+                        job_parameters = (
+                            (vault_id, *sorted(job_ids), *sorted(job_ids))
+                            if "depends_on_job_id" in statement
+                            else parameters
+                        )
+                        result = connection.exec_driver_sql(statement, job_parameters)
+                        deleted_rows += max(result.rowcount, 0)
+
+                ordered_result_ids = sorted(result_ids)
+                for offset in range(0, len(ordered_result_ids), 400):
+                    batch = ordered_result_ids[offset : offset + 400]
+                    placeholders = ",".join("?" for _ in batch)
+                    result = connection.exec_driver_sql(
+                        "DELETE FROM idempotency_records WHERE vault_id = ? "
+                        f"AND result_id IN ({placeholders})",
+                        (vault_id, *batch),
+                    )
+                    deleted_rows += max(result.rowcount, 0)
+                removed = connection.execute(
+                    delete(profiles).where(
+                        and_(profiles.c.vault_id == vault_id, profiles.c.id == profile_id)
+                    )
+                )
+                if removed.rowcount != 1:
+                    raise RevisionConflict("profile purge conflict")
+                deleted_rows += 1
+            connection.exec_driver_sql("VACUUM")
+            connection.commit()
+        return deleted_rows
 
     def purge_expired_temporary_content(
         self,
