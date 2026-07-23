@@ -537,12 +537,36 @@ class IdentityDiscoveryRepository:
                     ).mappings()
                 }
             )
+        # Broad contextual attributes are useful only when tied to a person or
+        # alias. Searching them alone creates a large unrelated frontier, so
+        # direct web seeds are limited to identifiers and names while contextual
+        # attributes are emitted as compound queries below.
+        web_searchable = {
+            "EMAIL",
+            "USERNAME",
+            "TELEPHONE",
+            "PERSON",
+            "ALIAS",
+            "DOMAIN",
+        }
+        username_values = {
+            str(entity["canonical_value"]).casefold()
+            for entity in entity_rows
+            if str(entity["entity_type"]) == "USERNAME"
+        }
         for entity in entity_rows:
             value = str(entity["canonical_value"])
             masked = str(entity["display_mask"])
             entity_type = str(entity["entity_type"])
             lead_hmac = str(entity["value_hmac"])
-            if "DUCKDUCKGO_HTML" in provider_ids:
+            dotted_username_duplicate = (
+                entity_type == "DOMAIN" and value.casefold() in username_values
+            )
+            if (
+                "DUCKDUCKGO_HTML" in provider_ids
+                and entity_type in web_searchable
+                and not dotted_username_duplicate
+            ):
                 seeds.append(
                     SeedTask(
                         task_type="SEARCH_WEB",
@@ -598,7 +622,7 @@ class IdentityDiscoveryRepository:
                         information_gain_micros=720_000,
                     )
                 )
-            if entity_type == "DOMAIN":
+            if entity_type == "DOMAIN" and not dotted_username_duplicate:
                 if "RDAP_DOMAIN" in provider_ids:
                     seeds.append(
                         SeedTask(
@@ -656,6 +680,37 @@ class IdentityDiscoveryRepository:
                         information_gain_micros=900_000,
                     )
                 )
+        if "DUCKDUCKGO_HTML" in provider_ids:
+            people = [
+                entity
+                for entity in entity_rows
+                if str(entity["entity_type"]) in {"PERSON", "ALIAS"}
+            ][:4]
+            context = [
+                entity
+                for entity in entity_rows
+                if str(entity["entity_type"])
+                in {"ORGANISATION", "EMPLOYMENT", "EDUCATION", "LOCATION", "PROJECT"}
+            ][:8]
+            for person in people:
+                for clue in context:
+                    person_value = str(person["canonical_value"])
+                    clue_value = str(clue["canonical_value"])
+                    query = f'"{person_value}" "{clue_value}"'
+                    masked_query = f'"{person["display_mask"]}" "{clue["display_mask"]}"'
+                    seeds.append(
+                        SeedTask(
+                            task_type="SEARCH_WEB",
+                            provider_id="DUCKDUCKGO_HTML",
+                            payload=query,
+                            masked_payload=masked_query,
+                            lead_type="PERSON",
+                            lead_display=masked_query,
+                            lead_value_hmac=self.fingerprint(query),
+                            priority=82,
+                            information_gain_micros=820_000,
+                        )
+                    )
         for source in source_rows:
             value = str(source["canonical_url"])
             seeds.append(
@@ -1095,8 +1150,34 @@ class IdentityDiscoveryRepository:
                     0,
                     int(audit["request_budget"]) - self._task_count(connection, task.audit_id),
                 )
-                if task.depth < int(audit["max_depth"]):
-                    for index, link in enumerate(page.links[: min(5, available)]):
+                proposal_hmacs = {
+                    self.fingerprint(proposal.canonical_value) for proposal in page.proposals
+                }
+                confirms_known_identifier = False
+                if proposal_hmacs:
+                    confirms_known_identifier = (
+                        connection.execute(
+                            select(func.count())
+                            .select_from(self.entities)
+                            .where(
+                                and_(
+                                    self.entities.c.vault_id == task.vault_id,
+                                    self.entities.c.profile_id == task.profile_id,
+                                    self.entities.c.deleted_at_us.is_(None),
+                                    self.entities.c.review_state.in_(("CONFIRMED", "PROBABLE")),
+                                    self.entities.c.value_hmac.in_(proposal_hmacs),
+                                )
+                            )
+                        ).scalar_one()
+                        > 0
+                    )
+                # One same-site hop from a relevant search result is useful.
+                # Deeper recursion needs an exact known identifier on the page;
+                # this prevents a high depth setting from becoming a generic
+                # crawl while preserving evidence-led expansion.
+                may_expand = task.depth <= 1 or confirms_known_identifier
+                if task.depth < int(audit["max_depth"]) and may_expand:
+                    for index, link in enumerate(page.links[: min(2, available)]):
                         link_hmac = self.fingerprint(link)
                         child_lead_id = self._ensure_url_lead(
                             connection,
@@ -1452,8 +1533,14 @@ class IdentityDiscoveryRepository:
                 connection.execute(
                     select(self.results)
                     .where(self.results.c.audit_id == audit_id)
-                    .order_by(self.results.c.observed_at_us.desc())
-                    .limit(120)
+                    # Lower provider ranks carry the strongest query match. Feed
+                    # those to the model first so a large recursive run cannot
+                    # crowd its best evidence out with late low-value pages.
+                    .order_by(
+                        self.results.c.rank.asc(),
+                        self.results.c.observed_at_us.asc(),
+                    )
+                    .limit(200)
                 ).mappings()
             )
             timestamp = now_us()

@@ -405,7 +405,7 @@ export function PeoplePage() {
             </div>
             <div className="identity-model-picker">
               <div className="identity-model-picker__header">
-                <span><BrainCircuit size={16} /><span><strong>AI analysis model</strong><small>Choose the Ollama model that will analyse, connect, and organise this run.</small></span></span>
+                <span><BrainCircuit size={16} /><span><strong>AI assistance model</strong><small>Choose the Ollama model used for natural-language clues, search seeding, cited connections, and review.</small></span></span>
                 <Button size="compact" variant="ghost" disabled={localAIPending} onClick={() => void loadLocalAI()}><RefreshCw className={localAIPending ? 'spin' : ''} size={13} />Refresh</Button>
               </div>
               {localAIModels.length > 0 ? (
@@ -442,7 +442,7 @@ export function PeoplePage() {
                 <BrainCircuit size={15} />
                 <span>
                   <strong>{auditForm.useLocalAi && localAI?.selectedModel ? `Use ${localAI.selectedModel}` : 'Deterministic audit only'}</strong>
-                  <small>{localAI?.enabled && localAI.selectedModel ? 'AI will run after discovery and remain available during review.' : 'Select a model above to enable AI for this run.'}</small>
+                  <small>{localAI?.enabled && localAI.selectedModel ? 'Confirmed AI-enriched clues seed bounded searches; the model then organises and connects retained sources.' : 'Select a model above to enable AI for this run.'}</small>
                 </span>
               </label>
               {localAIError ? <div className="callout callout--danger" role="alert">{localAIError}</div> : null}

@@ -268,7 +268,12 @@ class IdentityDiscoveryCoordinator:
                                 reason=execution.reason,
                                 page=execution.page,
                             )
-                    self._run_local_ai_if_ready(repository, body)
+                    # The model stage runs on the next empty batch. Returning
+                    # the final deterministic checkpoint first keeps Qwen's
+                    # cold-start latency out of the search request and lets the
+                    # UI show an explicit, recoverable AI-analysis phase.
+                    if not tasks:
+                        self._run_local_ai_if_ready(repository, body)
                     repository.refresh_audit(self._vault_id, body.profile_id, body.audit_id)
                     return _audit_detail(
                         body.profile_id,
@@ -460,6 +465,18 @@ class IdentityDiscoveryCoordinator:
                     "statement": connection.relationship,
                     "rationale": connection.rationale,
                     "confidence": connection.confidence.value,
+                    "evidenceRefs": connection.supporting_refs,
+                }
+            )
+            insights.append(
+                {
+                    "kind": "NEXT_STEP",
+                    "statement": connection.verification_suggestion,
+                    "rationale": (
+                        "The local model proposed this bounded follow-up for a "
+                        "source-grounded possible correlation."
+                    ),
+                    "confidence": None,
                     "evidenceRefs": connection.supporting_refs,
                 }
             )

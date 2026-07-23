@@ -151,10 +151,11 @@ async def test_confirmed_entities_compile_to_masked_local_preflight_and_real_dry
         plan = await client.post("/v1/query/plans", json=plan_request, headers=_headers())
         assert plan.status_code == 200
         plan_body = plan.json()
-        assert plan_body["approvalRequiredCount"] == 1
+        assert plan_body["approvalRequiredCount"] == 0
+        assert plan_body["plannedCount"] == 1
         assert plan_body["notCheckedCount"] == 1
         assert {cell["state"] for cell in plan_body["cells"]} == {
-            "APPROVAL_REQUIRED",
+            "PLANNED",
             "NOT_CHECKED",
         }
         assert raw_value not in plan.text
@@ -184,9 +185,11 @@ async def test_confirmed_entities_compile_to_masked_local_preflight_and_real_dry
             == 1
         )
         ledger = connection.execute(select(repository.ledger)).mappings().one()
-        approval = connection.execute(select(repository.approvals)).mappings().one()
+        approval_count = connection.execute(
+            select(func.count()).select_from(repository.approvals)
+        ).scalar_one()
     assert raw_value not in str(ledger)
-    assert approval["consumed_at_us"] is not None
+    assert approval_count == 0
     repository.close()
     manager.lock()
 

@@ -6,7 +6,11 @@ import pytest
 from alembic import command
 from sqlalchemy import select
 
-from ariadne_core.api.intake_schemas import PasteIntakeRequest, ProfileCreateRequest
+from ariadne_core.api.intake_schemas import (
+    EntityDecisionRequest,
+    PasteIntakeRequest,
+    ProfileCreateRequest,
+)
 from ariadne_core.application.phase3 import Phase3Coordinator
 from ariadne_core.application.query_policy import (
     AdapterResult,
@@ -126,16 +130,31 @@ def _fixture(tmp_path):  # type: ignore[no-untyped-def]
             semantic_enrichment_enabled=False,
         )
     )
-    with manager.engine.begin() as connection:
-        connection.exec_driver_sql(
-            "UPDATE entities SET review_state = 'CONFIRMED', "
-            "transmission_policy = 'APPROVAL_REQUIRED' "
-            "WHERE profile_id = ? AND entity_type = 'EMAIL'",
+    with manager.engine.connect() as connection:
+        rows = connection.exec_driver_sql(
+            "SELECT id, revision FROM entities "
+            "WHERE profile_id = ? AND entity_type = 'EMAIL' ORDER BY canonical_value",
             (profile.profile_id,),
+        ).all()
+    for index, row in enumerate(rows):
+        phase3.decide_entity(
+            EntityDecisionRequest(
+                idempotency_key=f"synthetic-query-decision-{index:04d}",
+                profile_id=profile.profile_id,
+                entity_id=str(row[0]),
+                expected_revision=int(row[1]),
+                decision_type="CONFIRM",
+                review_state="CONFIRMED",
+                sensitivity="SENSITIVE",
+                temporal_state="CURRENT",
+                search_policy="REQUIRE_APPROVAL",
+                transmission_policy="REQUIRE_EACH_APPROVAL",
+                reason="Synthetic approval policy fixture",
+            )
         )
     with manager.engine.connect() as connection:
         rows = connection.exec_driver_sql(
-            "SELECT id, canonical_value, display_mask FROM entities "
+            "SELECT id, canonical_value, display_mask, revision FROM entities "
             "WHERE profile_id = ? AND entity_type = 'EMAIL' ORDER BY canonical_value",
             (profile.profile_id,),
         ).all()
@@ -148,7 +167,7 @@ def _fixture(tmp_path):  # type: ignore[no-untyped-def]
             sensitivity=Sensitivity.SENSITIVE,
             search_policy=SearchPolicy.REQUIRE_APPROVAL,
             transmission_policy=TransmissionPolicy.REQUIRE_APPROVAL,
-            revision=1,
+            revision=int(row[3]),
         )
         for row in rows
     )

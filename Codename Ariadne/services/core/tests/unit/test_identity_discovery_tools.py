@@ -8,6 +8,7 @@ from uuid import uuid4
 from ariadne_core.application.identity_discovery_tools import (
     InvestigationToolBroker,
     PageHttpResponse,
+    _search_result_matches_query,
 )
 from ariadne_core.application.public_discovery import PublicDiscoveryService
 from ariadne_core.infrastructure.db.identity_discovery_repository import FrontierTaskRecord
@@ -109,3 +110,30 @@ def test_credential_free_provider_adapters_return_exact_public_sources() -> None
         "https://crt.sh/?id=742",
     )
     assert len(set(urls)) == 5
+
+
+def test_search_relevance_requires_visible_identifier_evidence() -> None:
+    assert _search_result_matches_query(
+        "synthetic_orbit",
+        url="https://example.test/users/synthetic_orbit",
+        title="Synthetic profile",
+        snippet="",
+    )
+    assert _search_result_matches_query(
+        '"Synthetic Person" "Example University"',
+        url="https://example.test/profile",
+        title="Synthetic Person",
+        snippet="Researcher at Example University.",
+    )
+    assert not _search_result_matches_query(
+        "synthetic-person@example.invalid",
+        url="https://accounts.example.test/login",
+        title="Sign in to your email",
+        snippet="Access your account.",
+    )
+    assert not _search_result_matches_query(
+        "Synthetic Person",
+        url="https://example.test/another-person",
+        title="Synthetic profile directory",
+        snippet="Unrelated record.",
+    )

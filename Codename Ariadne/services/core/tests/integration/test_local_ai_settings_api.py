@@ -369,8 +369,10 @@ async def test_selected_local_model_enriches_only_redacted_intake_and_requires_r
         )
         assert suggestion["entityType"] == "ORGANISATION"
         assert suggestion["reviewState"] == "UNREVIEWED"
-        assert suggestion["searchPolicy"] == "STORE_ONLY"
-        assert suggestion["transmissionPolicy"] == "LOCAL_ONLY"
+        assert suggestion["sensitivity"] == "PUBLIC"
+        assert suggestion["temporalState"] == "CURRENT"
+        assert suggestion["searchPolicy"] == "ALLOW"
+        assert suggestion["transmissionPolicy"] == "POLICY_CONTROLLED"
         assert suggestion["confidenceMicros"] == 850_000
 
     assert len(transport.requests) == 1

@@ -112,6 +112,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const KEYCHAIN_REQUEST_TIMEOUT: Duration = Duration::from_secs(125);
 const LOCAL_AI_WORKSPACE_REQUEST_TIMEOUT: Duration = Duration::from_secs(65);
 const LOCAL_AI_CORPUS_REQUEST_TIMEOUT: Duration = Duration::from_secs(105);
+const LOCAL_AI_INTAKE_REQUEST_TIMEOUT: Duration = Duration::from_secs(75);
 const PUBLIC_DISCOVERY_REQUEST_TIMEOUT: Duration = Duration::from_secs(25);
 const HIBP_REQUEST_TIMEOUT: Duration = Duration::from_secs(25);
 const PHASE5_LIST_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
@@ -202,6 +203,7 @@ const MAX_IDENTITY_RECEIPTS: usize = 500;
 const MAX_IDENTITY_AI_INSIGHTS: usize = 100;
 const MAX_IDENTITY_AI_CITATIONS: usize = 200;
 const IDENTITY_REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
+const IDENTITY_AI_REQUEST_TIMEOUT: Duration = Duration::from_secs(75);
 const MAX_SAFE_JAVASCRIPT_INTEGER: u64 = 9_007_199_254_740_991;
 
 #[derive(Clone)]
@@ -7773,6 +7775,10 @@ where
         LOCAL_AI_CORPUS_REQUEST_TIMEOUT
     } else if route == CoreRoute::AnalyzeLocalAiWorkspace {
         LOCAL_AI_WORKSPACE_REQUEST_TIMEOUT
+    } else if matches!(route, CoreRoute::IntakePaste | CoreRoute::IntakeFile) {
+        LOCAL_AI_INTAKE_REQUEST_TIMEOUT
+    } else if route == CoreRoute::ExecuteIdentityAuditBatch {
+        IDENTITY_AI_REQUEST_TIMEOUT
     } else if matches!(
         route,
         CoreRoute::SearchPublicDiscovery | CoreRoute::CapturePublicDiscovery

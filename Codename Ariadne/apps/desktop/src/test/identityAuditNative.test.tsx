@@ -71,4 +71,47 @@ describe('terminal native identity audit workflow', () => {
       } },
     ))
   })
+
+  it('recovers missing local AI analysis from a reopened partial run', async () => {
+    const partialWithoutAnalysis = {
+      ...completedAuditDetail,
+      audit: {
+        ...completedAuditDetail.audit,
+        state: 'PARTIAL' as const,
+        stage: 'COMPLETE' as const,
+        stopReason: 'REQUEST_BUDGET_EXHAUSTED' as const,
+      },
+      aiAnalysis: null,
+    }
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'core_get_identity_audit') {
+        return { requestId, data: partialWithoutAnalysis }
+      }
+      if (command === 'core_execute_identity_audit_batch') {
+        return { requestId, data: completedAuditDetail }
+      }
+      throw new Error(`Unexpected command ${command}`)
+    })
+
+    render(
+      <MemoryRouter initialEntries={[`/identity/audits/${completedAuditDetail.audit.auditId}`]}>
+        <Routes>
+          <Route path="/identity/audits/:auditId" element={<IdentityAuditPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('heading', {
+      name: completedAuditDetail.audit.name,
+    })).toBeVisible()
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith(
+      'core_execute_identity_audit_batch',
+      { request: {
+        profileId: completedAuditDetail.profileId,
+        auditId: completedAuditDetail.audit.auditId,
+        maximumTasks: 1,
+      } },
+    ))
+    expect(await screen.findByText('Ready to export')).toBeVisible()
+  })
 })

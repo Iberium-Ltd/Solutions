@@ -188,7 +188,12 @@ def test_ollama_executes_bounded_grounded_structured_enrichment() -> None:
     assert payload["stream"] is False
     assert payload["think"] is False
     assert payload["format"]["additionalProperties"] is False
-    assert payload["options"] == {"num_predict": 1024, "temperature": 0}
+    assert payload["keep_alive"] == "10m"
+    assert payload["options"] == {
+        "num_ctx": 8192,
+        "num_predict": 1024,
+        "temperature": 0,
+    }
     assert all(name.casefold() != "authorization" for name, _value in wire_request.headers)
     assert text not in repr(wire_request)
     assert "Northbridge Systems" not in repr(result)
@@ -246,11 +251,43 @@ def test_model_output_must_be_exactly_grounded_in_redacted_input() -> None:
     )
     client = LocalAIClient(LocalAIConfig(enabled=True), transport=transport)
 
-    with pytest.raises(LocalAIError) as raised:
-        client.enrich(EnrichmentRequest(redacted_text=text), model_id="qwen-local:7b")
+    result = client.enrich(
+        EnrichmentRequest(redacted_text=text),
+        model_id="qwen-local:7b",
+    )
+    assert all(entity.surface != "Imagined Company" for entity in result.entities)
 
-    assert raised.value.code is LocalAIErrorCode.INVALID_RESPONSE
-    assert "Imagined Company" not in str(raised.value)
+
+def test_unique_exact_surface_repairs_model_character_arithmetic() -> None:
+    text = "Morgan Vale worked at Northbridge Systems."
+    wrong_offsets = _model_output(start=5)
+    transport = RecordingTransport(
+        [
+            _json_response(
+                {
+                    "model": "qwen-local:7b",
+                    "message": {"content": json.dumps(wrong_offsets)},
+                }
+            )
+        ]
+    )
+
+    result = LocalAIClient(
+        LocalAIConfig(enabled=True),
+        transport=transport,
+    ).enrich(
+        EnrichmentRequest(redacted_text=text),
+        model_id="qwen-local:7b",
+    )
+
+    organisation = next(
+        entity
+        for entity in result.entities
+        if entity.entity_type is SemanticEntityType.ORGANISATION
+    )
+    assert (organisation.start, organisation.end) == (22, 41)
+    assert text[organisation.start : organisation.end] == organisation.surface
+    assert result.relationships == ()
 
 
 def test_request_response_and_service_failures_are_bounded_and_redacted() -> None:

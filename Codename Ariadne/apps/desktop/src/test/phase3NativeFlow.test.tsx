@@ -144,6 +144,15 @@ describe('native Phase 3 UI flow', () => {
     const privateInput = 'Authorised ephemeral source 7f4d8a'
     usePhase3WorkflowStore.getState().setProfileId(profileId)
     invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'core_get_local_ai_settings') {
+        return response({
+          enabled: true,
+          provider: 'OLLAMA',
+          endpoint: 'http://127.0.0.1:11434',
+          selectedModel: 'synthetic-local:1b',
+          revision: 1,
+        })
+      }
       if (command === 'core_intake_paste') return response(receipt)
       throw new Error('Unexpected native command')
     })
@@ -162,7 +171,7 @@ describe('native Phase 3 UI flow', () => {
     expect(
       screen.getAllByRole('link', { name: /Review candidates/ })[0],
     ).toHaveAttribute('href', '/audits/new/entities')
-    expect(invokeMock).toHaveBeenCalledTimes(1)
+    expect(invokeMock).toHaveBeenCalledTimes(2)
     expect(invokeMock).toHaveBeenCalledWith('core_intake_paste', {
       request: expect.objectContaining({
         profileId,

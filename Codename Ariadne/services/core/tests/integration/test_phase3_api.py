@@ -376,11 +376,21 @@ async def test_paste_review_decision_and_graph_are_profile_scoped_and_idempotent
         assert secret not in first_origin_page.text + remaining_origin_page.text
         assert raw_only_marker not in first_origin_page.text + remaining_origin_page.text
 
-        candidate = next(
-            entity
+        assert all(entity["sensitivity"] == "PUBLIC" for entity in review_body["entities"])
+        assert all(
+            entity["temporalState"] in {"CURRENT", "HISTORICAL"}
             for entity in review_body["entities"]
-            if entity["transmissionPolicy"] == "LOCAL_ONLY"
         )
+        assert any(
+            entity["entityType"] == "USERNAME" and entity["temporalState"] == "HISTORICAL"
+            for entity in review_body["entities"]
+        )
+        assert all(entity["searchPolicy"] == "ALLOW" for entity in review_body["entities"])
+        assert all(
+            entity["transmissionPolicy"] == "POLICY_CONTROLLED"
+            for entity in review_body["entities"]
+        )
+        candidate = review_body["entities"][0]
         decision_key = _idempotency_key()
         decision_request = {
             "idempotencyKey": decision_key,
@@ -407,7 +417,7 @@ async def test_paste_review_decision_and_graph_are_profile_scoped_and_idempotent
         )
         assert decided.status_code == decision_replay.status_code == 200
         assert decided.json()["reviewState"] == "CONFIRMED"
-        assert decided.json()["transmissionPolicy"] == "LOCAL_ONLY"
+        assert decided.json()["transmissionPolicy"] == "POLICY_CONTROLLED"
         assert decision_replay.json()["revision"] == decided.json()["revision"]
 
         graph = await client.post(

@@ -6,7 +6,7 @@ Overall state: **streamlined foreground identity-audit workflow complete and pac
 ## Implemented at the current source boundary
 
 - The generated contract contains **57 narrow operations (4 GET, 53 POST; 55 distinct paths)** at schema head `0011_profile_purge`.
-- The current frontend passes typecheck, lint, production build, and **152/152 Vitest tests across 38 files**.
+- The current frontend passes typecheck, lint, production build, and **153/153 Vitest tests across 38 files**.
 - Native vault creation now leads to explicit named-profile creation or
   selection. Intake refuses to create a hidden generic profile, and the default
   native route enters the persistent People workspace.
@@ -35,14 +35,15 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 ### Current 57-operation source evidence
 
 - Generated contract: **57 operations / 55 paths (4 GET, 53 POST)**; drift check passes.
-- Python: Ruff passes across **171 files**, strict mypy across **94 source files**, and the full aggregate completes with **498 passed and 4 intentional skips in 473.34 seconds**.
+- Python: Ruff passes across **171 files**, strict mypy across **94 source files**, and the full aggregate completes with **500 passed and 4 intentional skips in 462.80 seconds**.
 - Rust: format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual Keychain test in 15.16 seconds.
-- Frontend: typecheck, lint, production build, and **152/152 Vitest tests across 38 files** pass.
+- Frontend: typecheck, lint, production build, and **153/153 Vitest tests across 38 files** pass.
 - Focused end-to-end backend: the synthetic named-profile → intake → decision →
   audit execution → cited AI → proposal promotion → reopen workflow passes.
 - Privacy: **445 candidate files passed**.
 - Live local Qwen after SSD relocation: fresh opt-in `qwen3:30b` run **4/4
-  passed in 127.90 seconds**; Ollama reported the 45 GB runtime at 100% GPU.
+  passed in 30.23 seconds**; Ollama reported a bounded 19 GB runtime, 8K
+  context, and 100% GPU execution.
   The running `llama-server` held its 18,556,685,856-byte model blob open from
   `/Volumes/Predator SSD GM7000/LLMs/Ollama/models`.
 - Primary renderer journey: one synthetic native Playwright flow passed from
@@ -58,10 +59,10 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 Current 57-operation local package evidence:
 
-- Frozen/staged sidecar: 21,053,600 bytes, arm64/minimum macOS 11.0, SHA-256 `dccaaa5d3c9a60b668ecd85cdd0d00a79c4b16aadd2c02995e43891478a9d7f5`.
-- Signed packaged sidecar: 21,053,584 bytes, SHA-256 `74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`, CDHash `396892d4ec3a4784ceb924ddff682987ac65d852`.
-- Desktop executable: 17,815,088 bytes, arm64/minimum macOS 14.0, SHA-256 `716052aab25cb30f2784c876e27f17c8ae2664f8b6f688a1db8377a57e06399d`, CDHash `a743997917251694713e1e44494d9aac94a5aa02`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 3,852/2,532 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Frozen/staged sidecar: 21,061,664 bytes, arm64/minimum macOS 11.0, SHA-256 `780924ee5c553b38a80f05b4055e35f10051f66f573142b0ea611efb2c7ce5a9`.
+- Signed packaged sidecar: 21,061,648 bytes, SHA-256 `c9a24bfa73dc61d79b78514ad748ce3834938ddfe3bec4e316be2aae10c4c3f2`, CDHash `5eb416c4e6a35d6cfac6062103e86224d62e04b6`.
+- Desktop executable: 17,815,088 bytes, arm64/minimum macOS 14.0, SHA-256 `eb3f0dcf58d3c90bf99a6630d9ef56b5dd0894b71aa9ee001897c0e4573add97`, CDHash `0edc27da42d9b3a8bac4995511c53a99e5f90d7e`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 2,318/1,908 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 
 ### Historical 48- and 45-operation candidate evidence
 

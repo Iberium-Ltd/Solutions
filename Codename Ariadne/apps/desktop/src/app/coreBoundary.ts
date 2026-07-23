@@ -5,7 +5,7 @@
  * disappears at runtime, so an incompatible or compromised sidecar response
  * must fail here before it can alter UI authority or vault state.
  */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   SessionState,
   SystemCapabilities,
@@ -49,6 +49,25 @@ const FEATURE_STATUSES = new Set([
   'UNAVAILABLE',
 ])
 const SESSION_POLL_INTERVAL_MS = 1_000
+const CORE_INVOKE_TIMEOUT_MS = 8_000
+const SESSION_FAILURES_BEFORE_RECONNECT = 10
+
+async function boundedInvoke<T>(promise: Promise<T>): Promise<T> {
+  let timer: number | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_resolve, reject) => {
+        timer = window.setTimeout(
+          () => reject(new Error('The local core command timed out')),
+          CORE_INVOKE_TIMEOUT_MS,
+        )
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) window.clearTimeout(timer)
+  }
+}
 
 export function nativeRuntimeAvailable(): boolean {
   return Boolean((globalThis as { isTauri?: boolean }).isTauri)
@@ -161,15 +180,16 @@ export function useCoreBoundary() {
   )
   const [vaultActionPending, setVaultActionPending] = useState(false)
   const [vaultActionError, setVaultActionError] = useState<string | null>(null)
+  const sessionFailures = useRef(0)
 
   const refresh = useCallback(async () => {
     if (!native) return true
     try {
       const { invoke } = await import('@tauri-apps/api/core')
-      const [capabilities, session] = await Promise.all([
+      const [capabilities, session] = await boundedInvoke(Promise.all([
         invoke<CommandResponse<SystemCapabilities>>('core_capabilities'),
         invoke<CommandResponse<SessionState>>('core_session'),
-      ])
+      ]))
       const parsedSession = parseSession(session)
       if (parsedSession.lockState !== 'UNLOCKED') {
         clearPhase3WorkflowMemory()
@@ -179,6 +199,7 @@ export function useCoreBoundary() {
         capabilities: parseCapabilities(capabilities),
         session: parsedSession,
       })
+      sessionFailures.current = 0
       return true
     } catch {
       return false
@@ -188,15 +209,16 @@ export function useCoreBoundary() {
   const refreshUnlockedSession = useCallback(async () => {
     if (!native) return true
     try {
-      const session = parseSession(
-        await invokeNative<CommandResponse<SessionState>>('core_session'),
-      )
+      const session = parseSession(await boundedInvoke(
+        invokeNative<CommandResponse<SessionState>>('core_session'),
+      ))
       if (session.lockState !== 'UNLOCKED') {
         clearPhase3WorkflowMemory()
       }
       setState((current) =>
         current.mode === 'AVAILABLE' ? { ...current, session } : current,
       )
+      sessionFailures.current = 0
       return true
     } catch {
       return false
@@ -250,7 +272,11 @@ export function useCoreBoundary() {
       refreshPending = true
       void refreshUnlockedSession().then((refreshed) => {
         refreshPending = false
-        if (!refreshed) setState({ mode: 'CONNECTING' })
+        if (refreshed) return
+        sessionFailures.current += 1
+        if (sessionFailures.current >= SESSION_FAILURES_BEFORE_RECONNECT) {
+          setState({ mode: 'CONNECTING' })
+        }
       })
     }, SESSION_POLL_INTERVAL_MS)
     return () => window.clearInterval(timer)

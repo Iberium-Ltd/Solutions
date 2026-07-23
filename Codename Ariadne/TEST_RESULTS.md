@@ -15,12 +15,12 @@ operations and one confirmed physical-profile deletion operation.
 | Category | Current result |
 |---|---|
 | Python quality | Ruff passed across **171 files**; strict mypy passed across **94 source files** |
-| Python full aggregate | **498 passed, 4 intentional skips in 473.34 seconds** |
+| Python full aggregate | **500 passed, 4 intentional skips in 462.80 seconds** |
 | Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **57 operations / 55 paths** |
 | Rust | Format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual macOS Keychain test in **15.16 seconds** |
-| Frontend | **152/152 passed across 38 files**; typecheck, lint, and production build passed |
+| Frontend | **153/153 passed across 38 files**; typecheck, lint, and production build passed |
 | Focused workflow | **16/16 frontend workflow tests**, the backend profile-to-audit integration, and one complete native-renderer Playwright journey passed |
-| Live local Qwen | Post-relocation opt-in `qwen3:30b` schema, summary, connections, and gap-analysis run: **4/4 passed in 127.90 seconds**; Ollama reported 45 GB at 100% GPU and opened the 18,556,685,856-byte model blob from the SSD |
+| Live local Qwen | Post-relocation opt-in `qwen3:30b` workspace, summary, connections, and gap-analysis run: **4/4 passed in 30.23 seconds**; Ollama reported a bounded 19 GB runtime, 8K context, and 100% GPU execution from the SSD-backed model store |
 | Focused screenshots | Nine 1720×1000 primary-journey screens captured and reviewed once; zero external requests/runtime problems and no blocking visual defect |
 | Privacy | **445 candidate files passed** |
 | Frozen/package | Schema-0011 frozen/staged inspection, deep strict ad-hoc signature, and normal/abrupt packaged lifecycle passed |
@@ -46,8 +46,8 @@ response scope, exact-name prompt, and navigation-memory reset.
 Schema/archive:   0011_profile_purge
 Architecture:     arm64
 Minimum macOS:    11.0
-Frozen/staged:    21,053,600 bytes
-Staged SHA-256:   dccaaa5d3c9a60b668ecd85cdd0d00a79c4b16aadd2c02995e43891478a9d7f5
+Frozen/staged:    21,061,664 bytes
+Staged SHA-256:   780924ee5c553b38a80f05b4055e35f10051f66f573142b0ea611efb2c7ce5a9
 ```
 
 Fresh frozen and staged inspections both passed authenticated development TCP
@@ -58,12 +58,12 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 | Package evidence | Current 57-operation result |
 |---|---|
-| Requested quit | 3,852 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
-| Abrupt parent exit | 2,532 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Requested quit | 2,318 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 1,908 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
 | Runtime permissions | `0700` directory; `0600` socket in both runs |
-| Signed packaged sidecar | 21,053,584 bytes; arm64/minimum macOS 11.0; SHA-256 `74325b31abba5afb4f916051898c80431018cd4a0b8ae90a9f44f0183281d7b0`; CDHash `396892d4ec3a4784ceb924ddff682987ac65d852` |
-| Desktop executable | 17,815,088 bytes; arm64/minimum macOS 14.0; SHA-256 `716052aab25cb30f2784c876e27f17c8ae2664f8b6f688a1db8377a57e06399d`; CDHash `a743997917251694713e1e44494d9aac94a5aa02` |
-| Bundle | 38,032 KiB allocated; deep strict ad-hoc signature verification passed |
+| Signed packaged sidecar | 21,061,648 bytes; arm64/minimum macOS 11.0; SHA-256 `c9a24bfa73dc61d79b78514ad748ce3834938ddfe3bec4e316be2aae10c4c3f2`; CDHash `5eb416c4e6a35d6cfac6062103e86224d62e04b6` |
+| Desktop executable | 17,815,088 bytes; arm64/minimum macOS 14.0; SHA-256 `eb3f0dcf58d3c90bf99a6630d9ef56b5dd0894b71aa9ee001897c0e4573add97`; CDHash `0edc27da42d9b3a8bac4995511c53a99e5f90d7e` |
+| Bundle | 38,040 KiB allocated; deep strict ad-hoc signature verification passed |
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,
 notarisation, signed-update, clean-machine, or public-release proof.

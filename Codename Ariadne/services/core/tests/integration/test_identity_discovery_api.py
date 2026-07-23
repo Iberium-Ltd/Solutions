@@ -140,7 +140,7 @@ def _search_response() -> PublicDiscoveryHttpResponse:
         headers=(("Content-Type", "text/html; charset=UTF-8"),),
         body=(
             b'<div class="result"><a class="result__a" '
-            b'href="https://profiles.example.com/synthetic-orbit">Synthetic profile</a>'
+            b'href="https://profiles.example.com/synthetic_orbit_742">Synthetic profile</a>'
             b'<div class="result__snippet">Synthetic public profile result.</div></div>'
         ),
     )
@@ -270,12 +270,21 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
             executed["tasks"][0]["stopReason"],
             executed["receipts"][0]["resultCode"],
         )
-        assert executed["results"][0]["url"].endswith("/synthetic-orbit")
+        assert executed["results"][0]["url"].endswith("/synthetic_orbit_742")
         assert executed["tasks"][0]["state"] == "SUCCEEDED_RESULTS"
+        assert executed["aiAnalysis"] is None
+
+        analysis_response = await client.post(
+            "/v1/identity/audits/execute",
+            json={"profileId": profile_id, "auditId": audit_id, "maximumTasks": 1},
+            headers=_headers(),
+        )
+        assert analysis_response.status_code == 200
+        executed = analysis_response.json()
         assert executed["aiAnalysis"]["status"] == "SUCCEEDED"
         assert executed["aiAnalysis"]["provider"] == "OLLAMA"
         assert executed["aiAnalysis"]["modelId"] == "qwen-local:7b"
-        assert executed["aiAnalysis"]["citations"][0]["url"].endswith("/synthetic-orbit")
+        assert executed["aiAnalysis"]["citations"][0]["url"].endswith("/synthetic_orbit_742")
         assert executed["aiAnalysis"]["insights"][0]["evidenceRefs"] == [
             executed["aiAnalysis"]["citations"][0]["referenceId"]
         ]

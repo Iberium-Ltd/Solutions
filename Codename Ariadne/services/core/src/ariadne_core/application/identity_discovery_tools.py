@@ -12,7 +12,9 @@ from __future__ import annotations
 import hashlib
 import ipaddress
 import json
+import re
 import socket
+import unicodedata
 import urllib.error
 import urllib.request
 from contextlib import suppress
@@ -20,7 +22,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from http.client import HTTPMessage
 from typing import IO, Protocol
-from urllib.parse import quote, urlencode, urljoin, urlsplit
+from urllib.parse import quote, unquote, urlencode, urljoin, urlsplit
 
 from ariadne_core.application.public_discovery import PublicDiscoveryService
 from ariadne_core.domain.identity_compiler import ExtractionLimits, compile_text
@@ -239,9 +241,19 @@ class InvestigationToolBroker:
             )
         except (LookupError, ValueError):
             return ToolExecution(state="FAILED_TERMINAL", reason="INVALID_PROVIDER_REQUEST")
+        relevant_results = tuple(
+            result
+            for result in response.results
+            if _search_result_matches_query(
+                task.payload,
+                url=result.url,
+                title=result.title,
+                snippet=result.snippet or "",
+            )
+        )
         state = {
             PublicDiscoveryState.SUCCEEDED: (
-                "SUCCEEDED_RESULTS" if response.results else "SUCCEEDED_EMPTY"
+                "SUCCEEDED_RESULTS" if relevant_results else "SUCCEEDED_EMPTY"
             ),
             PublicDiscoveryState.RATE_LIMITED: "RATE_LIMITED",
             PublicDiscoveryState.ACCESS_BLOCKED: "BLOCKED",
@@ -257,7 +269,7 @@ class InvestigationToolBroker:
                 title=result.title,
                 snippet=result.snippet or "No provider snippet was returned.",
             )
-            for result in response.results
+            for result in relevant_results
         )
         return ToolExecution(state=state, reason=response.reason.value, search_results=results)
 
@@ -483,6 +495,58 @@ def _json_url(value: object) -> str | None:
     return None
 
 
+def _search_result_matches_query(
+    query: str,
+    *,
+    url: str,
+    title: str,
+    snippet: str,
+) -> bool:
+    """Require visible identifier evidence before retaining or crawling a hit.
+
+    Search engines often return login pages, generic help articles, and fuzzy
+    name matches. Ariadne keeps a result only when its URL, title, or provider
+    excerpt visibly contains the queried identifier terms. This is a relevance
+    gate, not an ownership claim.
+    """
+
+    normalised_query = unicodedata.normalize("NFKC", query)
+    required_phrases = tuple(
+        " ".join(match.split()).casefold()
+        for match in re.findall(r'"([^"]+)"', normalised_query)
+        if match.strip()
+    )
+    canonical_query = " ".join(
+        normalised_query.replace('"', " ").replace("'", " ").split()
+    ).casefold()
+    surface = " ".join(
+        unicodedata.normalize("NFKC", unquote(f"{url} {title} {snippet}")).split()
+    ).casefold()
+    if not canonical_query or not surface:
+        return False
+    if required_phrases:
+        return all(phrase in surface for phrase in required_phrases)
+    if canonical_query in surface:
+        return True
+    query_digits = "".join(character for character in canonical_query if character.isdigit())
+    if query_digits and len(query_digits) >= 7:
+        surface_digits = "".join(character for character in surface if character.isdigit())
+        return query_digits in surface_digits
+    tokens = tuple(
+        token
+        for token in re.findall(r"[\w@.+-]+", canonical_query, flags=re.UNICODE)
+        if len(token.strip("@.+-")) >= 2
+        and token not in {"and", "or", "site", "inurl", "intitle", "filetype"}
+    )
+    if not tokens:
+        return False
+    if len(tokens) == 1:
+        return tokens[0] in surface
+    # A multi-word name is meaningful as a phrase; matching its tokens across
+    # unrelated URL/title/snippet fields is too weak to retain as evidence.
+    return False
+
+
 class _PageParser(HTMLParser):
     """Non-rendering, event-bounded text/link extractor for untrusted public HTML."""
 
@@ -638,7 +702,11 @@ def classify_url(url: str, *, page_text: str = "") -> str:
 
 
 def _rank_links(base_url: str, links: list[str]) -> tuple[str, ...]:
-    """Favor bounded same-site/profile paths and exclude obvious state-changing links."""
+    """Retain bounded same-site paths and exclude obvious state-changing links.
+
+    Cross-site URLs may still appear as exact search results, but recursively
+    crawling every outbound link turns a person audit into a generic web crawl.
+    """
 
     base_host = urlsplit(base_url).hostname
     blocked_tokens = (
@@ -666,15 +734,17 @@ def _rank_links(base_url: str, links: list[str]) -> tuple[str, ...]:
     )
     unique = tuple(
         dict.fromkeys(
-            link for link in links if not any(token in link.casefold() for token in blocked_tokens)
+            link
+            for link in links
+            if urlsplit(link).hostname == base_host
+            and not any(token in link.casefold() for token in blocked_tokens)
         )
     )
 
     def score(link: str) -> tuple[int, int, str]:
         lowered = link.casefold()
-        same_host = int(urlsplit(link).hostname == base_host)
         preferred = sum(token in lowered for token in preferred_tokens)
-        return (-same_host, -preferred, link)
+        return (-preferred, len(urlsplit(link).path), link)
 
     return tuple(sorted(unique, key=score)[:MAX_LINKS])
 

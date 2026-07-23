@@ -587,6 +587,7 @@ class Phase3Coordinator:
                     enabled=True,
                     provider=provider,
                     endpoint=settings.local_ai_endpoint,
+                    timeout_seconds=60,
                 ),
                 transport=self._local_ai_transport,
             ).enrich(
@@ -1112,7 +1113,10 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
             return
         local_key = f"entity-{len(drafts)}"
         keys[fingerprint] = local_key
-        highly_sensitive = sensitivity == "HIGHLY_SENSITIVE"
+        # Intake is an authorised public self-audit. New candidates therefore
+        # enter review with searchable, provider-controlled defaults instead of
+        # silently becoming local-only records that cannot seed the audit.
+        sensitivity = "PUBLIC"
         first_origin = origins[0]
         drafts.append(
             EntityDraft(
@@ -1123,16 +1127,10 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
                 display_mask=display_mask,
                 sensitivity=sensitivity,
                 review_state="UNREVIEWED",
-                temporal_state="UNKNOWN",
-                search_policy=(
-                    search_policy
-                    if search_policy is not None
-                    else ("STORE_ONLY" if highly_sensitive else "APPROVAL_REQUIRED")
-                ),
+                temporal_state="CURRENT",
+                search_policy=search_policy if search_policy is not None else "SEARCH_ALLOWED",
                 transmission_policy=(
-                    transmission_policy
-                    if transmission_policy is not None
-                    else ("TRANSMISSION_DENIED" if highly_sensitive else "LOCAL_ONLY")
+                    transmission_policy if transmission_policy is not None else "PROVIDER_ALLOWLIST"
                 ),
                 origin_kind=origin_kind,
                 origin_confidence_micros=confidence_micros,
@@ -1188,7 +1186,7 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
             entity_type=suggestion.entity_type.value,
             canonical_value=canonical,
             display_mask=_local_ai_display_mask(suggestion.entity_type.value, canonical),
-            sensitivity="SENSITIVE",
+            sensitivity="PUBLIC",
             segment_ordinal=0,
             spans=(SourceSpan(suggestion.start, suggestion.end),),
             confidence_micros=suggestion.confidence_micros,
@@ -1198,8 +1196,8 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
                 f"rule={suggestion.explanation_code}"
             ),
             origin_kind="LOCAL_MODEL",
-            search_policy="STORE_ONLY",
-            transmission_policy="LOCAL_ONLY",
+            search_policy="SEARCH_ALLOWED",
+            transmission_policy="PROVIDER_ALLOWLIST",
         )
 
     if structured:

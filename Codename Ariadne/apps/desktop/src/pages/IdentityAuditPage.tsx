@@ -88,6 +88,7 @@ export function IdentityAuditPage() {
   const [view, setView] = useState<AuditView>('RESULTS')
   const [cycle, setCycle] = useState(0)
   const [batchPending, setBatchPending] = useState(false)
+  const [analysisPending, setAnalysisPending] = useState(false)
   const [actionPending, setActionPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -115,10 +116,34 @@ export function IdentityAuditPage() {
           if (!RUNNING_STATES.has(current.audit.state)) break
           await wait(current.audit.revision === previousRevision ? 1_000 : 250)
         }
+        // AI is a distinct terminal phase. Running it after the deterministic
+        // frontier has committed prevents a cold model start from making the
+        // discovery batch appear stuck at 99%, and lets a reopened partial run
+        // recover an analysis that was interrupted when the app closed.
+        if (
+          !cancelled &&
+          TERMINAL_GOOD.has(current.audit.state) &&
+          current.audit.useLocalAi &&
+          current.audit.selectedModel !== null &&
+          current.aiAnalysis === null
+        ) {
+          setAnalysisPending(true)
+          current = await executeIdentityAuditBatch({
+            profileId: profileId!,
+            auditId: auditId!,
+            maximumTasks: 1,
+          })
+          if (cancelled) return
+          setDetail(current)
+          setAnalysisPending(false)
+        }
       } catch {
-        if (!cancelled) setError('The durable audit could not be loaded or advanced. Its last committed state remains in the vault.')
+        if (!cancelled) setError('The audit stopped safely before its next commit. Reload to resume discovery or retry the local AI analysis; the vault remains available.')
       } finally {
-        if (!cancelled) setBatchPending(false)
+        if (!cancelled) {
+          setBatchPending(false)
+          setAnalysisPending(false)
+        }
       }
     }
     void loadAndRun()
@@ -189,6 +214,32 @@ export function IdentityAuditPage() {
     }
   }
 
+  async function runAIAnalysis() {
+    if (
+      profileId === null ||
+      auditId === undefined ||
+      detail === null ||
+      analysisPending ||
+      !detail.audit.useLocalAi ||
+      detail.audit.selectedModel === null
+    ) return
+    setAnalysisPending(true)
+    setError(null)
+    try {
+      const next = await executeIdentityAuditBatch({
+        profileId,
+        auditId,
+        maximumTasks: 1,
+      })
+      setDetail(next)
+      setView('ANALYSIS')
+    } catch {
+      setError('The selected local model did not finish this analysis attempt. The audit is preserved; verify Ollama is running, then retry.')
+    } finally {
+      setAnalysisPending(false)
+    }
+  }
+
   if (profileId === null || auditId === undefined) {
     return (
       <div className="page identity-audit-page" data-testid="route-ready">
@@ -228,14 +279,14 @@ export function IdentityAuditPage() {
       {error ? <div className="callout callout--danger" role="alert"><AlertTriangle size={16} />{error}</div> : null}
 
       <section className="identity-progress-card" aria-live="polite">
-        <div className="identity-progress-card__top"><div><span>{running ? 'Ariadne is working' : 'Durable run state'}</span><strong>{detail.audit.stage.replaceAll('_', ' ')}</strong><small>{detail.audit.terminalTasks} of {detail.audit.totalTasks} frontier tasks terminal{detail.audit.stopReason ? ` · ${detail.audit.stopReason.replaceAll('_', ' ').toLocaleLowerCase()}` : ''}</small></div><strong>{Math.round(percentage)}%</strong></div>
+        <div className="identity-progress-card__top"><div><span>{running || analysisPending ? 'Ariadne is working' : 'Durable run state'}</span><strong>{analysisPending ? 'AI ANALYSIS' : detail.audit.stage.replaceAll('_', ' ')}</strong><small>{analysisPending ? `Loading ${detail.audit.selectedModel ?? 'the selected model'} locally and organising cited results` : `${detail.audit.terminalTasks} of ${detail.audit.totalTasks} frontier tasks terminal${detail.audit.stopReason ? ` · ${detail.audit.stopReason.replaceAll('_', ' ').toLocaleLowerCase()}` : ''}`}</small></div><strong>{analysisPending ? 'AI' : `${Math.round(percentage)}%`}</strong></div>
         <Progress value={percentage} label={`${detail.audit.name} durable progress`} tone={TERMINAL_GOOD.has(detail.audit.state) ? 'green' : 'cyan'} />
         <div className="identity-task-state-strip">{taskStateCounts.map((item) => <Badge key={item.state} tone={stateTone(item.state)}>{item.count} {item.state.replaceAll('_', ' ').toLocaleLowerCase()}</Badge>)}</div>
         <div className="identity-progress-card__controls">
           {running ? <Button variant="secondary" disabled={actionPending || batchPending} onClick={() => void control('PAUSE')}><Pause size={14} />Pause after current batch</Button> : null}
           {detail.audit.state === 'PAUSED' ? <Button variant="primary" disabled={actionPending} onClick={() => void control('RESUME')}><Play size={14} />Resume</Button> : null}
           {['READY', 'RUNNING', 'PAUSED'].includes(detail.audit.state) ? <Button variant="danger" disabled={actionPending || batchPending} onClick={() => void control('CANCEL')}><Square size={13} />Cancel run</Button> : null}
-          <span>{batchPending ? <><LoaderCircle className="spin" size={14} />Executing the next bounded task batch…</> : `Last committed ${formatTime(detail.audit.updatedAtUs)}`}</span>
+          <span>{analysisPending ? <><LoaderCircle className="spin" size={14} />The selected local model is analysing retained sources…</> : batchPending ? <><LoaderCircle className="spin" size={14} />Executing the next bounded task batch…</> : `Last committed ${formatTime(detail.audit.updatedAtUs)}`}</span>
         </div>
       </section>
 
@@ -260,12 +311,12 @@ export function IdentityAuditPage() {
               <span className={unresolvedProposals === 0 ? '' : 'is-pending'}>{unresolvedProposals === 0 ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}<strong>Human review</strong><small>{unresolvedProposals === 0 ? 'No unresolved proposals' : 'Review proposals before final export'}</small></span>
               <span><ShieldCheck size={16} /><strong>Analysis labelled</strong><small>{detail.aiAnalysis?.status.toLocaleLowerCase() ?? 'No analysis produced'}</small></span>
             </div>
-            {unresolvedProposals > 0 ? (
-              <Button variant="primary" onClick={() => setView('REVIEW')}>
-                Review {unresolvedProposals} proposal{unresolvedProposals === 1 ? '' : 's'}
-              </Button>
-            ) : (
-              <div className="identity-finish__export">
+            <div className="identity-finish__export">
+              {unresolvedProposals > 0 ? (
+                <Button variant="secondary" onClick={() => setView('REVIEW')}>
+                  Review {unresolvedProposals} proposal{unresolvedProposals === 1 ? '' : 's'}
+                </Button>
+              ) : null}
                 <label className="field">
                   <span>Final package</span>
                   <select
@@ -285,8 +336,7 @@ export function IdentityAuditPage() {
                   {packagePending ? <LoaderCircle className="spin" size={14} /> : <Download size={14} />}
                   {packagePending ? 'Building package…' : 'Generate and download'}
                 </Button>
-              </div>
-            )}
+            </div>
             {auditPackage ? (
               <div className="identity-finish__artifact" role="status">
                 <FileText size={16} />
@@ -294,7 +344,7 @@ export function IdentityAuditPage() {
                 <Button size="compact" variant="secondary" onClick={() => savePackage(auditPackage)}><Download size={13} />Download again</Button>
               </div>
             ) : null}
-            <p className="text-muted">The package includes exact result URLs, provider coverage and failures, cited analysis, proposal decisions, and explicit uncertainty. Nothing is uploaded.</p>
+            <p className="text-muted">The package includes exact result URLs, provider coverage and failures, cited analysis, proposal decisions, and explicit uncertainty. Unreviewed proposals remain clearly labelled; they no longer prevent finishing the audit.</p>
           </div>
         </Panel>
       ) : null}
@@ -326,7 +376,7 @@ export function IdentityAuditPage() {
 
       {view === 'ANALYSIS' ? (
         <Panel eyebrow="Cited reasoning" title={detail.aiAnalysis?.title ?? 'No analysis produced'} action={detail.aiAnalysis ? <Badge tone={detail.aiAnalysis.status === 'SUCCEEDED' ? 'violet' : 'amber'}>{detail.aiAnalysis.status.toLocaleLowerCase()}</Badge> : undefined}>
-          {detail.aiAnalysis === null ? <div className="empty-state"><Sparkles size={28} /><h2>No AI analysis for this run</h2><p>Enable a selected local model before starting an audit. Deterministic discovery remains fully available without it.</p></div> : <div className="identity-ai-analysis">
+          {detail.aiAnalysis === null ? <div className="empty-state"><Sparkles size={28} /><h2>{analysisPending ? 'Local AI is analysing this run' : 'No AI analysis yet'}</h2><p>{analysisPending ? `Ariadne is loading ${detail.audit.selectedModel ?? 'the selected model'} and grounding every insight in retained source URLs.` : detail.audit.useLocalAi && detail.audit.selectedModel !== null ? 'The audit is preserved and ready for a local-model retry.' : 'Enable a selected local model before starting an audit. Deterministic discovery remains fully available without it.'}</p>{detail.audit.useLocalAi && detail.audit.selectedModel !== null && !analysisPending ? <Button variant="primary" onClick={() => void runAIAnalysis()}><Sparkles size={14} />Run AI analysis now</Button> : null}</div> : <div className="identity-ai-analysis">
             <p className="identity-ai-analysis__summary">{detail.aiAnalysis.summary}</p>
             <div className="identity-card-grid">{detail.aiAnalysis.insights.map((insight, index) => <article className="identity-knowledge-card" key={`${insight.kind}-${index}`}><header><Badge tone="violet">{insight.kind.replaceAll('_', ' ').toLocaleLowerCase()}</Badge>{insight.confidence ? <span>{insight.confidence.toLocaleLowerCase()} confidence</span> : null}</header><strong>{insight.statement}</strong><p>{insight.rationale}</p><div className="chip-wrap">{insight.evidenceRefs.map((reference) => <Badge key={reference}>{reference}</Badge>)}</div></article>)}</div>
             <div className="identity-ai-citations">{detail.aiAnalysis.citations.map((citation) => <article className="identity-result-row" key={citation.referenceId}><Sparkles size={15} /><div><strong>{citation.title || citation.url}</strong><code>{citation.url}</code><small>{citation.referenceId}</small></div><Button size="compact" variant="secondary" onClick={() => void copy(citation.url, citation.referenceId)}><Clipboard size={13} />{copied === citation.referenceId ? 'Copied' : 'Copy URL'}</Button></article>)}</div>

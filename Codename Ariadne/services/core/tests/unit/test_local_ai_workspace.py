@@ -115,11 +115,22 @@ def test_workspace_uses_explicit_ollama_model_and_exact_json_schema() -> None:
     assert payload["model"] == "qwen-local:30b"
     assert payload["stream"] is False
     assert payload["think"] is False
-    assert payload["options"] == {"num_predict": 2048, "temperature": 0}
+    assert payload["keep_alive"] == "10m"
+    assert payload["options"] == {
+        "num_ctx": 8192,
+        "num_predict": 2048,
+        "temperature": 0,
+    }
     assert payload["format"]["additionalProperties"] is False
     assert "$defs" not in payload["format"]
     assert "$ref" not in json.dumps(payload["format"])
     assert payload["format"]["properties"]["facts"]["items"]["additionalProperties"] is False
+    assert payload["format"]["properties"]["facts"]["items"]["properties"]["evidence_refs"][
+        "items"
+    ]["enum"] == [reference]
+    assert payload["format"]["properties"]["connections"]["maxItems"] == 0
+    assert payload["format"]["properties"]["facts"]["maxItems"] == 3
+    assert payload["format"]["properties"]["unanswered"] == {"type": "null"}
     assert "unanswered" in payload["format"]["required"]
     assert "SUMMARY contract" in payload["messages"][1]["content"]
     assert "documentId, textSha256" in payload["messages"][0]["content"]

@@ -1,5 +1,5 @@
 /** Local intake UI for bounded paste/file preparation before entity review. */
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -19,7 +19,11 @@ import { nativeRuntimeAvailable } from '../app/coreBoundary'
 import { submitFileIntake, submitPastedIntake } from '../app/phase3Boundary'
 import { prepareSelectedIntakeFile } from '../app/selectedIntakeFile'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
-import type { IntakeReceipt } from '../../../../packages/contracts/src/generated/api'
+import { getLocalAISettings } from '../app/localAiBoundary'
+import type {
+  IntakeReceipt,
+  LocalAISettings,
+} from '../../../../packages/contracts/src/generated/api'
 
 const syntheticText = `Morgan Vale uses the historical handle @night_orbit.
 Contact: morgan.vale@example.invalid
@@ -71,6 +75,8 @@ function NativeIntakePage() {
   const [status, setStatus] = useState<NativeIntakeStatus>('IDLE')
   const [receipt, setReceipt] = useState<IntakeReceipt | null>(null)
   const [safeError, setSafeError] = useState<string | null>(null)
+  const [localAiSettings, setLocalAiSettings] =
+    useState<LocalAISettings | null>(null)
   const [fileState, setFileState] = useState<'NONE' | 'PROCESSING' | 'ACCEPTED'>(
     'NONE',
   )
@@ -81,6 +87,20 @@ function NativeIntakePage() {
   const fileIntakeRetry = useRef<FileIntakeRetryBinding | null>(null)
   const pending = status === 'PROCESSING'
   const ready = status === 'READY' && receipt !== null
+  const activeModel =
+    localAiSettings?.enabled === true ? localAiSettings.selectedModel : null
+
+  useEffect(() => {
+    let cancelled = false
+    void getLocalAISettings()
+      .then((settings) => {
+        if (!cancelled) setLocalAiSettings(settings)
+      })
+      .catch(() => {
+        if (!cancelled) setLocalAiSettings(null)
+      })
+    return () => { cancelled = true }
+  }, [])
 
   function acceptReceipt(nextReceipt: IntakeReceipt, expectedProfileId: string) {
     if (nextReceipt.profileId !== expectedProfileId) {
@@ -223,7 +243,9 @@ function NativeIntakePage() {
         meta={
           <>
             <Badge tone="green" dot>Native local processing</Badge>
-            <Badge tone="cyan">5 MVP file types</Badge>
+            <Badge tone={activeModel === null ? 'neutral' : 'violet'}>
+              {activeModel === null ? 'AI off' : `AI · ${activeModel}`}
+            </Badge>
           </>
         }
         actions={
@@ -244,8 +266,8 @@ function NativeIntakePage() {
 
       <div className="compact-workflow-action compact-workflow-action--intake" role="region" aria-label="Intake step action">
         <div>
-          <strong>{ready ? `${candidateCount} candidates ready` : pending ? 'Processing locally' : 'Extraction required'}</strong>
-          <span>{quarantineCount > 0 ? `${quarantineCount} restricted value${quarantineCount === 1 ? '' : 's'} quarantined` : 'No source content leaves this Mac'}</span>
+          <strong>{ready ? `${candidateCount} candidates ready` : pending ? activeModel === null ? 'Processing locally' : `Extracting with ${activeModel}` : 'Extraction required'}</strong>
+          <span>{quarantineCount > 0 ? `${quarantineCount} restricted value${quarantineCount === 1 ? '' : 's'} quarantined` : activeModel === null ? 'Deterministic extraction · no model selected' : 'Natural-language clues are enriched by the selected local model'}</span>
         </div>
         <Link className={`button button--primary ${!ready ? 'is-disabled' : ''}`} to={ready ? '/audits/new/entities' : '#'} aria-disabled={!ready}>
           Review candidates <ArrowRight size={14} />
@@ -261,7 +283,7 @@ function NativeIntakePage() {
               className="textarea intake-textarea mono"
               value={text}
               maxLength={262_144}
-              placeholder="Paste authorised source text here. It is held only in memory while this screen is open."
+              placeholder="Write naturally or paste structured identifiers—for example: “My name is…, I also use…, I study at…, and my username is…”."
               onChange={(event) => {
                 setText(event.target.value)
                 setReceipt(null)

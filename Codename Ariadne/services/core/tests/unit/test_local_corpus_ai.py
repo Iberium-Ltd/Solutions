@@ -420,7 +420,7 @@ def test_live_selected_ollama_model_preserves_exact_corpus_sources(
         )
     )
 
-    assert result.execution_mode is LocalCorpusAIExecution.LOCAL_MODEL
+    assert result.execution_mode is LocalCorpusAIExecution.LOCAL_MODEL, result.fallback_reason
     assert result.model_id == model
     catalog = _resolved_catalog(result)
     cited = {reference for fact in result.facts for reference in fact.evidence_refs}
@@ -521,7 +521,12 @@ def test_selected_loopback_model_uses_strict_schema_and_preserves_source_catalog
     assert payload["model"] == "qwen3:30b"
     assert payload["stream"] is False
     assert payload["think"] is False
-    assert payload["options"] == {"num_predict": 2048, "temperature": 0}
+    assert payload["keep_alive"] == "10m"
+    assert payload["options"] == {
+        "num_ctx": 8192,
+        "num_predict": 2048,
+        "temperature": 0,
+    }
     assert payload["format"]["additionalProperties"] is False
     assert wire.timeout_seconds == 98
     profile_records = json.loads(
