@@ -195,7 +195,7 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
             },
             headers=_headers(),
         )
-        assert intake_response.status_code == 200
+        assert intake_response.status_code == 200, intake_response.text
         review_response = await client.post(
             "/v1/intake/review",
             json={"profileId": profile_id, "limit": 100},
@@ -371,6 +371,44 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
         assert workspace["person"]["identityCount"] == 2
         assert workspace["audits"][0]["auditId"] == audit_id
         assert workspace["audits"][0]["taskStates"]
+
+        # Completed recursive runs retain nullable parent-task links. Profile
+        # deletion must break those self references and erase the whole durable
+        # workspace in one transaction.
+        tasks = Table("identity_frontier_tasks", metadata, autoload_with=manager.engine)
+        with manager.engine.begin() as connection:
+            parent = (
+                connection.execute(select(tasks).where(tasks.c.audit_id == audit_id))
+                .mappings()
+                .one()
+            )
+            child = dict(parent)
+            child.update(
+                id=str(uuid4()),
+                parent_task_id=str(parent["id"]),
+                payload_text="synthetic-child-query",
+                payload_hmac="b" * 64,
+                masked_payload="synthetic-child-query",
+                state="BLOCKED",
+                stop_reason="SYNTHETIC_TEST_TERMINAL",
+                revision=1,
+            )
+            connection.execute(insert(tasks).values(**child))
+
+        profiles_response = await client.get("/v1/profiles", headers=_headers())
+        assert profiles_response.status_code == 200
+        profile = profiles_response.json()["profiles"][0]
+        deleted = await client.post(
+            "/v1/profiles/delete",
+            json={
+                "profileId": profile_id,
+                "expectedRevision": profile["revision"],
+                "confirmationLabel": profile["displayLabel"],
+            },
+            headers=_headers(),
+        )
+        assert deleted.status_code == 200, deleted.text
+        assert (await client.get("/v1/profiles", headers=_headers())).json()["profiles"] == []
 
     assert len(local_ai_transport.requests) == 1
 

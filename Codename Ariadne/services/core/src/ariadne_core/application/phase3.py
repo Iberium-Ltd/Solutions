@@ -1074,11 +1074,6 @@ def _quarantine(prepared: PreparedIntake) -> tuple[QuarantineDraft, ...]:
 def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
     drafts: list[EntityDraft] = []
     keys: dict[tuple[str, str], str] = {}
-    structured = prepared.parsed.source_format in {
-        SourceFormat.CSV,
-        SourceFormat.JSON,
-        SourceFormat.VCARD,
-    }
 
     def append(
         *,
@@ -1143,18 +1138,19 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
             )
         )
 
-    if not structured:
-        for candidate in prepared.deterministic.candidates:
-            append(
-                entity_type=candidate.entity_type.value,
-                canonical_value=candidate.canonical_value,
-                display_mask=candidate.display_mask,
-                sensitivity=candidate.sensitivity.value,
-                segment_ordinal=0,
-                spans=candidate.spans,
-                confidence_micros=candidate.confidence_micros,
-                explanation=candidate.extractor,
-            )
+    # Structured files can contain free-text cells or trailing notes. Merge the
+    # full-source compiler instead of assuming every clue was a typed record.
+    for candidate in prepared.deterministic.candidates:
+        append(
+            entity_type=candidate.entity_type.value,
+            canonical_value=candidate.canonical_value,
+            display_mask=candidate.display_mask,
+            sensitivity=candidate.sensitivity.value,
+            segment_ordinal=0,
+            spans=candidate.spans,
+            confidence_micros=candidate.confidence_micros,
+            explanation=candidate.extractor,
+        )
     for item in prepared.structured_candidates:
         candidate = item.candidate
         append(
@@ -1167,18 +1163,17 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
             confidence_micros=candidate.confidence_micros,
             explanation=candidate.extractor,
         )
-    if not structured:
-        for entity in prepared.semantic.entities:
-            append(
-                entity_type=entity.entity_type.value,
-                canonical_value=entity.canonical_value,
-                display_mask=entity.display_mask,
-                sensitivity=entity.sensitivity.value,
-                segment_ordinal=0,
-                spans=(entity.span,),
-                confidence_micros=entity.confidence_micros,
-                explanation=entity.rule_code,
-            )
+    for entity in prepared.semantic.entities:
+        append(
+            entity_type=entity.entity_type.value,
+            canonical_value=entity.canonical_value,
+            display_mask=entity.display_mask,
+            sensitivity=entity.sensitivity.value,
+            segment_ordinal=0,
+            spans=(entity.span,),
+            confidence_micros=entity.confidence_micros,
+            explanation=entity.rule_code,
+        )
 
     for suggestion in prepared.local_ai.suggestions:
         canonical = _normalise_local_ai_surface(suggestion.surface)
@@ -1199,9 +1194,6 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
             search_policy="SEARCH_ALLOWED",
             transmission_policy="PROVIDER_ALLOWLIST",
         )
-
-    if structured:
-        return tuple(drafts)
 
     for relationship in prepared.semantic.relationships:
         if relationship.relationship_type.value not in {"PREVIOUS_USERNAME", "CURRENT_USERNAME"}:
@@ -1226,12 +1218,6 @@ def _entities(prepared: PreparedIntake) -> tuple[EntityDraft, ...]:
 
 
 def _edges(prepared: PreparedIntake) -> tuple[EdgeDraft, ...]:
-    if prepared.parsed.source_format in {
-        SourceFormat.CSV,
-        SourceFormat.JSON,
-        SourceFormat.VCARD,
-    }:
-        return ()
     entity_keys = {
         (draft.entity_type, draft.canonical_value): draft.local_key for draft in _entities(prepared)
     }

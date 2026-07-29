@@ -419,12 +419,15 @@ def test_live_ollama_workspace_schema() -> None:
         LocalAIConfig(
             enabled=True,
             endpoint="http://127.0.0.1:11434",
-            timeout_seconds=60,
+            timeout_seconds=120,
             max_output_tokens=1_024,
         )
     )
 
     try:
+        # Match the desktop workflow: prove the chosen model is actually loaded
+        # before asking it for a source-grounded analysis.
+        client.preload(model_id=model)
         result = client.analyze_workspace(_request(), model_id=model)
     except LocalAIError as error:
         # An undersized model may violate the accepted schema or invent a ref; that is a safe,

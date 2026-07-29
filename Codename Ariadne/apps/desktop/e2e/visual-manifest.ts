@@ -188,7 +188,7 @@ export const majorVisualCases = [
     heading: 'Private by default, explicit by design',
     documentTitle: 'Privacy & Settings · Codename Ariadne',
     activeNavigation: 'Privacy & Settings',
-    proof: 'Auto-lock, retention, redaction, local AI, connectors, telemetry off, and motion controls',
+    proof: 'Manual vault session, retention, redaction, local AI, connectors, telemetry off, and motion controls',
   },
   {
     id: 'M17',

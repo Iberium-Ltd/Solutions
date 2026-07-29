@@ -469,6 +469,93 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
 .profile-delete-button:disabled { opacity: .36; cursor: default; }
 .profile-delete-button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 
+.profile-delete-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  padding: 24px;
+  background: rgb(2 7 16 / 76%);
+  backdrop-filter: blur(7px);
+  display: grid;
+  place-items: center;
+}
+
+.profile-delete-dialog {
+  position: relative;
+  inline-size: min(480px, 100%);
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: 0 24px 90px rgb(0 0 0 / 55%);
+}
+
+.profile-delete-dialog h2 {
+  margin: 8px 0;
+  font-size: calc(22px * var(--font-scale));
+}
+
+.profile-delete-dialog p {
+  margin: 0 0 20px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.profile-delete-dialog label {
+  display: block;
+  margin-block-end: 7px;
+  color: var(--color-text-secondary);
+  font-weight: 650;
+}
+
+.profile-delete-dialog input {
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding-inline: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-shell);
+  color: var(--color-text);
+}
+
+.profile-delete-dialog__close {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-end: 16px;
+  inline-size: 34px;
+  block-size: 34px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+}
+
+.profile-delete-dialog__close:hover:not(:disabled) {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.profile-delete-dialog .profile-delete-dialog__error {
+  margin: 10px 0 0;
+  color: var(--color-danger);
+}
+
+.profile-delete-dialog__actions {
+  margin-block-start: 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.audit-ai-load-actions {
+  min-block-size: 42px;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
 .contextbar {
   padding-inline: 22px 17px;
   border-block-end: 1px solid var(--color-border-subtle);

@@ -853,3 +853,56 @@ async def test_retained_structured_source_redacts_short_password_cell_before_per
     assert f"\n{secret}\n" not in f"\n{persisted}\n"
     assert "structured.safe@example.invalid" in persisted
     manager.lock()
+
+
+@pytest.mark.anyio
+async def test_mixed_csv_and_natural_language_retains_all_searchable_clues(
+    tmp_path: Path,
+) -> None:
+    """Typed rows must not suppress free-text clues in the same intake file."""
+
+    manager = VaultManager(tmp_path / "vault", MemoryKeyCustodian())
+    manager.create(display_name="Synthetic mixed-intake vault")
+    app = _app(manager)
+    content = (
+        "username,synthetic_orbit_742,current\n"
+        "name,Morgan Vale,current\n"
+        "Morgan Vale works at Northbridge Systems.\n"
+        "Morgan Vale lives in Greyhaven.\n"
+    )
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url=f"http://{HOST}",
+    ) as client:
+        profile = await _create_profile(client, "Synthetic mixed-intake profile")
+        accepted = await client.post(
+            "/v1/intake/paste",
+            json={
+                "idempotencyKey": _idempotency_key(),
+                "profileId": profile["profileId"],
+                "displayName": "Synthetic mixed source",
+                "content": content,
+                "consentConfirmed": True,
+                "retainRawSource": False,
+                "semanticEnrichmentEnabled": True,
+            },
+            headers=_headers(),
+        )
+        assert accepted.status_code == 200, accepted.text
+        review = await client.post(
+            "/v1/intake/review",
+            json={"profileId": profile["profileId"], "limit": 100},
+            headers=_headers(),
+        )
+
+    assert review.status_code == 200, review.text
+    entities = review.json()["entities"]
+    assert {"USERNAME", "PERSON", "ORGANISATION", "LOCATION"} <= {
+        item["entityType"] for item in entities
+    }
+    assert all(item["sensitivity"] == "PUBLIC" for item in entities)
+    assert all(item["temporalState"] == "CURRENT" for item in entities)
+    assert all(item["searchPolicy"] == "ALLOW" for item in entities)
+    assert all(item["transmissionPolicy"] == "POLICY_CONTROLLED" for item in entities)
+    manager.lock()

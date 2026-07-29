@@ -826,6 +826,12 @@ class _Adapter(Protocol):
 
     def parse_models(self, payload: object, *, maximum: int) -> tuple[str, ...]: ...
 
+    def preload_path(self) -> str: ...
+
+    def preload_body(self, *, model_id: str) -> dict[str, object]: ...
+
+    def validate_preload(self, payload: object, *, model_id: str) -> None: ...
+
     def enrichment_path(self) -> str: ...
 
     def enrichment_body(
@@ -864,6 +870,24 @@ class _OllamaAdapter:
             candidate = model.get("model", model.get("name"))
             identifiers.append(_validated_model_id(candidate))
         return _deduplicated(identifiers)
+
+    def preload_path(self) -> str:
+        return "/api/generate"
+
+    def preload_body(self, *, model_id: str) -> dict[str, object]:
+        # An empty generation with keep_alive makes Ollama load the exact model
+        # without sending identity material or producing user-facing content.
+        return {
+            "model": model_id,
+            "prompt": "",
+            "stream": False,
+            "keep_alive": "10m",
+        }
+
+    def validate_preload(self, payload: object, *, model_id: str) -> None:
+        root = _object_mapping(payload)
+        if root.get("model") != model_id or root.get("done") is not True:
+            raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE)
 
     def enrichment_path(self) -> str:
         return "/api/chat"
@@ -937,6 +961,28 @@ class _OpenAICompatibleAdapter:
             raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE)
         identifiers = [_validated_model_id(_object_mapping(item).get("id")) for item in items]
         return _deduplicated(identifiers)
+
+    def preload_path(self) -> str:
+        return "/v1/chat/completions"
+
+    def preload_body(self, *, model_id: str) -> dict[str, object]:
+        # LM Studio loads a selected model when the first bounded completion is
+        # requested. The fixed synthetic token contains no workspace content.
+        return {
+            "model": model_id,
+            "messages": [{"role": "user", "content": "Reply OK."}],
+            "stream": False,
+            "temperature": 0,
+            "max_tokens": 1,
+        }
+
+    def validate_preload(self, payload: object, *, model_id: str) -> None:
+        root = _object_mapping(payload)
+        if root.get("model") != model_id:
+            raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE)
+        choices = root.get("choices")
+        if not isinstance(choices, list) or len(choices) < 1:
+            raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE)
 
     def enrichment_path(self) -> str:
         return "/v1/chat/completions"
@@ -1040,6 +1086,23 @@ class LocalAIClient:
         except Exception:
             raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE) from None
         return tuple(LocalAIModel(self._adapter.provider, item) for item in identifiers)
+
+    def preload(self, *, model_id: str) -> None:
+        """Load one explicitly selected local model without workspace content."""
+
+        self._require_enabled()
+        selected_model = _validated_model_id(model_id, selection=True)
+        payload = self._request_json(
+            "POST",
+            self._adapter.preload_path(),
+            body=self._adapter.preload_body(model_id=selected_model),
+        )
+        try:
+            self._adapter.validate_preload(payload, model_id=selected_model)
+        except LocalAIError:
+            raise
+        except Exception:
+            raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE) from None
 
     def enrich(
         self,

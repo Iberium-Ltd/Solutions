@@ -139,7 +139,7 @@ Remediation supports monitoring, evidence preservation, owned-account deletion, 
 ## 13. Privacy and security baseline
 
 - Local-first, no telemetry by default, no real identity data in tracked or generated development material.
-- Encryption at rest, macOS Keychain key custody, auto-lock, least privilege, safe rendering, strict CSP, and redacted structured logs.
+- Encryption at rest, macOS Keychain key custody, explicit manual/app-exit locking, least privilege, safe rendering, strict CSP, and redacted structured logs.
 - Isolated and bounded parsing/browser workers; hostile webpage and file content is data, never instructions.
 - Cross-profile scoping in every row, blob, cache key, job, and export.
 - Minimal connector ingestion: metadata first, message/file bodies only when explicitly preserved.
@@ -151,4 +151,3 @@ Remediation supports monitoring, evidence preservation, owned-account deletion, 
 Testing covers extraction and normalisation, sensitivity and transmission policy, query compilation, correlation, deduplication, diffing, redaction and hashing, providers, adapters, migrations, evidence, graph updates, retry/cancel/resume, imports and exports, encryption, synthetic end-to-end journeys, failures and blocks, visual states and viewports, reduced motion, long content, accessibility, and repository privacy.
 
 The first serious release additionally requires clean startup on the target Mac; real progress state; provenance for every result and graph connection; evidence capture and hashing; run comparison; remediation tracking; visible transmission risk; full and redacted exports; passing tests; documented limitations; and no claim of completeness.
-

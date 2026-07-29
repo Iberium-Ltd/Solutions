@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Iterable
 
 import pytest
@@ -162,6 +163,39 @@ def test_openai_compatible_lists_lm_studio_served_models() -> None:
     assert models[0].provider is LocalAIProvider.OPENAI_COMPATIBLE
     assert models[0].model_id == "lmstudio-community/model-gguf"
     assert transport.requests[0].url == "http://127.0.0.1:1234/v1/models"
+
+
+def test_ollama_preloads_exact_model_without_workspace_content() -> None:
+    transport = RecordingTransport([_json_response({"model": "qwen-local:7b", "done": True})])
+    client = LocalAIClient(LocalAIConfig(enabled=True), transport=transport)
+
+    client.preload(model_id="qwen-local:7b")
+
+    request = transport.requests[0]
+    assert request.url == "http://127.0.0.1:11434/api/generate"
+    assert json.loads(request.body or b"") == {
+        "model": "qwen-local:7b",
+        "prompt": "",
+        "stream": False,
+        "keep_alive": "10m",
+    }
+
+
+def test_lm_studio_preload_uses_one_synthetic_token() -> None:
+    transport = RecordingTransport(
+        [_json_response({"model": "lmstudio-community/model-gguf", "choices": [{}]})]
+    )
+    config = LocalAIConfig(
+        enabled=True,
+        provider=LocalAIProvider.OPENAI_COMPATIBLE,
+        endpoint="http://127.0.0.1:1234",
+    )
+
+    LocalAIClient(config, transport=transport).preload(model_id="lmstudio-community/model-gguf")
+
+    request = transport.requests[0]
+    assert request.url == "http://127.0.0.1:1234/v1/chat/completions"
+    assert json.loads(request.body or b"")["messages"] == [{"role": "user", "content": "Reply OK."}]
 
 
 def test_ollama_executes_bounded_grounded_structured_enrichment() -> None:
@@ -341,3 +375,28 @@ def test_non_success_and_malformed_json_never_surface_upstream_bodies() -> None:
         malformed.list_models()
     assert json_error.value.code is LocalAIErrorCode.INVALID_RESPONSE
     assert sensitive_marker not in str(json_error.value)
+
+
+@pytest.mark.skipif(
+    os.getenv("ARIADNE_RUN_LIVE_LOCAL_AI") != "1",
+    reason="set ARIADNE_RUN_LIVE_LOCAL_AI=1 for the opt-in loopback model test",
+)
+def test_live_ollama_preload_and_natural_language_extraction() -> None:
+    model = os.getenv("ARIADNE_LIVE_LOCAL_AI_MODEL", "qwen3:30b")
+    text = (
+        "Morgan Vale studies at Northbridge University and lives in Greyhaven. "
+        "Morgan Vale also uses the alias night_orbit."
+    )
+    client = LocalAIClient(
+        LocalAIConfig(
+            enabled=True,
+            endpoint="http://127.0.0.1:11434",
+            timeout_seconds=120,
+        )
+    )
+
+    client.preload(model_id=model)
+    result = client.enrich(EnrichmentRequest(redacted_text=text), model_id=model)
+
+    assert result.model_id == model
+    assert all(text[entity.start : entity.end] == entity.surface for entity in result.entities)

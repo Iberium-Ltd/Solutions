@@ -14,26 +14,26 @@ use std::sync::{
 };
 
 use core::{
-    AppActivity, CoreCapabilities, CoreCommandError, CoreCommandResponse,
-    CoreEntityDecisionRequest, CoreEntityOriginPageRequest, CoreEntityOriginPageResult,
-    CoreEntityReviewRequest, CoreEntityReviewResult, CoreEntitySummary, CoreFileIntakeRequest,
-    CoreGraphSnapshot, CoreGraphSnapshotRequest, CoreHibpAccountRequest, CoreHibpAccountResult,
-    CoreHibpDomainRequest, CoreHibpDomainResult, CoreIdentityAuditControlRequest,
-    CoreIdentityAuditCreateRequest, CoreIdentityAuditDetail, CoreIdentityAuditExecuteRequest,
-    CoreIdentityPersonUpdateRequest, CoreIdentityProposalDecisionRequest,
-    CoreIdentitySourceCreateRequest, CoreIdentityWorkspace, CoreIdentityWorkspaceRequest,
-    CoreIntakeReceipt, CoreInvestigationPlanRequest, CoreInvestigationPlanResult,
-    CoreLocalAiConnectionResult, CoreLocalAiEndpointRequest, CoreLocalAiModelDiscoveryResult,
-    CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest, CoreLocalAiWorkspaceRequest,
-    CoreLocalAiWorkspaceResult, CoreLocalCorpusAiRequest, CoreLocalCorpusAiResult,
-    CoreLocalReportGenerateRequest, CoreLocalReportGenerateResult, CorePasteIntakeRequest,
-    CorePhase5AttributionDecisionRequest, CorePhase5AttributionDecisionResult,
-    CorePhase5FindingDetailRequest, CorePhase5FindingDetailResult, CorePhase5FindingListRequest,
-    CorePhase5FindingListResult, CorePhase5ManualEvidenceImportRequest,
-    CorePhase5ManualEvidenceImportResult, CorePhase5ManualFindingCreateRequest,
-    CorePhase5RedactedDerivativeRequest, CorePhase5RedactedDerivativeResult,
-    CorePhase6AuditRunListRequest, CorePhase6AuditRunListResult, CorePhase6CompareRunsRequest,
-    CorePhase6ComparisonResult, CorePhase6LocalCheckpointRequest, CorePhase6LocalCheckpointResult,
+    CoreCapabilities, CoreCommandError, CoreCommandResponse, CoreEntityDecisionRequest,
+    CoreEntityOriginPageRequest, CoreEntityOriginPageResult, CoreEntityReviewRequest,
+    CoreEntityReviewResult, CoreEntitySummary, CoreFileIntakeRequest, CoreGraphSnapshot,
+    CoreGraphSnapshotRequest, CoreHibpAccountRequest, CoreHibpAccountResult, CoreHibpDomainRequest,
+    CoreHibpDomainResult, CoreIdentityAuditControlRequest, CoreIdentityAuditCreateRequest,
+    CoreIdentityAuditDetail, CoreIdentityAuditExecuteRequest, CoreIdentityPersonUpdateRequest,
+    CoreIdentityProposalDecisionRequest, CoreIdentitySourceCreateRequest, CoreIdentityWorkspace,
+    CoreIdentityWorkspaceRequest, CoreIntakeReceipt, CoreInvestigationPlanRequest,
+    CoreInvestigationPlanResult, CoreLocalAiConnectionResult, CoreLocalAiEndpointRequest,
+    CoreLocalAiModelDiscoveryResult, CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest,
+    CoreLocalAiWorkspaceRequest, CoreLocalAiWorkspaceResult, CoreLocalCorpusAiRequest,
+    CoreLocalCorpusAiResult, CoreLocalReportGenerateRequest, CoreLocalReportGenerateResult,
+    CorePasteIntakeRequest, CorePhase5AttributionDecisionRequest,
+    CorePhase5AttributionDecisionResult, CorePhase5FindingDetailRequest,
+    CorePhase5FindingDetailResult, CorePhase5FindingListRequest, CorePhase5FindingListResult,
+    CorePhase5ManualEvidenceImportRequest, CorePhase5ManualEvidenceImportResult,
+    CorePhase5ManualFindingCreateRequest, CorePhase5RedactedDerivativeRequest,
+    CorePhase5RedactedDerivativeResult, CorePhase6AuditRunListRequest,
+    CorePhase6AuditRunListResult, CorePhase6CompareRunsRequest, CorePhase6ComparisonResult,
+    CorePhase6LocalCheckpointRequest, CorePhase6LocalCheckpointResult,
     CorePhase6RemediationCreateRequest, CorePhase6RemediationDeadlineUpdateRequest,
     CorePhase6RemediationDetailRequest, CorePhase6RemediationDetailResult,
     CorePhase6RemediationDraftUpdateRequest, CorePhase6RemediationEvidenceLinkRequest,
@@ -45,7 +45,7 @@ use core::{
     CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest, CorePublicDiscoveryCaptureResult,
     CorePublicDiscoverySearchRequest, CorePublicDiscoverySearchResult, CoreQueryDryRunRequest,
     CoreQueryPlanCell, CoreQueryPlanRequest, CoreQueryPlanResult, CoreSession, CoreSupervisor,
-    CoreVaultLifecycleResult, spawn_auto_lock, spawn_event_relay,
+    CoreVaultLifecycleResult, spawn_event_relay,
 };
 use security::KeyCustody;
 use tauri::Manager;
@@ -510,8 +510,6 @@ async fn core_decide_identity_proposal(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // State is constructed once here so every command shares one supervised core.
-    let activity = AppActivity::default();
-    let setup_activity = activity.clone();
     let application = tauri::Builder::default()
         .setup(move |app| {
             let vault_root = app.path().app_data_dir()?.join("vault");
@@ -519,7 +517,6 @@ pub fn run() {
             let key_custody = KeyCustody::platform();
             app.manage(supervisor.clone());
             app.manage(key_custody);
-            spawn_auto_lock(supervisor.clone(), setup_activity.clone());
             supervisor.spawn_crash_monitor();
             spawn_event_relay(app.handle().clone(), supervisor.clone());
             tauri::async_runtime::spawn(async move {
@@ -593,17 +590,10 @@ pub fn run() {
         .expect("error while building tauri application");
 
     let exit_started = Arc::new(AtomicBool::new(false));
-    let mut platform_observers = None;
     application.run(move |app_handle, event| match event {
-        tauri::RunEvent::Ready => {
-            platform_observers = Some(platform::PlatformSecurityObservers::install(
-                app_handle.state::<CoreSupervisor>().inner().clone(),
-            ));
-        }
         tauri::RunEvent::ExitRequested { code, api, .. } => {
             if !exit_started.swap(true, Ordering::AcqRel) {
                 api.prevent_exit();
-                platform_observers.take();
                 let supervisor = app_handle.state::<CoreSupervisor>().inner().clone();
                 let app_handle = app_handle.clone();
                 let exit_code = code.unwrap_or_default();
@@ -614,13 +604,8 @@ pub fn run() {
             }
         }
         tauri::RunEvent::Exit => {
-            platform_observers.take();
             app_handle.state::<CoreSupervisor>().force_stop();
         }
-        tauri::RunEvent::WindowEvent {
-            event: tauri::WindowEvent::Focused(focused),
-            ..
-        } => activity.set_focused(focused),
         _ => {}
     });
 }

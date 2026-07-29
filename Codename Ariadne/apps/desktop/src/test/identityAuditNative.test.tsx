@@ -87,6 +87,29 @@ describe('terminal native identity audit workflow', () => {
       if (command === 'core_get_identity_audit') {
         return { requestId, data: partialWithoutAnalysis }
       }
+      if (command === 'core_get_local_ai_settings') {
+        return {
+          requestId,
+          data: {
+            enabled: true,
+            provider: 'OLLAMA',
+            endpoint: 'http://127.0.0.1:11434',
+            selectedModel: completedAuditDetail.audit.selectedModel,
+            revision: 2,
+          },
+        }
+      }
+      if (command === 'core_test_local_ai_connection') {
+        return {
+          requestId,
+          data: {
+            status: 'AVAILABLE',
+            reachable: true,
+            modelCount: 1,
+            selectedModelAvailable: true,
+          },
+        }
+      }
       if (command === 'core_execute_identity_audit_batch') {
         return { requestId, data: completedAuditDetail }
       }

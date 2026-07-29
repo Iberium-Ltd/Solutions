@@ -3,18 +3,31 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
+  BrainCircuit,
   Check,
   Crosshair,
   FileClock,
   Files,
   LockKeyhole,
+  LoaderCircle,
+  RefreshCw,
   SearchCheck,
   ShieldCheck,
   Sparkles,
   UserRoundPlus,
 } from 'lucide-react'
-import type { ProfileSummary } from '../../../../packages/contracts/src/generated/api'
+import type {
+  LocalAIProvider,
+  LocalAISettings,
+  ProfileSummary,
+} from '../../../../packages/contracts/src/generated/api'
 import { nativeRuntimeAvailable } from '../app/coreBoundary'
+import {
+  discoverLocalAIModels,
+  getLocalAISettings,
+  testLocalAIConnection,
+  updateLocalAISettings,
+} from '../app/localAiBoundary'
 import { createProfile, listProfiles } from '../app/phase3Boundary'
 import {
   loadPhase6AuditRuns,
@@ -52,6 +65,13 @@ const modes = [
 ] as const
 
 type NativeProfileMode = 'CREATE' | 'CONTINUE'
+type ModelLoadState = 'IDLE' | 'DISCOVERING' | 'LOADING' | 'READY' | 'ERROR'
+
+const LOCAL_AI_ENDPOINTS: Readonly<Record<LocalAIProvider, string>> = {
+  OLLAMA: 'http://127.0.0.1:11434',
+  OPENAI_COMPATIBLE: 'http://127.0.0.1:1234',
+  OPENAI_RESPONSES: 'http://127.0.0.1:11434',
+}
 
 function formatRunTime(timestampUs: number): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -149,6 +169,13 @@ function NativeNewAuditPage() {
   const [purpose, setPurpose] = useState('Authorised self-audit')
   const [pending, setPending] = useState(false)
   const [safeError, setSafeError] = useState<string | null>(null)
+  const [localAI, setLocalAI] = useState<LocalAISettings | null>(null)
+  const [aiProvider, setAIProvider] = useState<LocalAIProvider>('OLLAMA')
+  const [aiEndpoint, setAIEndpoint] = useState(LOCAL_AI_ENDPOINTS.OLLAMA)
+  const [aiModels, setAIModels] = useState<ReadonlyArray<string>>([])
+  const [selectedAIModel, setSelectedAIModel] = useState('')
+  const [modelLoadState, setModelLoadState] = useState<ModelLoadState>('IDLE')
+  const [modelError, setModelError] = useState<string | null>(null)
   const createIdempotencyKey = useRef(crypto.randomUUID())
 
   useEffect(() => {
@@ -185,6 +212,118 @@ function NativeNewAuditPage() {
       cancelled = true
     }
   }, [activeProfileId])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadSavedModel() {
+      try {
+        const settings = await getLocalAISettings()
+        if (cancelled) return
+        setLocalAI(settings)
+        setAIProvider(settings.provider)
+        setAIEndpoint(settings.endpoint)
+        setSelectedAIModel(settings.selectedModel ?? '')
+        setModelLoadState('DISCOVERING')
+        try {
+          const discovered = await discoverLocalAIModels({
+            provider: settings.provider,
+            endpoint: settings.endpoint,
+            selectedModel: settings.selectedModel,
+          })
+          if (cancelled) return
+          const models = discovered.models.map((model) => model.modelId)
+          setAIModels(models)
+          setSelectedAIModel(
+            settings.selectedModel !== null &&
+              models.includes(settings.selectedModel)
+              ? settings.selectedModel
+              : models[0] ?? '',
+          )
+          setModelLoadState(
+            settings.enabled &&
+              settings.selectedModel !== null &&
+              models.includes(settings.selectedModel)
+              ? 'READY'
+              : 'IDLE',
+          )
+          if (models.length === 0) {
+            setModelError('The configured local AI server reports no served models.')
+          }
+        } catch {
+          if (cancelled) return
+          setAIModels([])
+          setModelLoadState('ERROR')
+          setModelError('Start the configured local AI server, then detect models again.')
+        }
+      } catch {
+        if (!cancelled) {
+          setModelError('Local model settings could not be loaded.')
+          setModelLoadState('ERROR')
+        }
+      }
+    }
+    void loadSavedModel()
+    return () => { cancelled = true }
+  }, [])
+
+  async function discoverModels() {
+    setModelLoadState('DISCOVERING')
+    setModelError(null)
+    try {
+      const result = await discoverLocalAIModels({
+        provider: aiProvider,
+        endpoint: aiEndpoint,
+        selectedModel: selectedAIModel || null,
+      })
+      const models = result.models.map((model) => model.modelId)
+      setAIModels(models)
+      setSelectedAIModel((current) =>
+        models.includes(current) ? current : models[0] ?? '',
+      )
+      setModelLoadState('IDLE')
+      if (models.length === 0) {
+        setModelError(
+          `${aiProvider === 'OLLAMA' ? 'Ollama' : 'LM Studio'} is reachable but reports no served models.`,
+        )
+      }
+    } catch {
+      setAIModels([])
+      setModelLoadState('ERROR')
+      setModelError(
+        `Start ${aiProvider === 'OLLAMA' ? 'Ollama' : 'the LM Studio local server'}, then detect models again.`,
+      )
+    }
+  }
+
+  async function loadSelectedModel() {
+    if (localAI === null || selectedAIModel === '') return
+    setModelLoadState('LOADING')
+    setModelError(null)
+    try {
+      const result = await testLocalAIConnection({
+        provider: aiProvider,
+        endpoint: aiEndpoint,
+        selectedModel: selectedAIModel,
+      })
+      if (result.status !== 'AVAILABLE' || !result.selectedModelAvailable) {
+        throw new Error('Selected model did not become ready')
+      }
+      const saved = await updateLocalAISettings({
+        enabled: true,
+        provider: aiProvider,
+        endpoint: aiEndpoint,
+        selectedModel: selectedAIModel,
+        expectedRevision: localAI.revision,
+      })
+      setLocalAI(saved)
+      setModelLoadState('READY')
+    } catch {
+      setModelLoadState('ERROR')
+      setModelError(
+        'The model could not be loaded. Confirm it is served locally, then retry.',
+      )
+    }
+  }
 
   const resumableProfiles = useMemo(
     () =>
@@ -329,6 +468,103 @@ function NativeNewAuditPage() {
             </div>
           </Panel>
         </div>
+
+        <Panel
+          className="span-12 panel--signal"
+          eyebrow="Local AI before intake"
+          title="Choose, load, and keep one model with this workflow"
+        >
+          <div className="panel__body stack">
+            <p className="text-muted">
+              The loaded model assists natural-language identifier extraction,
+              bounded search planning, cited result analysis, and connection
+              review. Deterministic validation remains in control of every request.
+            </p>
+            <div className="grid-3">
+              <label className="field">
+                <span>Model source</span>
+                <select
+                  className="select"
+                  disabled={modelLoadState === 'LOADING'}
+                  value={aiProvider}
+                  onChange={(event) => {
+                    const provider = event.currentTarget.value as LocalAIProvider
+                    setAIProvider(provider)
+                    setAIEndpoint(LOCAL_AI_ENDPOINTS[provider])
+                    setAIModels([])
+                    setSelectedAIModel('')
+                    setModelLoadState('IDLE')
+                    setModelError(null)
+                  }}
+                >
+                  <option value="OLLAMA">Ollama</option>
+                  <option value="OPENAI_COMPATIBLE">LM Studio</option>
+                </select>
+              </label>
+              <label className="field">
+                <span>Detected model</span>
+                <select
+                  className="select"
+                  disabled={aiModels.length === 0 || modelLoadState === 'LOADING'}
+                  value={selectedAIModel}
+                  onChange={(event) => {
+                    setSelectedAIModel(event.currentTarget.value)
+                    setModelLoadState('IDLE')
+                    setModelError(null)
+                  }}
+                >
+                  {aiModels.length === 0 ? (
+                    <option value="">Detect served models first</option>
+                  ) : aiModels.map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="field">
+                <span>Inference readiness</span>
+                <div className="audit-ai-load-actions">
+                  <Button
+                    variant="secondary"
+                    disabled={
+                      modelLoadState === 'DISCOVERING' ||
+                      modelLoadState === 'LOADING'
+                    }
+                    onClick={() => void discoverModels()}
+                  >
+                    <RefreshCw
+                      className={modelLoadState === 'DISCOVERING' ? 'spin' : ''}
+                      size={14}
+                    />
+                    Detect models
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={
+                      selectedAIModel === '' ||
+                      modelLoadState === 'DISCOVERING' ||
+                      modelLoadState === 'LOADING'
+                    }
+                    onClick={() => void loadSelectedModel()}
+                  >
+                    {modelLoadState === 'LOADING' ? (
+                      <LoaderCircle className="spin" size={14} />
+                    ) : <BrainCircuit size={14} />}
+                    {modelLoadState === 'LOADING' ? 'Loading model…' : 'Load and enable'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {modelLoadState === 'READY' ? (
+              <div className="callout callout--success" role="status">
+                <strong>{selectedAIModel}</strong> is loaded and will be used
+                during intake and the later audit.
+              </div>
+            ) : null}
+            {modelError ? (
+              <div className="callout callout--danger" role="alert">{modelError}</div>
+            ) : null}
+          </div>
+        </Panel>
 
         <div className="span-12 audit-builder-footer">
           <div className="audit-builder-note">

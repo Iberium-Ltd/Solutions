@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Codename Ariadne · Synthetic prototype",
+        "title": "Codename Ariadne",
         "width": 1440,
         "height": 900,
         "minWidth": 1000,

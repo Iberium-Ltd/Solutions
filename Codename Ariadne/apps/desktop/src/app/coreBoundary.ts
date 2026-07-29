@@ -5,7 +5,7 @@
  * disappears at runtime, so an incompatible or compromised sidecar response
  * must fail here before it can alter UI authority or vault state.
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type {
   SessionState,
   SystemCapabilities,
@@ -50,7 +50,6 @@ const FEATURE_STATUSES = new Set([
 ])
 const SESSION_POLL_INTERVAL_MS = 1_000
 const CORE_INVOKE_TIMEOUT_MS = 8_000
-const SESSION_FAILURES_BEFORE_RECONNECT = 10
 
 async function boundedInvoke<T>(promise: Promise<T>): Promise<T> {
   let timer: number | undefined
@@ -180,7 +179,6 @@ export function useCoreBoundary() {
   )
   const [vaultActionPending, setVaultActionPending] = useState(false)
   const [vaultActionError, setVaultActionError] = useState<string | null>(null)
-  const sessionFailures = useRef(0)
 
   const refresh = useCallback(async () => {
     if (!native) return true
@@ -199,7 +197,6 @@ export function useCoreBoundary() {
         capabilities: parseCapabilities(capabilities),
         session: parsedSession,
       })
-      sessionFailures.current = 0
       return true
     } catch {
       return false
@@ -218,7 +215,6 @@ export function useCoreBoundary() {
       setState((current) =>
         current.mode === 'AVAILABLE' ? { ...current, session } : current,
       )
-      sessionFailures.current = 0
       return true
     } catch {
       return false
@@ -270,13 +266,8 @@ export function useCoreBoundary() {
     const timer = window.setInterval(() => {
       if (refreshPending) return
       refreshPending = true
-      void refreshUnlockedSession().then((refreshed) => {
+      void refreshUnlockedSession().then(() => {
         refreshPending = false
-        if (refreshed) return
-        sessionFailures.current += 1
-        if (sessionFailures.current >= SESSION_FAILURES_BEFORE_RECONNECT) {
-          setState({ mode: 'CONNECTING' })
-        }
       })
     }, SESSION_POLL_INTERVAL_MS)
     return () => window.clearInterval(timer)

@@ -468,7 +468,7 @@ One row per encrypted Ariadne vault.
 | display_name | TEXT | Local label; sensitive because it may reveal purpose |
 | state | TEXT | LOCKED, UNLOCKED, MIGRATING, RECOVERY_REQUIRED |
 | format_version | INTEGER | Vault bundle format |
-| auto_lock_seconds | INTEGER | Zero is not allowed in release defaults |
+| auto_lock_seconds | INTEGER | Legacy compatibility field; inert in foreground sessions |
 | last_opened_at_us | INTEGER nullable | Local operational metadata |
 | purge_requested_at_us | INTEGER nullable | Starts dependency-aware purge |
 

@@ -1,6 +1,5 @@
 //! Supervised sidecar boundary, typed wire contract, key lease, and lock lifecycle.
 
-mod auto_lock;
 mod contract;
 mod event_relay;
 #[cfg(unix)]
@@ -8,7 +7,6 @@ pub(crate) mod key_lease;
 mod supervisor;
 mod vault_manifest;
 
-pub use auto_lock::{AppActivity, spawn_auto_lock};
 pub use contract::{
     CoreCapabilities, CoreCommandError, CoreCommandResponse, CoreEntityDecisionRequest,
     CoreEntityOriginPageRequest, CoreEntityOriginPageResult, CoreEntityReviewRequest,

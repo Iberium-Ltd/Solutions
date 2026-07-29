@@ -169,7 +169,7 @@ describe('Phase 3 lock memory boundary', () => {
     })
   })
 
-  it('polls for auto-lock and removes entity results before retaining stale scope', async () => {
+  it('honours an authoritative locked session and removes stale entity scope', async () => {
     seedWorkflow()
     renderProtectedRoute('/audits/new/entities', <EntitiesPage />)
     expect(await screen.findByText(maskedEntity.displayValue)).toBeVisible()
@@ -189,7 +189,7 @@ describe('Phase 3 lock memory boundary', () => {
     expect(screen.getByTestId('vault-workspace-guard')).toBeVisible()
   })
 
-  it('fails closed during system-lock focus revalidation and purges locked scope', async () => {
+  it('purges locked scope when focus revalidation reports an authoritative lock', async () => {
     seedWorkflow()
     renderProtectedRoute('/audits/new/entities', <EntitiesPage />)
     expect(await screen.findByText(maskedEntity.displayValue)).toBeVisible()

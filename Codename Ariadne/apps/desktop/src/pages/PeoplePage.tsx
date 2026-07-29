@@ -109,18 +109,18 @@ export function PeoplePage() {
         useLocalAi: loaded.enabled && loaded.selectedModel !== null,
       }))
       if (models.length === 0) {
-        setLocalAIError('Ollama is reachable but is not serving any models.')
+        setLocalAIError('The configured local AI server is reachable but is not serving any models.')
       } else if (
         loaded.selectedModel !== null &&
         !models.includes(loaded.selectedModel)
       ) {
-        setLocalAIError('The saved model is not currently served by Ollama.')
+        setLocalAIError('The saved model is not currently served by the configured local AI server.')
       }
     } catch {
       setLocalAI(null)
       setLocalAIModels([])
       setAuditForm((current) => ({ ...current, useLocalAi: false }))
-      setLocalAIError('Local AI is unavailable. Start Ollama, then refresh models.')
+      setLocalAIError('Local AI is unavailable. Start the configured Ollama or LM Studio server, then refresh models.')
     } finally {
       setLocalAIPending(false)
     }
@@ -248,7 +248,7 @@ export function PeoplePage() {
         })
         setLocalAIStatus(connection.status)
         if (connection.status !== 'AVAILABLE') {
-          setError('The selected local model is not available. Start Ollama or choose another model.')
+          setError('The selected local model is not available. Start its local server or choose another model.')
           return
         }
       }
@@ -287,7 +287,7 @@ export function PeoplePage() {
       })
       setLocalAIStatus(connection.status)
       if (connection.status !== 'AVAILABLE') {
-        setLocalAIError('That model is listed but could not be activated by Ollama.')
+        setLocalAIError('That model is listed but could not be loaded by the configured local AI server.')
         return
       }
       const saved = await updateLocalAISettings({
@@ -405,7 +405,7 @@ export function PeoplePage() {
             </div>
             <div className="identity-model-picker">
               <div className="identity-model-picker__header">
-                <span><BrainCircuit size={16} /><span><strong>AI assistance model</strong><small>Choose the Ollama model used for natural-language clues, search seeding, cited connections, and review.</small></span></span>
+                <span><BrainCircuit size={16} /><span><strong>AI assistance model</strong><small>Choose the served Ollama or LM Studio model used for natural-language clues, search seeding, cited connections, and review.</small></span></span>
                 <Button size="compact" variant="ghost" disabled={localAIPending} onClick={() => void loadLocalAI()}><RefreshCw className={localAIPending ? 'spin' : ''} size={13} />Refresh</Button>
               </div>
               {localAIModels.length > 0 ? (
@@ -430,7 +430,7 @@ export function PeoplePage() {
                   })}
                 </div>
               ) : (
-                <div className="identity-model-picker__empty">No served model discovered. Start Ollama and select Refresh.</div>
+                <div className="identity-model-picker__empty">No served model discovered. Start the configured local AI server and select Refresh.</div>
               )}
               <label className="identity-check">
                 <input
@@ -446,7 +446,7 @@ export function PeoplePage() {
                 </span>
               </label>
               {localAIError ? <div className="callout callout--danger" role="alert">{localAIError}</div> : null}
-              {localAIStatus === 'AVAILABLE' && !localAIError ? <div className="callout callout--success" role="status">Ollama and the selected model are ready.</div> : null}
+              {localAIStatus === 'AVAILABLE' && !localAIError ? <div className="callout callout--success" role="status">The local AI server and selected model are ready.</div> : null}
             </div>
             <label className="identity-check"><input type="checkbox" checked={auditForm.includeHibp} onChange={(event) => setAuditForm((current) => ({ ...current, includeHibp: event.target.checked }))} /><FileSearch size={15} /><span><strong>Include Have I Been Pwned checks</strong><small>Tasks will report “authentication required” until an API key is configured.</small></span></label>
             <div className="callout"><div><strong>Seven automatic public surfaces</strong><p>DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback Machine, and certificate-transparency records run from every compatible reviewed identifier. Progress is persisted after every task and survives navigation or restart.</p></div></div>

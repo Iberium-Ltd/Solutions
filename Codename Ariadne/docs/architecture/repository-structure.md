@@ -31,7 +31,7 @@ production personal-data or operational-audit release.
 │       │   ├── capabilities/
 │       │   ├── icons/
 │       │   ├── src/
-│       │   │   ├── core/               # supervisor, auto-lock, event relay, contracts, manifest, key lease
+│       │   │   ├── core/               # supervisor, event relay, contracts, manifest, key lease
 │       │   │   ├── platform.rs         # macOS power/screen/session observers
 │       │   │   ├── security/           # macOS Keychain custody boundary
 │       │   │   ├── lib.rs

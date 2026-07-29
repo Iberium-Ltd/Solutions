@@ -129,6 +129,7 @@ async def test_local_ai_settings_discovery_test_and_revisioned_selection(
         [
             _json_response({"models": [{"model": "qwen-local:7b"}]}),
             _json_response({"models": [{"model": "qwen-local:7b"}]}),
+            _json_response({"model": "qwen-local:7b", "done": True}),
         ]
     )
 
@@ -179,6 +180,8 @@ async def test_local_ai_settings_discovery_test_and_revisioned_selection(
             "modelCount": 1,
             "selectedModelAvailable": True,
         }
+        assert transport.requests[2].url.endswith("/api/generate")
+        assert json.loads(transport.requests[2].body or b"")["prompt"] == ""
 
         saved = await client.post(
             "/v1/local-ai/settings",
@@ -224,10 +227,11 @@ async def test_local_ai_settings_discovery_test_and_revisioned_selection(
         assert cleared.json()["selectedModel"] is None
         assert cleared.json()["provider"] == "OPENAI_COMPATIBLE"
 
-    assert [request.url for request in transport.requests] == [
-        "http://127.0.0.1:11434/api/tags",
-        "http://127.0.0.1:11434/api/tags",
-    ]
+        assert [request.url for request in transport.requests] == [
+            "http://127.0.0.1:11434/api/tags",
+            "http://127.0.0.1:11434/api/tags",
+            "http://127.0.0.1:11434/api/generate",
+        ]
     assert all(
         all(name.casefold() != "authorization" for name, _value in request.headers)
         for request in transport.requests
@@ -347,7 +351,7 @@ async def test_selected_local_model_enriches_only_redacted_intake_and_requires_r
         }
         response = await client.post("/v1/intake/paste", json=request, headers=_headers())
         replay = await client.post("/v1/intake/paste", json=request, headers=_headers())
-        assert response.status_code == replay.status_code == 200
+        assert response.status_code == replay.status_code == 200, response.text
         receipt = response.json()
         assert replay.json() == receipt
         assert receipt["localAiStatus"] == "SUCCEEDED"
@@ -442,7 +446,7 @@ async def test_local_ai_failure_keeps_deterministic_intake_ready(
             },
             headers=_headers(),
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
         receipt = response.json()
         assert receipt["state"] == "READY_FOR_REVIEW"
         assert receipt["candidateCount"] >= 1

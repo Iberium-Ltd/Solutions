@@ -568,7 +568,7 @@ These recipes define the first visual hierarchy, not fixed pixel-perfect wirefra
 
 ### Privacy & Settings — `/settings/privacy`
 
-- Privacy posture/auto-lock/encryption lead.
+- Privacy posture/manual-session lifecycle/encryption lead.
 - Tabs group data/retention, export/redaction, connectors, local AI, and appearance/motion without inventing extra canonical routes.
 - Save state is explicit; consequential changes explain scope and restart/relock needs.
 

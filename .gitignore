@@ -39,6 +39,7 @@
 /playwright-report/
 /test-results/
 /coverage/
+/Ariadne Private Validation */
 
 # Tooling and builds.
 node_modules/

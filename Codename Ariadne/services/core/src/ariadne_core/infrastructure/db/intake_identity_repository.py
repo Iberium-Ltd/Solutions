@@ -723,20 +723,28 @@ class IntakeIdentityRepository:
                 job_ids: set[str] = set()
                 result_ids = {profile_id}
                 table_parents: dict[str, set[str]] = {}
+                nullable_self_references: dict[str, set[str]] = {}
                 for table_name in table_names:
                     quoted = '"' + table_name.replace('"', '""') + '"'
-                    columns = {
-                        str(item[1])
-                        for item in connection.exec_driver_sql(f"PRAGMA table_info({quoted})").all()
-                    }
+                    table_info = connection.exec_driver_sql(f"PRAGMA table_info({quoted})").all()
+                    columns = {str(item[1]) for item in table_info}
                     if {"vault_id", "profile_id"} <= columns and table_name != "profiles":
                         profile_tables.append(table_name)
+                        foreign_keys = connection.exec_driver_sql(
+                            f"PRAGMA foreign_key_list({quoted})"
+                        ).all()
                         table_parents[table_name] = {
-                            str(item[2])
-                            for item in connection.exec_driver_sql(
-                                f"PRAGMA foreign_key_list({quoted})"
-                            ).all()
-                            if str(item[2]) != table_name
+                            str(item[2]) for item in foreign_keys if str(item[2]) != table_name
+                        }
+                        nullable_columns = {
+                            str(item[1])
+                            for item in table_info
+                            if int(item[3]) == 0 and int(item[5]) == 0
+                        }
+                        nullable_self_references[table_name] = {
+                            str(item[3])
+                            for item in foreign_keys
+                            if str(item[2]) == table_name and str(item[3]) in nullable_columns
                         }
                         if "id" in columns:
                             result_ids.update(
@@ -778,6 +786,25 @@ class IntakeIdentityRepository:
                             ready.sort()
                 if len(deletion_order) != len(profile_tables):
                     raise RuntimeError("profile schema contains a purge dependency cycle")
+
+                # A profile can contain recursive audit tasks and superseding
+                # decisions. Their parent pointers are nullable by design, but
+                # SQLite's RESTRICT checks otherwise reject a bulk delete even
+                # though every row in the self-referencing set is being erased.
+                # Break only those nullable in-profile links before deleting
+                # tables in child-first order.
+                for table_name, reference_columns in nullable_self_references.items():
+                    if not reference_columns:
+                        continue
+                    quoted = '"' + table_name.replace('"', '""') + '"'
+                    assignments = ", ".join(
+                        f'"{column.replace(chr(34), chr(34) * 2)}" = NULL'
+                        for column in sorted(reference_columns)
+                    )
+                    connection.exec_driver_sql(
+                        f"UPDATE {quoted} SET {assignments} WHERE vault_id = ? AND profile_id = ?",
+                        (vault_id, profile_id),
+                    )
 
                 for table_name in deletion_order:
                     quoted = '"' + table_name.replace('"', '""') + '"'

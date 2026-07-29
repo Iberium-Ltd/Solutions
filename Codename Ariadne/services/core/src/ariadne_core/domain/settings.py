@@ -22,6 +22,8 @@ class TransmissionMode(StrEnum):
 
 
 class SettingKey(StrEnum):
+    # Retained for encrypted-vault schema compatibility. Foreground sessions
+    # now lock only on an explicit user action or application shutdown.
     AUTO_LOCK_SECONDS = "auto_lock_seconds"
     HIGHLY_SENSITIVE_FTS = "highly_sensitive_fts"
     LOCK_ON_SLEEP = "lock_on_sleep"
@@ -40,6 +42,8 @@ class VaultSettings(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    # Legacy persisted fields remain parseable so existing vaults upgrade
+    # without rewriting history; no runtime observer consumes either value.
     auto_lock_seconds: int = Field(default=300, ge=30, le=86_400)
     highly_sensitive_fts: bool = False
     lock_on_sleep: bool = True

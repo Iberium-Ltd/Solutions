@@ -1,5 +1,5 @@
 /** Geographic evidence projection; map points retain their temporal/source context. */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowUpRight,
@@ -24,6 +24,13 @@ import {
   Panel,
   type Tone,
 } from '../components/Primitives'
+import type { AuditDetail } from '../../../../packages/contracts/src/generated/api'
+import { nativeRuntimeAvailable } from '../app/coreBoundary'
+import {
+  getIdentityAudit,
+  getIdentityWorkspace,
+} from '../app/identityDiscoveryBoundary'
+import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { Toggle } from '../components/Toggle'
 import '../styles/pages-results.css'
 
@@ -63,7 +70,171 @@ const pointContext: Record<MapPoint['id'], { state: string; source: string; obse
   },
 }
 
+const COUNTRY_TLDS: Readonly<Record<string, string>> = {
+  au: 'Australia',
+  br: 'Brazil',
+  ca: 'Canada',
+  ch: 'Switzerland',
+  cn: 'China',
+  de: 'Germany',
+  es: 'Spain',
+  fr: 'France',
+  ie: 'Ireland',
+  in: 'India',
+  it: 'Italy',
+  jp: 'Japan',
+  mx: 'Mexico',
+  nl: 'Netherlands',
+  nz: 'New Zealand',
+  pl: 'Poland',
+  pt: 'Portugal',
+  ru: 'Russia',
+  se: 'Sweden',
+  uk: 'United Kingdom',
+  us: 'United States',
+  za: 'South Africa',
+}
+
+function sourceCountry(url: string): string {
+  try {
+    const hostname = new URL(url).hostname.toLocaleLowerCase()
+    const suffix = hostname.split('.').at(-1) ?? ''
+    return COUNTRY_TLDS[suffix] ?? 'Global or unspecified'
+  } catch {
+    return 'Unresolved'
+  }
+}
+
+function NativeMapPage() {
+  const profileId = usePhase3WorkflowStore((state) => state.profileId)
+  const [audit, setAudit] = useState<AuditDetail | null>(null)
+  const [state, setState] = useState<'LOADING' | 'READY' | 'EMPTY' | 'ERROR'>(
+    profileId === null ? 'EMPTY' : 'LOADING',
+  )
+
+  useEffect(() => {
+    if (profileId === null) {
+      setAudit(null)
+      setState('EMPTY')
+      return
+    }
+    let cancelled = false
+    setState('LOADING')
+    void getIdentityWorkspace({ profileId })
+      .then(async (workspace) => {
+        const latest = workspace.audits[0]
+        if (!latest) return null
+        return getIdentityAudit({
+          profileId,
+          auditId: latest.auditId,
+          maximumTasks: 1,
+        })
+      })
+      .then((detail) => {
+        if (cancelled) return
+        setAudit(detail)
+        setState(detail === null ? 'EMPTY' : 'READY')
+      })
+      .catch(() => {
+        if (!cancelled) setState('ERROR')
+      })
+    return () => { cancelled = true }
+  }, [profileId])
+
+  const countries = useMemo(() => {
+    const grouped = new Map<string, AuditDetail['results']>()
+    for (const result of audit?.results ?? []) {
+      const country = sourceCountry(result.url)
+      grouped.set(country, [...(grouped.get(country) ?? []), result])
+    }
+    return [...grouped.entries()].sort(
+      (left, right) => right[1].length - left[1].length,
+    )
+  }, [audit])
+
+  if (state !== 'READY' || audit === null) {
+    return (
+      <div className="page map-page" data-testid="route-ready">
+        <PageHeader
+          eyebrow="Exact-source geography"
+          title="Geographic Map"
+          description="Country labels are derived only from exact source domains. Ariadne does not invent a location for generic domains."
+          meta={<Badge tone={state === 'ERROR' ? 'rose' : 'cyan'}>{state.toLocaleLowerCase()}</Badge>}
+        />
+        <Panel className="empty-state panel--raised">
+          <Globe2 size={28} />
+          <h2>{state === 'LOADING' ? 'Projecting source countries…' : state === 'ERROR' ? 'Source geography could not be loaded' : 'No retained audit sources yet'}</h2>
+          <p>{state === 'EMPTY' ? 'Complete or reopen an identity audit to populate this view.' : 'The active profile and its latest retained audit remain unchanged.'}</p>
+          <Link className="button button--primary" to="/people">Open People</Link>
+        </Panel>
+      </div>
+    )
+  }
+
+  return (
+    <div className="page map-page" data-testid="route-ready">
+      <PageHeader
+        eyebrow="Exact-source geography · latest durable audit"
+        title="Geographic Map"
+        description="Every country bucket below resolves to retained source URLs. Generic domains stay global or unspecified instead of receiving a guessed country."
+        meta={<><Badge tone="green">{audit.results.length} exact sources</Badge><Badge tone="cyan">{countries.length} country or scope buckets</Badge>{audit.aiAnalysis?.status === 'SUCCEEDED' ? <Badge tone="violet">AI connections available</Badge> : null}</>}
+        actions={<><Link className="button button--secondary" to="/graph">Open Link Map</Link><Link className="button button--secondary" to={`/identity/audits/${audit.audit.auditId}`}>Open audit</Link></>}
+      />
+      <div className="grid-4 identity-metrics">
+        {countries.slice(0, 4).map(([country, results]) => (
+          <article className="metric-card" key={country}>
+            <span>{country}</span>
+            <strong>{results.length}</strong>
+            <small>retained source{results.length === 1 ? '' : 's'}</small>
+          </article>
+        ))}
+      </div>
+      <Panel
+        className="panel--signal"
+        eyebrow="Cited country inventory"
+        title={`${audit.results.length} source URLs across ${countries.length} buckets`}
+      >
+        <div className="identity-result-list">
+          {countries.flatMap(([country, results]) =>
+            results.map((result) => (
+              <article className="identity-result-row" key={result.resultId}>
+                <MapPin size={15} />
+                <div>
+                  <div className="inline">
+                    <strong>{result.title || result.url}</strong>
+                    <Badge tone={country === 'Global or unspecified' ? 'neutral' : 'cyan'}>{country}</Badge>
+                  </div>
+                  <code>{result.url}</code>
+                  <small>{result.providerId.replaceAll('_', ' ').toLocaleLowerCase()} · domain-derived country scope</small>
+                </div>
+              </article>
+            )),
+          )}
+        </div>
+      </Panel>
+      {audit.aiAnalysis?.status === 'SUCCEEDED' ? (
+        <Panel eyebrow="AI-assisted connections" title="Cited relationships from this audit">
+          <div className="identity-card-grid">
+            {audit.aiAnalysis.insights.filter((insight) => insight.kind === 'CONNECTION').map((insight, index) => (
+              <article className="identity-knowledge-card" key={`${insight.statement}-${index}`}>
+                <Badge tone="violet">Connection</Badge>
+                <strong>{insight.statement}</strong>
+                <p>{insight.rationale}</p>
+                <small>{insight.evidenceRefs.join(' · ')}</small>
+              </article>
+            ))}
+          </div>
+        </Panel>
+      ) : null}
+    </div>
+  )
+}
+
 export function MapPage() {
+  return nativeRuntimeAvailable() ? <NativeMapPage /> : <SimulatedMapPage />
+}
+
+function SimulatedMapPage() {
   const [style, setStyle] = useState<MapStyle>('identity')
   const [providerOverlay, setProviderOverlay] = useState(true)
   const [selectedId, setSelectedId] = useState<MapPoint['id']>('greyhaven')

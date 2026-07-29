@@ -14,7 +14,6 @@ import {
   RefreshCw,
   Save,
   ShieldCheck,
-  TimerReset,
   Trash2,
   WifiOff,
 } from 'lucide-react'
@@ -93,7 +92,6 @@ export function SettingsPage() {
   const [section, setSection] = useState<SettingsSection>('privacy')
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [autoLock, setAutoLock] = useState('15')
   const [retention, setRetention] = useState('90')
   const [motion, setMotion] = useState<MotionPreference>(reducedMotion ? 'reduced' : 'system')
   const [settings, setSettings] = useState({
@@ -371,16 +369,11 @@ export function SettingsPage() {
           <div className="controls-settings-grid">
             <Panel className={`controls-settings-panel ${section === 'data' ? 'is-highlighted' : ''}`} eyebrow="Local data" title="Lock, retention & redaction">
               <div className="controls-settings-fields">
-                <label className="field">
-                  <span>Auto-lock after inactivity</span>
-                  <select className="select" value={autoLock} onChange={(event) => { setAutoLock(event.target.value); setDirty(true); setSaved(false) }}>
-                    <option value="5">5 minutes</option>
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="60">1 hour</option>
-                  </select>
-                  <small>Lock removes sensitive content from the rendered document.</small>
-                </label>
+                <div className="field">
+                  <span>Vault session</span>
+                  <strong>Manual lock or app exit</strong>
+                  <small>Once unlocked, the vault remains available until you lock it or close Ariadne.</small>
+                </div>
                 <label className="field">
                   <span>Default evidence retention</span>
                   <select className="select" value={retention} onChange={(event) => { setRetention(event.target.value); setDirty(true); setSaved(false) }}>
@@ -554,7 +547,7 @@ export function SettingsPage() {
                 <div><strong>{motion === 'reduced' ? 'Static status preview' : 'Interface motion preview'}</strong><small>{motion === 'system' ? 'Follows macOS preference' : motion === 'reduced' ? 'No nonessential movement' : 'Purposeful transitions enabled'}</small></div>
                 <span aria-hidden="true" />
               </div>
-              <div className="controls-relock-note"><TimerReset size={14} /><span>Auto-lock changes apply immediately; encryption changes would require relocking.</span></div>
+              <div className="controls-relock-note"><LockKeyhole size={14} /><span>Vault locking is always explicit: use the vault control or close Ariadne.</span></div>
             </Panel>
           </div>
         </div>

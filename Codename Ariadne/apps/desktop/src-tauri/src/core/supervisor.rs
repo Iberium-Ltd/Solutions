@@ -113,9 +113,11 @@ const KEYCHAIN_REQUEST_TIMEOUT: Duration = Duration::from_secs(125);
 const LOCAL_AI_WORKSPACE_REQUEST_TIMEOUT: Duration = Duration::from_secs(65);
 const LOCAL_AI_CORPUS_REQUEST_TIMEOUT: Duration = Duration::from_secs(105);
 const LOCAL_AI_INTAKE_REQUEST_TIMEOUT: Duration = Duration::from_secs(75);
+const LOCAL_AI_PRELOAD_REQUEST_TIMEOUT: Duration = Duration::from_secs(125);
 const PUBLIC_DISCOVERY_REQUEST_TIMEOUT: Duration = Duration::from_secs(25);
 const HIBP_REQUEST_TIMEOUT: Duration = Duration::from_secs(25);
 const PHASE5_LIST_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
+const PROFILE_DELETE_REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(3);
 const CRASH_MONITOR_INTERVAL: Duration = Duration::from_millis(250);
@@ -431,11 +433,6 @@ impl CoreSupervisor {
 
     pub async fn session(&self) -> Result<CoreCommandResponse<CoreSession>, CoreCommandError> {
         self.execute(CoreRoute::Session).await
-    }
-
-    pub(crate) fn vault_is_unlocked(&self) -> bool {
-        let inner = self.lock();
-        inner.state == CoreLifecycleState::Ready && inner.vault_unlocked
     }
 
     pub(super) async fn replay_events(
@@ -2013,7 +2010,6 @@ impl CoreSupervisor {
             inner.key_lease_broker = None;
             inner.key_lease_handle = None;
             inner.vault_unlocked = false;
-            inner.policy_restart_pending = false;
             inner.restart_scheduled = false;
             inner.child.take()
         };
@@ -2029,62 +2025,6 @@ impl CoreSupervisor {
     pub async fn shutdown(&self) {
         self.shutting_down.store(true, Ordering::Release);
         self.stop().await;
-    }
-
-    pub fn request_system_lock(&self) -> bool {
-        let Some(plan) = self.begin_system_lock() else {
-            return false;
-        };
-        let supervisor = self.clone();
-        tauri::async_runtime::spawn(async move {
-            if let Some(child) = plan.child {
-                terminate_child(child).await;
-            }
-            while supervisor.active_operations.load(Ordering::Acquire) != 0 {
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
-            let should_restart = {
-                let mut inner = supervisor.lock();
-                if !inner.policy_restart_pending {
-                    false
-                } else {
-                    inner.policy_restart_pending = false;
-                    inner.state = CoreLifecycleState::Stopped;
-                    !supervisor.shutting_down.load(Ordering::Acquire)
-                }
-            };
-            if should_restart {
-                let _ = supervisor.start().await;
-            }
-        });
-        true
-    }
-
-    fn begin_system_lock(&self) -> Option<SystemLockPlan> {
-        // Revoke every in-memory capability before waiting on child termination.
-        // Durable core work is recovered later from its own leases; retaining an
-        // HTTP client or credential during system lock would violate fail-closed.
-        let mut inner = self.lock();
-        let sensitive = matches!(
-            inner.state,
-            CoreLifecycleState::Creating | CoreLifecycleState::Unlocking
-        ) || (inner.state == CoreLifecycleState::Ready && inner.vault_unlocked);
-        if !sensitive || inner.policy_restart_pending {
-            return None;
-        }
-        inner.state = CoreLifecycleState::Stopping;
-        inner.endpoint = None;
-        inner.client = None;
-        inner.credential = None;
-        inner.key_lease_broker = None;
-        inner.key_lease_handle = None;
-        inner.vault_unlocked = false;
-        inner.policy_restart_pending = true;
-        let mut child = inner.child.take();
-        if let Some(process) = child.as_mut() {
-            request_child_termination(process);
-        }
-        Some(SystemLockPlan { child })
     }
 
     fn begin_active_operation(&self) -> ActiveOperation {
@@ -2184,7 +2124,6 @@ impl CoreSupervisor {
         inner.key_lease_broker = None;
         inner.key_lease_handle = None;
         inner.vault_unlocked = false;
-        inner.policy_restart_pending = false;
         inner.restart_scheduled = false;
         // This path runs only once Tauri is already exiting. Detach instead of
         // abruptly signalling the one-file bootloader; the sidecar's parent
@@ -2195,9 +2134,6 @@ impl CoreSupervisor {
 
     fn mark_failed(&self, error: &CoreError) {
         let mut inner = self.lock();
-        if inner.state == CoreLifecycleState::Stopping && inner.policy_restart_pending {
-            return;
-        }
         inner.endpoint = None;
         inner.client = None;
         inner.credential = None;
@@ -2240,7 +2176,6 @@ struct SupervisorInner {
     key_lease_broker: Option<KeyLeaseBroker>,
     key_lease_handle: Option<KeyLeaseHandle>,
     vault_unlocked: bool,
-    policy_restart_pending: bool,
     restart_scheduled: bool,
     restart_budget: RestartBudget,
     last_error_code: Option<&'static str>,
@@ -2248,10 +2183,6 @@ struct SupervisorInner {
 
 struct ActiveOperation {
     counter: Arc<AtomicUsize>,
-}
-
-struct SystemLockPlan {
-    child: Option<Child>,
 }
 
 struct ChildExitPlan {
@@ -7777,6 +7708,8 @@ where
         LOCAL_AI_WORKSPACE_REQUEST_TIMEOUT
     } else if matches!(route, CoreRoute::IntakePaste | CoreRoute::IntakeFile) {
         LOCAL_AI_INTAKE_REQUEST_TIMEOUT
+    } else if route == CoreRoute::TestLocalAiConnection {
+        LOCAL_AI_PRELOAD_REQUEST_TIMEOUT
     } else if route == CoreRoute::ExecuteIdentityAuditBatch {
         IDENTITY_AI_REQUEST_TIMEOUT
     } else if matches!(
@@ -7789,6 +7722,8 @@ where
         CoreRoute::SearchHibpAccount | CoreRoute::SearchHibpDomain
     ) {
         HIBP_REQUEST_TIMEOUT
+    } else if route == CoreRoute::DeleteProfile {
+        PROFILE_DELETE_REQUEST_TIMEOUT
     } else if route == CoreRoute::ListPhase5Findings {
         PHASE5_LIST_REQUEST_TIMEOUT
     } else if matches!(
@@ -8338,22 +8273,6 @@ mod tests {
     use super::*;
 
     const TEST_TOKEN: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-    async fn wait_for_locked_session(supervisor: &CoreSupervisor) {
-        timeout(Duration::from_secs(30), async {
-            loop {
-                if let Ok(session) = supervisor.session().await
-                    && session.data.lock_state == SessionLockState::Locked
-                    && session.data.vault_state == VaultState::Locked
-                {
-                    break;
-                }
-                tokio::time::sleep(Duration::from_millis(25)).await;
-            }
-        })
-        .await
-        .unwrap();
-    }
 
     fn synthetic_file_request(content: &[u8]) -> CoreFileIntakeRequest {
         let digest = Sha256::digest(content);
@@ -10763,36 +10682,6 @@ mod tests {
     }
 
     #[test]
-    fn system_lock_synchronously_revokes_state_and_coalesces_duplicates() {
-        let supervisor = CoreSupervisor::new();
-        {
-            let mut inner = supervisor.lock();
-            inner.state = CoreLifecycleState::Ready;
-            inner.vault_unlocked = true;
-        }
-
-        let plan = supervisor.begin_system_lock().unwrap();
-        assert!(plan.child.is_none());
-        {
-            let inner = supervisor.lock();
-            assert_eq!(inner.state, CoreLifecycleState::Stopping);
-            assert!(!inner.vault_unlocked);
-            assert!(inner.endpoint.is_none());
-            assert!(inner.credential.is_none());
-            assert!(inner.key_lease_broker.is_none());
-            assert!(inner.key_lease_handle.is_none());
-            assert!(inner.policy_restart_pending);
-        }
-        assert!(supervisor.begin_system_lock().is_none());
-        assert!(
-            supervisor
-                .finish_lease_operation(CoreLifecycleState::Unlocking)
-                .is_err()
-        );
-        assert!(!supervisor.lock().vault_unlocked);
-    }
-
-    #[test]
     fn crash_restart_budget_allows_only_three_attempts_per_window() {
         let now = Instant::now();
         let mut budget = RestartBudget::default();
@@ -11013,32 +10902,16 @@ mod tests {
         assert_eq!(locked.data.lock_state, SessionLockState::Locked);
         assert!(supervisor.snapshot().has_key_lease_broker);
 
-        let (blocking_custody, entered, release) = custody.blocking_get_for_test();
-        let unlock_supervisor = supervisor.clone();
-        let blocked_unlock = tokio::spawn(async move {
-            unlock_supervisor
-                .unlock_current_vault(blocking_custody)
-                .await
-        });
-        tokio::task::spawn_blocking(move || entered.wait())
-            .await
-            .unwrap();
-        assert!(supervisor.request_system_lock());
-        tokio::task::spawn_blocking(move || release.wait())
-            .await
-            .unwrap();
-        assert!(blocked_unlock.await.unwrap().is_err());
-        wait_for_locked_session(&supervisor).await;
-
         let unlocked = supervisor
             .unlock_current_vault(custody.clone())
             .await
             .unwrap();
         assert_eq!(unlocked.data.vault_id, created.data.vault_id);
         assert_eq!(unlocked.data.lock_state, SessionLockState::Unlocked);
-        assert!(supervisor.request_system_lock());
-        wait_for_locked_session(&supervisor).await;
-        assert!(!supervisor.vault_is_unlocked());
+        assert_eq!(
+            supervisor.session().await.unwrap().data.lock_state,
+            SessionLockState::Unlocked
+        );
         supervisor.stop().await;
         fs::remove_dir_all(home).unwrap();
     }

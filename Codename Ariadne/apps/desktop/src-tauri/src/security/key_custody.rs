@@ -11,10 +11,7 @@
 use std::{fmt, sync::Arc};
 
 #[cfg(test)]
-use std::{
-    collections::HashMap,
-    sync::{Barrier, Mutex},
-};
+use std::{collections::HashMap, sync::Mutex};
 
 use uuid::{Uuid, Variant};
 use zeroize::Zeroizing;
@@ -164,21 +161,6 @@ impl KeyCustody {
         Self::with_backend(Arc::new(TestMemoryKeyCustodian::default()))
     }
 
-    #[cfg(test)]
-    pub(crate) fn blocking_get_for_test(&self) -> (Self, Arc<Barrier>, Arc<Barrier>) {
-        let entered = Arc::new(Barrier::new(2));
-        let release = Arc::new(Barrier::new(2));
-        (
-            Self::with_backend(Arc::new(BlockingGetKeyCustodian {
-                delegate: Arc::clone(&self.backend),
-                entered: Arc::clone(&entered),
-                release: Arc::clone(&release),
-            })),
-            entered,
-            release,
-        )
-    }
-
     #[allow(dead_code, reason = "reserved for the next vault unlock slice")]
     pub(crate) fn create_key(
         &self,
@@ -202,30 +184,6 @@ impl KeyCustody {
 #[derive(Default)]
 struct TestMemoryKeyCustodian {
     keys: Mutex<HashMap<KeyReference, Zeroizing<[u8; KEY_BYTES]>>>,
-}
-
-#[cfg(test)]
-struct BlockingGetKeyCustodian {
-    delegate: Arc<dyn KeyCustodian>,
-    entered: Arc<Barrier>,
-    release: Arc<Barrier>,
-}
-
-#[cfg(test)]
-impl KeyCustodian for BlockingGetKeyCustodian {
-    fn create_key(&self, reference: &KeyReference) -> Result<KeyMaterial, KeyCustodyError> {
-        self.delegate.create_key(reference)
-    }
-
-    fn get_key(&self, reference: &KeyReference) -> Result<KeyMaterial, KeyCustodyError> {
-        self.entered.wait();
-        self.release.wait();
-        self.delegate.get_key(reference)
-    }
-
-    fn delete_key(&self, reference: &KeyReference) -> Result<(), KeyCustodyError> {
-        self.delegate.delete_key(reference)
-    }
 }
 
 #[cfg(test)]

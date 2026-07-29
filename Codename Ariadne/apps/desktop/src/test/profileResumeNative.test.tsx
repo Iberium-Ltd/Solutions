@@ -131,8 +131,6 @@ describe('native profile resume boundary', () => {
 
   it('requires the exact profile name and clears navigation after deletion', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal('prompt', vi.fn(() => 'Synthetic primary profile'))
-    vi.stubGlobal('alert', vi.fn())
     render(
       <MemoryRouter initialEntries={['/audits/new/intake']}>
         <AppShell>
@@ -148,6 +146,13 @@ describe('native profile resume boundary', () => {
     await user.selectOptions(selector, firstProfileId)
     await user.click(screen.getByRole('button', {
       name: 'Delete active local profile',
+    }))
+    const confirmation = await screen.findByRole('textbox', {
+      name: 'Profile name',
+    })
+    await user.type(confirmation, 'Synthetic primary profile')
+    await user.click(screen.getByRole('button', {
+      name: 'Delete profile permanently',
     }))
 
     await waitFor(() => {

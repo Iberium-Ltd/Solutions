@@ -1,6 +1,6 @@
 /** Persistent profile selector backed by the Phase 3 core boundary and workflow store. */
-import { useEffect, useMemo, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { useEffect, useId, useMemo, useState } from 'react'
+import { Trash2, X } from 'lucide-react'
 import type { ProfileSummary } from '../../../../packages/contracts/src/generated/api'
 import { deleteProfile, listProfiles } from '../app/phase3Boundary'
 import {
@@ -27,6 +27,10 @@ export function NativeProfileSwitcher() {
   const [hasMore, setHasMore] = useState(false)
   const [loadState, setLoadState] = useState<LoadState>('IDLE')
   const [deleting, setDeleting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [confirmationLabel, setConfirmationLabel] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const confirmationInputId = useId()
 
   useEffect(() => {
     let cancelled = false
@@ -91,15 +95,9 @@ export function NativeProfileSwitcher() {
 
   const removeActiveProfile = async () => {
     if (!activeProfile || deleting) return
-    const confirmation = globalThis.prompt?.(
-      `Delete "${activeProfile.displayLabel}" and all of its local data?\n\nType the profile name exactly to confirm.`,
-    )
-    if (confirmation === null || confirmation === undefined) return
-    if (confirmation !== activeProfile.displayLabel) {
-      globalThis.alert?.('The profile name did not match. Nothing was deleted.')
-      return
-    }
+    if (confirmationLabel !== activeProfile.displayLabel) return
     setDeleting(true)
+    setDeleteError(null)
     try {
       const latest = await listProfiles()
       const current = latest.profiles.find(
@@ -111,7 +109,7 @@ export function NativeProfileSwitcher() {
       await deleteProfile({
         profileId: current.profileId,
         expectedRevision: current.revision,
-        confirmationLabel: confirmation,
+        confirmationLabel,
       })
       forgetRememberedProfile()
       clearPhase3WorkflowMemory()
@@ -119,9 +117,13 @@ export function NativeProfileSwitcher() {
         (profile) => profile.profileId !== current.profileId,
       ))
       setLoadState('READY')
-    } catch {
-      globalThis.alert?.(
-        'The profile could not be deleted. Refresh and try again while the vault is unlocked.',
+      setConfirmationLabel('')
+      setDeleteDialogOpen(false)
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : 'The profile could not be deleted while the vault is unlocked.',
       )
     } finally {
       setDeleting(false)
@@ -164,10 +166,81 @@ export function NativeProfileSwitcher() {
         aria-label="Delete active local profile"
         title="Delete active local profile"
         disabled={!activeProfile || deleting}
-        onClick={() => { void removeActiveProfile() }}
+        onClick={() => {
+          setConfirmationLabel('')
+          setDeleteError(null)
+          setDeleteDialogOpen(true)
+        }}
       >
         <Trash2 size={15} aria-hidden="true" />
       </button>
+      {deleteDialogOpen && activeProfile ? (
+        <div
+          className="profile-delete-dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deleting) {
+              setDeleteDialogOpen(false)
+            }
+          }}
+        >
+          <section
+            aria-labelledby={`${confirmationInputId}-title`}
+            aria-modal="true"
+            className="profile-delete-dialog"
+            role="dialog"
+          >
+            <button
+              aria-label="Close profile deletion"
+              className="profile-delete-dialog__close"
+              disabled={deleting}
+              type="button"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              <X size={17} aria-hidden="true" />
+            </button>
+            <span className="eyebrow">Permanent local deletion</span>
+            <h2 id={`${confirmationInputId}-title`}>Delete {activeProfile.displayLabel}?</h2>
+            <p>
+              This removes the profile, identifiers, runs, findings, and saved
+              analysis from this Mac. Type the profile name exactly to confirm.
+            </p>
+            <label htmlFor={confirmationInputId}>Profile name</label>
+            <input
+              autoFocus
+              id={confirmationInputId}
+              value={confirmationLabel}
+              onChange={(event) => {
+                setConfirmationLabel(event.currentTarget.value)
+                setDeleteError(null)
+              }}
+            />
+            {deleteError ? (
+              <p className="profile-delete-dialog__error" role="alert">{deleteError}</p>
+            ) : null}
+            <div className="profile-delete-dialog__actions">
+              <button
+                className="button button--secondary"
+                disabled={deleting}
+                type="button"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="button button--danger"
+                disabled={
+                  deleting || confirmationLabel !== activeProfile.displayLabel
+                }
+                type="button"
+                onClick={() => { void removeActiveProfile() }}
+              >
+                {deleting ? 'Deleting local data…' : 'Delete profile permanently'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   )
 }

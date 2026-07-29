@@ -15,7 +15,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from sqlalchemy import MetaData, Table, and_, func, insert, or_, select, update
+from sqlalchemy import MetaData, Table, and_, delete, func, insert, or_, select, update
 from sqlalchemy.engine import Engine, RowMapping
 from sqlalchemy.exc import IntegrityError
 from uuid6 import uuid7
@@ -1504,15 +1504,22 @@ class IdentityDiscoveryRepository:
                 or str(audit["state"]) in {"PAUSED", "CANCELLED", "FAILED"}
             ):
                 return None
-            existing = connection.execute(
-                select(self.ai_analyses.c.id).where(
-                    and_(
-                        self.ai_analyses.c.vault_id == vault_id,
-                        self.ai_analyses.c.profile_id == profile_id,
-                        self.ai_analyses.c.audit_id == audit_id,
+            existing = (
+                connection.execute(
+                    select(
+                        self.ai_analyses.c.id,
+                        self.ai_analyses.c.status,
+                    ).where(
+                        and_(
+                            self.ai_analyses.c.vault_id == vault_id,
+                            self.ai_analyses.c.profile_id == profile_id,
+                            self.ai_analyses.c.audit_id == audit_id,
+                        )
                     )
                 )
-            ).scalar_one_or_none()
+                .mappings()
+                .one_or_none()
+            )
             active = int(
                 connection.execute(
                     select(func.count())
@@ -1527,8 +1534,17 @@ class IdentityDiscoveryRepository:
                     )
                 ).scalar_one()
             )
-            if existing is not None or active:
+            if existing is not None and str(existing["status"]) != "FALLBACK":
                 return None
+            if active:
+                return None
+            if existing is not None:
+                # A fallback is a recoverable attempt, not a permanent claim.
+                # Replace it only after the user explicitly retries the empty
+                # AI batch; deterministic results and citations stay intact.
+                connection.execute(
+                    delete(self.ai_analyses).where(self.ai_analyses.c.id == str(existing["id"]))
+                )
             result_rows = tuple(
                 connection.execute(
                     select(self.results)

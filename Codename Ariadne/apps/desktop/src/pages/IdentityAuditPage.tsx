@@ -41,6 +41,10 @@ import {
   type IdentityAuditPackage,
   type IdentityAuditPackageFormat,
 } from '../app/identityAuditPackage'
+import {
+  getLocalAISettings,
+  testLocalAIConnection,
+} from '../app/localAiBoundary'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { Badge, Button, Metric, PageHeader, Panel, Progress } from '../components/Primitives'
 
@@ -65,6 +69,15 @@ function formatTime(value: number | null | undefined): string {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium', timeStyle: 'medium',
   }).format(new Date(value / 1_000))
+}
+
+function formatRemaining(seconds: number): string {
+  if (seconds < 60) return 'less than a minute'
+  const minutes = Math.ceil(seconds / 60)
+  if (minutes < 60) return `about ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return `about ${hours} h${remainder ? ` ${remainder} min` : ''}`
 }
 
 function savePackage(artifact: IdentityAuditPackage) {
@@ -96,6 +109,13 @@ export function IdentityAuditPage() {
     useState<IdentityAuditPackageFormat>('MARKDOWN')
   const [packagePending, setPackagePending] = useState(false)
   const [auditPackage, setAuditPackage] = useState<IdentityAuditPackage | null>(null)
+  const [clockMs, setClockMs] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (detail === null || !RUNNING_STATES.has(detail.audit.state)) return
+    const timer = window.setInterval(() => setClockMs(Date.now()), 1_000)
+    return () => window.clearInterval(timer)
+  }, [detail])
 
   useEffect(() => {
     if (profileId === null || auditId === undefined) return
@@ -128,6 +148,21 @@ export function IdentityAuditPage() {
           current.aiAnalysis === null
         ) {
           setAnalysisPending(true)
+          const settings = await getLocalAISettings()
+          if (
+            !settings.enabled ||
+            settings.selectedModel !== current.audit.selectedModel
+          ) {
+            throw new Error('The audit model is no longer selected')
+          }
+          const ready = await testLocalAIConnection({
+            provider: settings.provider,
+            endpoint: settings.endpoint,
+            selectedModel: settings.selectedModel,
+          })
+          if (ready.status !== 'AVAILABLE') {
+            throw new Error('The selected model could not be loaded')
+          }
           current = await executeIdentityAuditBatch({
             profileId: profileId!,
             auditId: auditId!,
@@ -226,6 +261,21 @@ export function IdentityAuditPage() {
     setAnalysisPending(true)
     setError(null)
     try {
+      const settings = await getLocalAISettings()
+      if (
+        !settings.enabled ||
+        settings.selectedModel !== detail.audit.selectedModel
+      ) {
+        throw new Error('The audit model is no longer selected')
+      }
+      const ready = await testLocalAIConnection({
+        provider: settings.provider,
+        endpoint: settings.endpoint,
+        selectedModel: settings.selectedModel,
+      })
+      if (ready.status !== 'AVAILABLE' || !ready.selectedModelAvailable) {
+        throw new Error('The selected model could not be loaded')
+      }
       const next = await executeIdentityAuditBatch({
         profileId,
         auditId,
@@ -234,7 +284,7 @@ export function IdentityAuditPage() {
       setDetail(next)
       setView('ANALYSIS')
     } catch {
-      setError('The selected local model did not finish this analysis attempt. The audit is preserved; verify Ollama is running, then retry.')
+      setError('The selected local model did not load or finish this analysis attempt. The search results are preserved; verify the local inference server, then retry.')
     } finally {
       setAnalysisPending(false)
     }
@@ -265,6 +315,23 @@ export function IdentityAuditPage() {
   const unresolvedProposals = detail.proposals.filter(
     (proposal) => proposal.reviewState === 'UNREVIEWED',
   ).length
+  const remainingTasks = Math.max(
+    0,
+    detail.audit.totalTasks - detail.audit.terminalTasks,
+  )
+  const elapsedSeconds = Math.max(
+    1,
+    clockMs / 1_000 - detail.audit.createdAtUs / 1_000_000,
+  )
+  const etaSeconds =
+    running && detail.audit.terminalTasks > 0 && remainingTasks > 0
+      ? elapsedSeconds / detail.audit.terminalTasks * remainingTasks
+      : null
+  const etaLabel = !running
+    ? 'Run is not actively estimating'
+    : etaSeconds === null
+      ? 'ETA appears after the first completed task'
+      : `${formatRemaining(etaSeconds)} remaining · estimated ${new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(new Date(clockMs + etaSeconds * 1_000))}`
 
   return (
     <div className="page identity-audit-page" data-testid="route-ready">
@@ -286,7 +353,7 @@ export function IdentityAuditPage() {
           {running ? <Button variant="secondary" disabled={actionPending || batchPending} onClick={() => void control('PAUSE')}><Pause size={14} />Pause after current batch</Button> : null}
           {detail.audit.state === 'PAUSED' ? <Button variant="primary" disabled={actionPending} onClick={() => void control('RESUME')}><Play size={14} />Resume</Button> : null}
           {['READY', 'RUNNING', 'PAUSED'].includes(detail.audit.state) ? <Button variant="danger" disabled={actionPending || batchPending} onClick={() => void control('CANCEL')}><Square size={13} />Cancel run</Button> : null}
-          <span>{analysisPending ? <><LoaderCircle className="spin" size={14} />The selected local model is analysing retained sources…</> : batchPending ? <><LoaderCircle className="spin" size={14} />Executing the next bounded task batch…</> : `Last committed ${formatTime(detail.audit.updatedAtUs)}`}</span>
+          <span>{analysisPending ? <><LoaderCircle className="spin" size={14} />The selected local model is analysing retained sources…</> : batchPending ? <><LoaderCircle className="spin" size={14} />Executing the next bounded task batch · {etaLabel}</> : running ? etaLabel : `Last committed ${formatTime(detail.audit.updatedAtUs)}`}</span>
         </div>
       </section>
 
@@ -376,11 +443,12 @@ export function IdentityAuditPage() {
 
       {view === 'ANALYSIS' ? (
         <Panel eyebrow="Cited reasoning" title={detail.aiAnalysis?.title ?? 'No analysis produced'} action={detail.aiAnalysis ? <Badge tone={detail.aiAnalysis.status === 'SUCCEEDED' ? 'violet' : 'amber'}>{detail.aiAnalysis.status.toLocaleLowerCase()}</Badge> : undefined}>
-          {detail.aiAnalysis === null ? <div className="empty-state"><Sparkles size={28} /><h2>{analysisPending ? 'Local AI is analysing this run' : 'No AI analysis yet'}</h2><p>{analysisPending ? `Ariadne is loading ${detail.audit.selectedModel ?? 'the selected model'} and grounding every insight in retained source URLs.` : detail.audit.useLocalAi && detail.audit.selectedModel !== null ? 'The audit is preserved and ready for a local-model retry.' : 'Enable a selected local model before starting an audit. Deterministic discovery remains fully available without it.'}</p>{detail.audit.useLocalAi && detail.audit.selectedModel !== null && !analysisPending ? <Button variant="primary" onClick={() => void runAIAnalysis()}><Sparkles size={14} />Run AI analysis now</Button> : null}</div> : <div className="identity-ai-analysis">
+          {detail.aiAnalysis === null ? <div className="empty-state"><Sparkles size={28} /><h2>{analysisPending ? 'Local AI is analysing this run' : 'No AI analysis yet'}</h2><p>{analysisPending ? `Ariadne is loading ${detail.audit.selectedModel ?? 'the selected model'} and grounding every insight in retained source URLs.` : detail.audit.useLocalAi && detail.audit.selectedModel !== null ? 'The audit is preserved and ready for a local-model retry.' : 'Enable a selected local model before starting an audit. Deterministic discovery remains fully available without it.'}</p>{detail.audit.useLocalAi && detail.audit.selectedModel !== null && !analysisPending ? <Button variant="primary" onClick={() => void runAIAnalysis()}><Sparkles size={14} />Load model and analyse results</Button> : null}</div> : <div className="identity-ai-analysis">
             <p className="identity-ai-analysis__summary">{detail.aiAnalysis.summary}</p>
             <div className="identity-card-grid">{detail.aiAnalysis.insights.map((insight, index) => <article className="identity-knowledge-card" key={`${insight.kind}-${index}`}><header><Badge tone="violet">{insight.kind.replaceAll('_', ' ').toLocaleLowerCase()}</Badge>{insight.confidence ? <span>{insight.confidence.toLocaleLowerCase()} confidence</span> : null}</header><strong>{insight.statement}</strong><p>{insight.rationale}</p><div className="chip-wrap">{insight.evidenceRefs.map((reference) => <Badge key={reference}>{reference}</Badge>)}</div></article>)}</div>
             <div className="identity-ai-citations">{detail.aiAnalysis.citations.map((citation) => <article className="identity-result-row" key={citation.referenceId}><Sparkles size={15} /><div><strong>{citation.title || citation.url}</strong><code>{citation.url}</code><small>{citation.referenceId}</small></div><Button size="compact" variant="secondary" onClick={() => void copy(citation.url, citation.referenceId)}><Clipboard size={13} />{copied === citation.referenceId ? 'Copied' : 'Copy URL'}</Button></article>)}</div>
             {detail.aiAnalysis.limitations.length ? <div className="callout callout--warning"><AlertTriangle size={16} /><div><strong>Analysis limits</strong><p>{detail.aiAnalysis.limitations.join(' · ')}</p></div></div> : null}
+            {detail.aiAnalysis.status === 'FALLBACK' && detail.audit.selectedModel !== null ? <Button variant="primary" disabled={analysisPending} onClick={() => void runAIAnalysis()}>{analysisPending ? <LoaderCircle className="spin" size={14} /> : <Sparkles size={14} />}{analysisPending ? 'Loading and analysing…' : 'Load model and retry cited analysis'}</Button> : null}
             <small>{detail.aiAnalysis.provider && detail.aiAnalysis.modelId ? `${detail.aiAnalysis.provider} · ${detail.aiAnalysis.modelId} · ` : 'Deterministic fallback · '}{detail.aiAnalysis.resultCode.replaceAll('_', ' ').toLocaleLowerCase()}</small>
           </div>}
         </Panel>

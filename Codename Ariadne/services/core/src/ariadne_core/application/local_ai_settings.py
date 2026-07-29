@@ -81,7 +81,18 @@ class LocalAISettingsService:
 
     def test_connection(self, request: LocalAIEndpointRequest) -> LocalAIConnectionResult:
         try:
-            models = self._client(request).list_models()
+            client = self._client(request)
+            models = client.list_models()
+            selected_available = (
+                None
+                if request.selected_model is None
+                else any(model.model_id == request.selected_model for model in models)
+            )
+            if request.selected_model is not None and selected_available:
+                # A connection test with a selected model is also an explicit,
+                # content-free preload. UI can therefore report "ready" only
+                # after the inference server has actually loaded that model.
+                client.preload(model_id=request.selected_model)
         except LocalAIError as error:
             status = {
                 LocalAIErrorCode.TIMEOUT: LocalAIConnectionStatus.TIMEOUT,
@@ -93,11 +104,6 @@ class LocalAISettingsService:
                 model_count=0,
                 selected_model_available=None,
             )
-        selected_available = (
-            None
-            if request.selected_model is None
-            else any(model.model_id == request.selected_model for model in models)
-        )
         return LocalAIConnectionResult(
             status=(
                 LocalAIConnectionStatus.MODEL_UNAVAILABLE
@@ -115,6 +121,11 @@ class LocalAISettingsService:
                 enabled=True,
                 provider=request.provider,
                 endpoint=request.endpoint,
+                # A cold 30B-class model on an external SSD can legitimately
+                # need longer than a connectivity probe. The native boundary
+                # applies a matching hard deadline and the provider remains
+                # restricted to loopback.
+                timeout_seconds=120,
             ),
             transport=self._transport,
         )
