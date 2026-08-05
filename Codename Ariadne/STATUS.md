@@ -1,12 +1,12 @@
 # Codename Ariadne — Project Status
 
 Last updated: 2026-08-05
-Overall state: **streamlined foreground identity-audit workflow complete and packaged at the 57-operation/55-path candidate; production release readiness remains incomplete**
+Overall state: **streamlined foreground identity-audit workflow implemented and packaged at the 57-operation/55-path candidate; final private-vault interaction awaits one macOS Keychain approval and production release readiness remains incomplete**
 
 ## Implemented at the current source boundary
 
 - The generated contract contains **57 narrow operations (4 GET, 53 POST; 55 distinct paths)** at schema head `0011_profile_purge`.
-- The current frontend passes typecheck, lint, production build, and **156/156 Vitest tests across 39 files**.
+- The current frontend passes typecheck, lint, production build, and **158/158 Vitest tests across 39 files**.
 - Native vault creation now leads to explicit named-profile creation or
   selection. Intake refuses to create a hidden generic profile, and the default
   native route enters the persistent People workspace.
@@ -17,6 +17,11 @@ Overall state: **streamlined foreground identity-audit workflow complete and pac
   results, coverage/failures, proposals, cited AI analysis, receipts,
   truncation flags, byte count, and SHA-256.
 - Selected local AI runs after the deterministic frontier and stores only source-grounded facts, connections, and next steps with exact result citations. If the selected model is unavailable or changes, Ariadne records an explicit deterministic fallback instead of inventing a model result.
+- Reopening a retained audit no longer lets one malformed route projection tear
+  down Core or revoke the unlocked vault. The rejected route stays fail-closed,
+  the rest of the session remains usable, legacy model prose is normalized to
+  the bounded display contract, and the UI offers retry/back recovery instead
+  of an indefinite loader.
 - Positive proposal decisions promote reviewed knowledge into canonical entities and retain proposal-to-entity exact-source provenance.
 - A native **Delete active local profile** action requires typing the exact profile name, refreshes the profile revision, physically purges all profile-scoped rows and linked jobs/idempotency results in one transaction, uses SQLite secure deletion, and vacuums freed pages. The accidental July 23 workspace was removed from the live app and placed in a recoverable user Trash backup.
 - The Discovery Console combines bounded DuckDuckGo HTML and unauthenticated GitHub-user search, official HIBP account/domain checks, a deterministic multi-identifier planner, fixed manual portals, and a local advanced query composer. The composer shows the exact query assembled from `site`, `filetype`, `intitle`, `inurl`, exclusion, date, and optional raw provider-specific operators; it can create user-opened handoffs for Google, Bing, DuckDuckGo, Brave, Ecosia, Startpage, and Mojeek or load the query into the bounded DuckDuckGo form. It does not scrape, import evidence automatically, or bypass controls.
@@ -35,9 +40,11 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 ### Current 57-operation source evidence
 
 - Generated contract: **57 operations / 55 paths (4 GET, 53 POST)**; drift check passes.
-- Python: Ruff passes across **169 files**, strict mypy across **93 source files**, and the full aggregate completes with **500 passed and 5 intentional skips**.
-- Rust: format and strict all-target Clippy clean; **90 passed, 0 failed, 1 ignored** manual Keychain test in 13.33 seconds.
-- Frontend: typecheck, lint, production build, and **156/156 Vitest tests across 39 files** pass.
+- Python: Ruff passes across **169 files**, strict mypy across **93 source files**,
+  **500 non-contract tests pass with 5 intentional skips**, and the regenerated
+  contract suite passes **4/4**.
+- Rust: format and strict all-target Clippy clean; **91 passed, 0 failed, 1 ignored** manual Keychain test.
+- Frontend: typecheck, lint, production build, and **158/158 Vitest tests across 39 files** pass.
 - Focused end-to-end backend: the synthetic named-profile → intake → decision →
   audit execution → cited AI → proposal promotion → reopen workflow passes.
 - Privacy: **443 candidate files passed**.
@@ -64,10 +71,14 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 Current 57-operation local package evidence:
 
-- Frozen/staged sidecar: 21,061,664 bytes, arm64/minimum macOS 11.0, SHA-256 `780924ee5c553b38a80f05b4055e35f10051f66f573142b0ea611efb2c7ce5a9`.
-- Signed packaged sidecar: 21,062,832 bytes, SHA-256 `e1ebcdd61b2f80d450a85b80d133f7a33e3a9ada3de504a233fb199e9e6432e9`, CDHash `8ce5b76633c65a4fcc6dd04f9c708fa77748a011`.
-- Desktop executable: 17,770,320 bytes, arm64/minimum macOS 14.0, SHA-256 `62a01e08e8c7545d78d077bb6055fa3e4581360af53af42bbe1a7105109f9410`, CDHash `56617aff3bebc2a241cdd5dde68fa4ca093b43d4`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 7,956/4,655 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Frozen/staged sidecar: 21,062,240 bytes, arm64/minimum macOS 11.0, SHA-256 `dc18c0dbe17c57b47bfd5c41543bc2ac8cf0c86e2ed3f3803ee9c6952f18d675`.
+- Signed packaged sidecar: 21,062,224 bytes, SHA-256 `4e3c23203847dc22219f3517a518d7ba72e22778dc167f73915ac2ecc976b3ae`, CDHash `f231413af3949aa9648b8a53eabe84ac7ef983c3`.
+- Desktop executable: 17,755,520 bytes, arm64/minimum macOS 14.0, SHA-256 `be422f744fbebba1553f71fec658d130c59bb4aa31aed49ba2b535645b9dc6df`, CDHash `70dc60af6bfeae62190ad42cd07f4a8e9a0dffa6`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 4,767/3,094 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- A final private-vault launch reached the expected macOS Keychain password
+  sheet because the ad-hoc binary identity changed. Live reopen and deletion
+  were not claimed past that sheet; the user must approve the newly signed
+  local build once.
 
 ### Historical 48- and 45-operation candidate evidence
 
@@ -109,7 +120,9 @@ Those identities remain historical evidence only and are not relabelled as 48-op
 
 ## Next milestone
 
-The current scoped goal is complete. Optional follow-on work is evidence
+The current scoped implementation and automated package gate are complete.
+After the one interactive Keychain approval, repeat the private retained-run
+reopen and delete the remaining local validation profile. Optional follow-on work is evidence
 streaming/retention, authorised connectors, specialist providers, saved-artifact
 management, and production release validation. Background scheduling is not a
 current priority. Preserve earlier artifact identities as historical local

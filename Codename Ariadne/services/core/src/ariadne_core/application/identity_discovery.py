@@ -10,6 +10,7 @@ and partial batches.
 from __future__ import annotations
 
 import json
+import unicodedata
 from collections.abc import Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -605,25 +606,41 @@ def _fallback_ai_analysis(
 
 def _ai_analysis(row: RowMapping) -> AuditAIAnalysis:
     content = json.loads(str(row["analysis_json"]))
+    title = _normalise_ai_text(content.get("title"), 500)
+    summary = _normalise_ai_text(content.get("summary"), 4_000)
+    limitations = tuple(
+        value
+        for item in content.get("limitations", ())[:32]
+        if (value := _normalise_ai_text(item, 2_000))
+    )
+    insights: list[AIAnalysisInsight] = []
+    for item in content.get("insights", ())[:MAX_AI_INSIGHTS]:
+        statement = _normalise_ai_text(item.get("statement"), 2_000)
+        if not statement:
+            continue
+        rationale = _normalise_ai_text(item.get("rationale"), 2_000)
+        insights.append(
+            AIAnalysisInsight(
+                kind=AIInsightKind(str(item["kind"])),
+                statement=statement,
+                rationale=rationale,
+                confidence=None if item.get("confidence") is None else str(item["confidence"]),
+                evidence_refs=tuple(str(value) for value in item.get("evidenceRefs", ())),
+            )
+        )
     return AuditAIAnalysis(
         analysis_id=str(row["id"]),
         status=AIAnalysisStatus(str(row["status"])),
         result_code=str(row["result_code"]),
-        provider=None if row["provider"] is None else str(row["provider"]),
-        model_id=None if row["model_id"] is None else str(row["model_id"]),
-        engine_version=(None if row["engine_version"] is None else str(row["engine_version"])),
-        title=str(content["title"]),
-        summary=str(content["summary"]),
-        insights=tuple(
-            AIAnalysisInsight(
-                kind=AIInsightKind(str(item["kind"])),
-                statement=str(item["statement"]),
-                rationale=str(item["rationale"]),
-                confidence=None if item["confidence"] is None else str(item["confidence"]),
-                evidence_refs=tuple(str(value) for value in item["evidenceRefs"]),
-            )
-            for item in content["insights"][:MAX_AI_INSIGHTS]
+        provider=_normalise_optional_ai_label(row["provider"], 64),
+        model_id=_normalise_optional_ai_label(row["model_id"], 256),
+        engine_version=_normalise_optional_ai_label(row["engine_version"], 64),
+        title=title or "Local analysis",
+        summary=(
+            summary
+            or "No additional model summary was retained; review the cited source results directly."
         ),
+        insights=tuple(insights),
         citations=tuple(
             AIAnalysisCitation(
                 reference_id=str(item["referenceId"]),
@@ -631,11 +648,30 @@ def _ai_analysis(row: RowMapping) -> AuditAIAnalysis:
                 url=str(item["url"]),
                 title=str(item["title"]),
             )
-            for item in content["citations"][:MAX_AI_CITATIONS]
+            for item in content.get("citations", ())[:MAX_AI_CITATIONS]
         ),
-        limitations=tuple(str(value) for value in content["limitations"][:32]),
+        limitations=limitations,
         created_at_us=int(row["created_at_us"]),
     )
+
+
+def _normalise_ai_text(value: object, maximum: int) -> str:
+    """Make stored model prose compatible with the native display contract."""
+
+    text = "" if value is None else str(value)
+    text = "".join(
+        character
+        for character in text
+        if character in {"\n", "\t"} or unicodedata.category(character) != "Cc"
+    ).strip()
+    return text[:maximum].rstrip()
+
+
+def _normalise_optional_ai_label(value: object, maximum: int) -> str | None:
+    """Bound optional provider metadata without inventing a missing label."""
+
+    text = _normalise_ai_text(value, maximum).replace("\n", "").replace("\t", "")
+    return text or None
 
 
 def _source(row: RowMapping) -> PersonSource:

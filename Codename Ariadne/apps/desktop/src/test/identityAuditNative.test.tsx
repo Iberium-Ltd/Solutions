@@ -72,6 +72,32 @@ describe('terminal native identity audit workflow', () => {
     ))
   })
 
+  it('offers recovery instead of an endless loader when a retained run is rejected', async () => {
+    const user = userEvent.setup()
+    invokeMock
+      .mockRejectedValueOnce(new Error('invalid retained projection'))
+      .mockResolvedValue({ requestId, data: completedAuditDetail })
+
+    render(
+      <MemoryRouter initialEntries={[`/identity/audits/${completedAuditDetail.audit.auditId}`]}>
+        <Routes>
+          <Route path="/identity/audits/:auditId" element={<IdentityAuditPage />} />
+          <Route path="/people" element={<h1>People recovery route</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Audit could not be opened' })).toBeVisible()
+    expect(screen.queryByText('Loading committed progress')).not.toBeInTheDocument()
+    expect(screen.getByText('Committed progress is still safe')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Retry opening' }))
+    expect(await screen.findByRole('heading', {
+      name: completedAuditDetail.audit.name,
+    })).toBeVisible()
+    expect(invokeMock).toHaveBeenCalledTimes(2)
+  })
+
   it('recovers missing local AI analysis from a reopened partial run', async () => {
     const partialWithoutAnalysis = {
       ...completedAuditDetail,

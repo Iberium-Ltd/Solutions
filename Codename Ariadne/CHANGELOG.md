@@ -2,6 +2,17 @@
 
 ## 2026-08-05 — Final native workflow correction and private aggregate proof
 
+- Prevented a malformed retained-audit response from terminating Core and
+  relocking the vault. Route payloads still fail closed, but the authenticated
+  process remains available; initial reopen errors now provide explicit retry
+  and People navigation instead of an indefinite loader.
+- Normalized legacy local-model title, summary, insight, limitation, and
+  provider metadata into the current bounded native display contract while
+  preserving exact result citations. Added backend, Rust, and renderer
+  regressions for the recovered behavior.
+- Corrected Geographic Map's global classification from synthetic to native
+  vault-backed and replaced its unstyled country summary with responsive metric
+  primitives.
 - Kept an unlocked vault session open until explicit manual lock or app exit,
   added recoverable partial-audit loading, pre-intake Ollama/LM Studio model
   discovery and loading, natural-language AI-assisted intake, honest audit ETA,
@@ -11,10 +22,11 @@
 - Corrected the native profile-step banner and profile-choice layout, then
   made saved-model restoration perform a real content-free preload and reject
   mismatched readiness states at audit start and analysis recovery. The final
-  gate passed 156 frontend tests, typecheck, lint, production packaging, generated
-  contract drift, 90 Rust tests plus one manual Keychain ignore, a 443-file
-  privacy scan, deep strict signature verification, and requested/abrupt
-  packaged lifecycle checks.
+  gate passed 158 frontend tests, typecheck, lint, production packaging,
+  generated contract drift, 91 Rust tests plus one manual Keychain ignore,
+  deep strict signature verification, and requested/abrupt packaged lifecycle
+  checks. The new ad-hoc identity still requires one interactive macOS Keychain
+  approval before its private-vault reopen and profile purge are repeated.
 - Completed a private ignored depth-2/request-budget-150 audit with all 55
   frontier tasks terminal, 20 exact-source results, and a 20-citation local
   Qwen analysis. Only aggregate counts are recorded in Git.

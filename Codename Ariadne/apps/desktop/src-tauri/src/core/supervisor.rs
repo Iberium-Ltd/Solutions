@@ -1780,8 +1780,7 @@ impl CoreSupervisor {
                 .await
                 .map_err(|error| error.into_command_error(fallback_request_id))?;
         if let Err(error) = validate_response(&data) {
-            self.mark_failed(&error);
-            return Err(error.into_command_error(request_id));
+            return self.reject_invalid_route_response(error, request_id);
         }
         let state = self.lock().state;
         if state != CoreLifecycleState::Ready {
@@ -1834,8 +1833,7 @@ impl CoreSupervisor {
             .await
             .map_err(|error| error.into_command_error(fallback_request_id))?;
         if let Err(error) = validate_response(&data) {
-            self.mark_failed(&error);
-            return Err(error.into_command_error(request_id));
+            return self.reject_invalid_route_response(error, request_id);
         }
         let inner = self.lock();
         if inner.state != CoreLifecycleState::Ready || !inner.vault_unlocked {
@@ -1894,8 +1892,7 @@ impl CoreSupervisor {
                 .await
                 .map_err(|error| error.into_command_error(fallback_request_id))?;
         if let Err(error) = validate_response(&data) {
-            self.mark_failed(&error);
-            return Err(error.into_command_error(request_id));
+            return self.reject_invalid_route_response(error, request_id);
         }
         {
             let inner = self.lock();
@@ -1904,6 +1901,18 @@ impl CoreSupervisor {
             }
         }
         Ok(CoreCommandResponse { request_id, data })
+    }
+
+    /// Reject a malformed route payload without converting a healthy,
+    /// authenticated Core process into a lifecycle failure. The individual
+    /// response remains fail-closed, while the vault session and unrelated
+    /// routes stay usable for recovery or retry.
+    fn reject_invalid_route_response<T>(
+        &self,
+        error: CoreError,
+        request_id: Uuid,
+    ) -> Result<CoreCommandResponse<T>, CoreCommandError> {
+        Err(error.into_command_error(request_id))
     }
 
     fn take_lease_operation(
@@ -2578,13 +2587,13 @@ fn validate_identity_audit_detail(
         || result.proposals.len() > MAX_IDENTITY_PROPOSALS
         || result.receipts.len() > MAX_IDENTITY_RECEIPTS
     {
-        return Err(CoreError::InvalidIdentityResponse);
+        return reject_identity_audit_detail("summary-or-collection-bounds");
     }
 
     let mut task_ids = HashSet::with_capacity(result.tasks.len());
     for task in &result.tasks {
         if !task_ids.insert(task.task_id) || !validate_identity_task(task) {
-            return Err(CoreError::InvalidIdentityResponse);
+            return reject_identity_audit_detail("frontier-task");
         }
     }
     let mut result_ids = HashSet::with_capacity(result.results.len());
@@ -2592,25 +2601,25 @@ fn validate_identity_audit_detail(
         if !result_ids.insert(discovery_result.result_id)
             || !validate_identity_result(discovery_result)
         {
-            return Err(CoreError::InvalidIdentityResponse);
+            return reject_identity_audit_detail("discovery-result");
         }
     }
     let mut lead_ids = HashSet::with_capacity(result.leads.len());
     for lead in &result.leads {
         if !lead_ids.insert(lead.lead_id) || !validate_identity_lead(lead) {
-            return Err(CoreError::InvalidIdentityResponse);
+            return reject_identity_audit_detail("connected-lead");
         }
     }
     let mut proposal_ids = HashSet::with_capacity(result.proposals.len());
     for proposal in &result.proposals {
         if !proposal_ids.insert(proposal.proposal_id) || !validate_identity_proposal(proposal) {
-            return Err(CoreError::InvalidIdentityResponse);
+            return reject_identity_audit_detail("knowledge-proposal");
         }
     }
     let mut receipt_ids = HashSet::with_capacity(result.receipts.len());
     for receipt in &result.receipts {
         if !receipt_ids.insert(receipt.receipt_id) || !validate_identity_receipt(receipt) {
-            return Err(CoreError::InvalidIdentityResponse);
+            return reject_identity_audit_detail("tool-receipt");
         }
     }
     if let Some(analysis) = &result.ai_analysis {
@@ -2620,10 +2629,18 @@ fn validate_identity_audit_detail(
             .map(|item| (item.result_id, item))
             .collect();
         if !validate_identity_ai_analysis(analysis, &result_by_id) {
-            return Err(CoreError::InvalidIdentityResponse);
+            return reject_identity_audit_detail("ai-analysis");
         }
     }
     Ok(())
+}
+
+/// Reports only the rejected contract category. It deliberately excludes
+/// identifiers and payload values so release diagnostics cannot disclose vault
+/// contents while still making persisted-schema regressions diagnosable.
+fn reject_identity_audit_detail(reason: &'static str) -> Result<(), CoreError> {
+    eprintln!("ariadne identity-audit response rejected: {reason}");
+    Err(CoreError::InvalidIdentityResponse)
 }
 
 fn validate_identity_source(source: &CoreIdentitySource) -> bool {
@@ -2820,48 +2837,78 @@ fn validate_identity_ai_analysis(
     analysis: &CoreIdentityAiAnalysis,
     results: &HashMap<Uuid, &CoreIdentityDiscoveryResult>,
 ) -> bool {
-    if !is_rfc4122_uuid(analysis.analysis_id)
-        || !is_bounded_event_label(&analysis.result_code, 96)
-        || analysis
-            .provider
-            .as_deref()
-            .is_none_or(|value| is_safe_bounded_text(value, 1, 64))
-        || analysis
-            .model_id
-            .as_deref()
-            .is_none_or(|value| is_safe_bounded_text(value, 1, 256))
-        || analysis
-            .engine_version
-            .as_deref()
-            .is_none_or(|value| is_safe_bounded_text(value, 1, 64))
-        || (analysis.title.is_empty() || !is_safe_multiline_text(&analysis.title, 1, 500))
-        || (analysis.summary.is_empty() || !is_safe_multiline_text(&analysis.summary, 1, 4_000))
-        || analysis.insights.len() > MAX_IDENTITY_AI_INSIGHTS
-        || analysis.citations.len() > MAX_IDENTITY_AI_CITATIONS
-        || analysis.limitations.len() > 32
-        || !analysis
-            .limitations
-            .iter()
-            .all(|value| is_safe_multiline_text(value, 1, 2_000))
-        || !is_valid_timestamp_us(analysis.created_at_us)
+    if !is_rfc4122_uuid(analysis.analysis_id) {
+        return reject_identity_ai_analysis("analysis-id");
+    }
+    if !is_bounded_event_label(&analysis.result_code, 96) {
+        return reject_identity_ai_analysis("result-code");
+    }
+    if !analysis
+        .provider
+        .as_deref()
+        .is_none_or(|value| is_safe_bounded_text(value, 1, 64))
     {
-        return false;
+        return reject_identity_ai_analysis("provider");
+    }
+    if !analysis
+        .model_id
+        .as_deref()
+        .is_none_or(|value| is_safe_bounded_text(value, 1, 256))
+    {
+        return reject_identity_ai_analysis("model-id");
+    }
+    if !analysis
+        .engine_version
+        .as_deref()
+        .is_none_or(|value| is_safe_bounded_text(value, 1, 64))
+    {
+        return reject_identity_ai_analysis("engine-version");
+    }
+    if analysis.title.is_empty() || !is_safe_multiline_text(&analysis.title, 1, 500) {
+        return reject_identity_ai_analysis("title");
+    }
+    if analysis.summary.is_empty() || !is_safe_multiline_text(&analysis.summary, 1, 4_000) {
+        return reject_identity_ai_analysis("summary");
+    }
+    if analysis.insights.len() > MAX_IDENTITY_AI_INSIGHTS {
+        return reject_identity_ai_analysis("insight-count");
+    }
+    if analysis.citations.len() > MAX_IDENTITY_AI_CITATIONS {
+        return reject_identity_ai_analysis("citation-count");
+    }
+    if analysis.limitations.len() > 32 {
+        return reject_identity_ai_analysis("limitation-count");
+    }
+    if !analysis
+        .limitations
+        .iter()
+        .all(|value| is_safe_multiline_text(value, 1, 2_000))
+    {
+        return reject_identity_ai_analysis("limitation");
+    }
+    if !is_valid_timestamp_us(analysis.created_at_us) {
+        return reject_identity_ai_analysis("created-at");
     }
     let mut references = HashSet::with_capacity(analysis.citations.len());
     for citation in &analysis.citations {
         let expected_reference = format!("result:{}", citation.result_id);
         let Some(result) = results.get(&citation.result_id) else {
-            return false;
+            return reject_identity_ai_analysis("citation-result-missing");
         };
-        if citation.reference_id != expected_reference
-            || !references.insert(citation.reference_id.as_str())
-            || citation.url != result.url
-            || citation.title != result.title
-        {
-            return false;
+        if citation.reference_id != expected_reference {
+            return reject_identity_ai_analysis("citation-reference-shape");
+        }
+        if !references.insert(citation.reference_id.as_str()) {
+            return reject_identity_ai_analysis("citation-reference-duplicate");
+        }
+        if citation.url != result.url {
+            return reject_identity_ai_analysis("citation-url-mismatch");
+        }
+        if citation.title != result.title {
+            return reject_identity_ai_analysis("citation-title-mismatch");
         }
     }
-    analysis.insights.iter().all(|insight| {
+    let insights_valid = analysis.insights.iter().all(|insight| {
         is_safe_multiline_text(&insight.statement, 1, 2_000)
             && (insight.rationale.is_empty()
                 || is_safe_multiline_text(&insight.rationale, 1, 2_000))
@@ -2874,7 +2921,16 @@ fn validate_identity_ai_analysis(
                 .evidence_refs
                 .iter()
                 .all(|reference| references.contains(reference.as_str()))
-    })
+    });
+    if !insights_valid {
+        return reject_identity_ai_analysis("insight");
+    }
+    true
+}
+
+fn reject_identity_ai_analysis(reason: &'static str) -> bool {
+    eprintln!("ariadne identity-audit analysis rejected: {reason}");
+    false
 }
 
 fn is_identity_url(value: &str) -> bool {
@@ -10679,6 +10735,28 @@ mod tests {
         let error = supervisor.session().await.unwrap_err();
         assert_eq!(error.code, "CORE_NOT_READY");
         assert_eq!(supervisor.snapshot().state, CoreLifecycleState::NotStarted);
+    }
+
+    #[test]
+    fn invalid_route_response_does_not_revoke_an_unlocked_core_session() {
+        let supervisor = CoreSupervisor::new();
+        {
+            let mut inner = supervisor.lock();
+            inner.state = CoreLifecycleState::Ready;
+            inner.vault_unlocked = true;
+        }
+
+        let error = supervisor
+            .reject_invalid_route_response::<serde_json::Value>(
+                CoreError::InvalidIdentityResponse,
+                Uuid::new_v4(),
+            )
+            .unwrap_err();
+
+        assert_eq!(error.code, "CORE_REQUEST_FAILED");
+        let inner = supervisor.lock();
+        assert_eq!(inner.state, CoreLifecycleState::Ready);
+        assert!(inner.vault_unlocked);
     }
 
     #[test]

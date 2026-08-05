@@ -1857,7 +1857,7 @@ export const ROUTE_CAPABILITIES = [
     "path": "/v1/identity/audits",
     "requestSchemaSha256": "d416ea38325ac7e8c38bdac8cb8fdd9982fb409a44c3762aeab72dfafb4ed207",
     "requiredLockState": "UNLOCKED",
-    "responseSchemaSha256": "2a7eb01c776e6b9108099533cfd1da22bc0dbc5a56b38207da3305a11b6e6a5d",
+    "responseSchemaSha256": "a2b099caf62fd3352ce29af3061c8ad40764f79e1bf469b2fade1c7e2d1a467e",
     "revealClass": "NONE",
     "routeId": "identity.audit.create",
     "scopeClass": "PROFILE"
@@ -1870,7 +1870,7 @@ export const ROUTE_CAPABILITIES = [
     "path": "/v1/identity/audits/control",
     "requestSchemaSha256": "8183bf40316c203b9f9860b6d10fbe4740057c229899787ab7873adb0ef424db",
     "requiredLockState": "UNLOCKED",
-    "responseSchemaSha256": "2a7eb01c776e6b9108099533cfd1da22bc0dbc5a56b38207da3305a11b6e6a5d",
+    "responseSchemaSha256": "a2b099caf62fd3352ce29af3061c8ad40764f79e1bf469b2fade1c7e2d1a467e",
     "revealClass": "NONE",
     "routeId": "identity.audit.control",
     "scopeClass": "PROFILE"
@@ -1883,7 +1883,7 @@ export const ROUTE_CAPABILITIES = [
     "path": "/v1/identity/audits/detail",
     "requestSchemaSha256": "a8ca3300b21252ff1852de4ada1f47cf37f086fe18865a0fa60f7b480abbfc86",
     "requiredLockState": "UNLOCKED",
-    "responseSchemaSha256": "2a7eb01c776e6b9108099533cfd1da22bc0dbc5a56b38207da3305a11b6e6a5d",
+    "responseSchemaSha256": "a2b099caf62fd3352ce29af3061c8ad40764f79e1bf469b2fade1c7e2d1a467e",
     "revealClass": "NONE",
     "routeId": "identity.audit.read",
     "scopeClass": "PROFILE"
@@ -1896,7 +1896,7 @@ export const ROUTE_CAPABILITIES = [
     "path": "/v1/identity/audits/execute",
     "requestSchemaSha256": "a8ca3300b21252ff1852de4ada1f47cf37f086fe18865a0fa60f7b480abbfc86",
     "requiredLockState": "UNLOCKED",
-    "responseSchemaSha256": "2a7eb01c776e6b9108099533cfd1da22bc0dbc5a56b38207da3305a11b6e6a5d",
+    "responseSchemaSha256": "a2b099caf62fd3352ce29af3061c8ad40764f79e1bf469b2fade1c7e2d1a467e",
     "revealClass": "NONE",
     "routeId": "identity.audit.execute",
     "scopeClass": "PROFILE"
@@ -1922,7 +1922,7 @@ export const ROUTE_CAPABILITIES = [
     "path": "/v1/identity/proposals/decision",
     "requestSchemaSha256": "246ab2c31a93bb1f6e04ead00e28ee16c39068dfb352681124b00d00ef4b820d",
     "requiredLockState": "UNLOCKED",
-    "responseSchemaSha256": "2a7eb01c776e6b9108099533cfd1da22bc0dbc5a56b38207da3305a11b6e6a5d",
+    "responseSchemaSha256": "a2b099caf62fd3352ce29af3061c8ad40764f79e1bf469b2fade1c7e2d1a467e",
     "revealClass": "NONE",
     "routeId": "identity.proposal.decision",
     "scopeClass": "PROFILE"

@@ -20,6 +20,7 @@ import {
   Badge,
   Button,
   DefinitionList,
+  Metric,
   PageHeader,
   Panel,
   type Tone,
@@ -182,11 +183,13 @@ function NativeMapPage() {
       />
       <div className="grid-4 identity-metrics">
         {countries.slice(0, 4).map(([country, results]) => (
-          <article className="metric-card" key={country}>
-            <span>{country}</span>
-            <strong>{results.length}</strong>
-            <small>retained source{results.length === 1 ? '' : 's'}</small>
-          </article>
+          <Metric
+            key={country}
+            label={country}
+            value={String(results.length)}
+            detail={`retained source${results.length === 1 ? '' : 's'}`}
+            tone={country === 'Global or unspecified' ? 'neutral' : 'cyan'}
+          />
         ))}
       </div>
       <Panel

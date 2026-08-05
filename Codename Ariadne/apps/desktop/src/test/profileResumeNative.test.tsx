@@ -98,6 +98,21 @@ describe('native profile resume boundary', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('labels the live geographic projection as vault-backed', async () => {
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <AppShell>
+          <div data-testid="native-map" />
+        </AppShell>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Native vault-backed screen')).toBeVisible()
+    expect(
+      screen.queryByText('Synthetic demonstration · not your vault data'),
+    ).not.toBeInTheDocument()
+  })
+
   it('requires explicit resume and purges the prior route state on profile switch', async () => {
     const user = userEvent.setup()
     render(

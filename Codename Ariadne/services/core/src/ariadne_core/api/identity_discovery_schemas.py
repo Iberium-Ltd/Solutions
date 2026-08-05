@@ -478,8 +478,8 @@ class AuditAIAnalysis(ApiModel):
     provider: str | None
     model_id: str | None
     engine_version: str | None
-    title: str = Field(max_length=500)
-    summary: str = Field(max_length=4_000)
+    title: str = Field(min_length=1, max_length=500)
+    summary: str = Field(min_length=1, max_length=4_000)
     insights: tuple[AIAnalysisInsight, ...] = Field(max_length=MAX_AI_INSIGHTS)
     citations: tuple[AIAnalysisCitation, ...] = Field(max_length=MAX_AI_CITATIONS)
     limitations: tuple[str, ...] = Field(max_length=32)

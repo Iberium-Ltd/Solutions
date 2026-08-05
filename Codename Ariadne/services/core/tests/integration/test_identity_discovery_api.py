@@ -12,7 +12,7 @@ from uuid import uuid4
 import httpx
 import pytest
 from fastapi import FastAPI
-from sqlalchemy import MetaData, Table, insert, select
+from sqlalchemy import MetaData, Table, insert, select, update
 
 from ariadne_core.api.app import ApiRuntime, create_app
 from ariadne_core.api.schemas import RuntimeTransport
@@ -293,6 +293,41 @@ async def test_person_workspace_and_audit_survive_navigation(tmp_path: Path) -> 
         assert parse_qs(request_body.decode())["q"] == ["synthetic_orbit_742"]
 
         metadata = MetaData()
+        analyses = Table("identity_ai_analyses", metadata, autoload_with=manager.engine)
+        legacy_analysis = dict(executed["aiAnalysis"])
+        legacy_analysis["title"] = " \u0000 "
+        legacy_analysis["summary"] = "  Legacy summary.\u0000  "
+        legacy_analysis["insights"][0]["statement"] = "  Legacy finding.\u0000  "
+        legacy_analysis["insights"][0]["rationale"] = "\r\n"
+        legacy_analysis["limitations"] = [" ", " Human review.\u0000 "]
+        with manager.engine.begin() as connection:
+            connection.execute(
+                update(analyses)
+                .where(analyses.c.audit_id == audit_id)
+                .values(
+                    provider=" OLLAMA ",
+                    model_id=" qwen-local:7b ",
+                    engine_version="\tlegacy-engine\n",
+                    analysis_json=json.dumps(legacy_analysis),
+                )
+            )
+
+        legacy_response = await client.post(
+            "/v1/identity/audits/detail",
+            json={"profileId": profile_id, "auditId": audit_id},
+            headers=_headers(),
+        )
+        assert legacy_response.status_code == 200, legacy_response.text
+        legacy = legacy_response.json()["aiAnalysis"]
+        assert legacy["title"] == "Local analysis"
+        assert legacy["summary"] == "Legacy summary."
+        assert legacy["provider"] == "OLLAMA"
+        assert legacy["modelId"] == "qwen-local:7b"
+        assert legacy["engineVersion"] == "legacy-engine"
+        assert legacy["insights"][0]["statement"] == "Legacy finding."
+        assert legacy["insights"][0]["rationale"] == ""
+        assert legacy["limitations"] == ["Human review."]
+
         proposals = Table("identity_proposals", metadata, autoload_with=manager.engine)
         proposal_origins = Table("identity_entity_origins", metadata, autoload_with=manager.engine)
         proposal_id = str(uuid4())

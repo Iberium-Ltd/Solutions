@@ -303,11 +303,36 @@ export function IdentityAuditPage() {
   }
 
   if (detail === null) {
+    if (error !== null) {
+      return (
+        <div className="page identity-audit-page" data-testid="route-ready">
+          <PageHeader
+            eyebrow="Identity audit · durable execution"
+            title="Audit could not be opened"
+            description="The persisted run remains in the local vault. Retry this route or return to People without locking the workspace."
+          />
+          <Panel>
+            <div className="empty-state">
+              <AlertTriangle size={30} />
+              <h2>Committed progress is still safe</h2>
+              <p>{error}</p>
+              <div className="button-row">
+                <Button variant="primary" onClick={() => setCycle((value) => value + 1)}>
+                  <RefreshCw size={16} /> Retry opening
+                </Button>
+                <Button onClick={() => navigate('/people')}>
+                  <ArrowLeft size={16} /> Back to People
+                </Button>
+              </div>
+            </div>
+          </Panel>
+        </div>
+      )
+    }
     return (
       <div className="page identity-audit-page" data-testid="route-ready" aria-busy="true">
         <PageHeader eyebrow="Identity audit · durable execution" title="Opening audit run" description="Loading the persisted frontier and exact task state from the local vault." />
         <Panel><div className="empty-state"><LoaderCircle className="spin" size={30} /><h2>Loading committed progress</h2><p>No simulated percentage is used on this screen.</p></div></Panel>
-        {error ? <div className="callout callout--danger" role="alert">{error}</div> : null}
       </div>
     )
   }

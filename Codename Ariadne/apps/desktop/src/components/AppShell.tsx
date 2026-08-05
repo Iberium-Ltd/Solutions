@@ -127,6 +127,7 @@ const nativeVaultRoutes = [
   /^\/audits\/new\/entities/,
   /^\/findings/,
   /^\/graph/,
+  /^\/map/,
   /^\/tools/,
   /^\/ai\/corpus/,
   /^\/ai\/workspace/,

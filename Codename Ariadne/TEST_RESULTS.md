@@ -1,7 +1,7 @@
 # Codename Ariadne — Test Results
 
 Last updated: 2026-08-05
-Current status: **streamlined foreground workflow, 57-operation/55-path source aggregate, frozen sidecar, and packaged macOS lifecycle pass**
+Current status: **streamlined foreground workflow, 57-operation/55-path source aggregate, frozen sidecar, and packaged macOS lifecycle pass; final private-vault interaction awaits one Keychain approval**
 
 No confidential-reference content, name, or claim is reproduced in these results. Tests use synthetic fixtures except for the aggregate-only, ephemeral local benchmark described below.
 
@@ -15,10 +15,10 @@ operations and one confirmed physical-profile deletion operation.
 | Category | Current result |
 |---|---|
 | Python quality | Ruff passed across **169 files**; strict mypy passed across **93 source files** |
-| Python full aggregate | **500 passed, 5 intentional skips** |
+| Python aggregate | **500 non-contract tests passed, 5 intentional skips**; regenerated contract suite **4/4 passed** |
 | Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **57 operations / 55 paths** |
-| Rust | Format and strict all-target Clippy clean; **90 passed, 0 failed, 1 ignored** manual macOS Keychain test in **13.33 seconds** |
-| Frontend | **156/156 passed across 39 files**; typecheck, lint, and production build passed |
+| Rust | Format and strict all-target Clippy clean; **91 passed, 0 failed, 1 ignored** manual macOS Keychain test |
+| Frontend | **158/158 passed across 39 files**; typecheck, lint, and production build passed |
 | Focused workflow | **16/16 frontend workflow tests**, the backend profile-to-audit integration, and one complete native-renderer Playwright journey passed |
 | Live local Qwen | Post-relocation opt-in `qwen3:30b` workspace, summary, connections, and gap-analysis run: **4/4 passed in 30.23 seconds**; Ollama reported a bounded 19 GB runtime, 8K context, and 100% GPU execution from the SSD-backed model store |
 | Focused screenshots | Nine 1720×1000 primary-journey screens captured and reviewed once; zero external requests/runtime problems and no blocking visual defect |
@@ -40,6 +40,13 @@ revision and exact name, and confirms that no row with that vault/profile scope
 remains in any installed table. Renderer tests verify the fixed native command,
 response scope, exact-name prompt, and navigation-memory reset.
 
+Retained-run regressions now cover two separate failure planes. Native response
+validation rejects an invalid route payload without changing a ready, unlocked
+Core session, and the audit page replaces the initial infinite loader with
+explicit retry/back recovery. The backend integration also rewrites a synthetic
+legacy analysis with blank/control-padded prose and confirms safe bounded
+normalization while preserving its exact citations.
+
 An ignored private validation used the user-supplied local source file without
 copying any identifier, URL, result text, or screenshot into the repository.
 At depth 2 with a request budget of 150, all **55/55** frontier tasks became
@@ -55,8 +62,8 @@ bounded result catalog.
 Schema/archive:   0011_profile_purge
 Architecture:     arm64
 Minimum macOS:    11.0
-Frozen/staged:    21,061,664 bytes
-Staged SHA-256:   780924ee5c553b38a80f05b4055e35f10051f66f573142b0ea611efb2c7ce5a9
+Frozen/staged:    21,062,240 bytes
+Staged SHA-256:   dc18c0dbe17c57b47bfd5c41543bc2ac8cf0c86e2ed3f3803ee9c6952f18d675
 ```
 
 Fresh frozen and staged inspections both passed authenticated development TCP
@@ -67,15 +74,19 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 | Package evidence | Current 57-operation result |
 |---|---|
-| Requested quit | 7,956 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
-| Abrupt parent exit | 4,655 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Requested quit | 4,767 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 3,094 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
 | Runtime permissions | `0700` directory; `0600` socket in both runs |
-| Signed packaged sidecar | 21,062,832 bytes; arm64/minimum macOS 11.0; SHA-256 `e1ebcdd61b2f80d450a85b80d133f7a33e3a9ada3de504a233fb199e9e6432e9`; CDHash `8ce5b76633c65a4fcc6dd04f9c708fa77748a011` |
-| Desktop executable | 17,770,320 bytes; arm64/minimum macOS 14.0; SHA-256 `62a01e08e8c7545d78d077bb6055fa3e4581360af53af42bbe1a7105109f9410`; CDHash `56617aff3bebc2a241cdd5dde68fa4ca093b43d4` |
+| Signed packaged sidecar | 21,062,224 bytes; arm64/minimum macOS 11.0; SHA-256 `4e3c23203847dc22219f3517a518d7ba72e22778dc167f73915ac2ecc976b3ae`; CDHash `f231413af3949aa9648b8a53eabe84ac7ef983c3` |
+| Desktop executable | 17,755,520 bytes; arm64/minimum macOS 14.0; SHA-256 `be422f744fbebba1553f71fec658d130c59bb4aa31aed49ba2b535645b9dc6df`; CDHash `70dc60af6bfeae62190ad42cd07f4a8e9a0dffa6` |
 | Bundle | 38,040 KiB allocated; deep strict ad-hoc signature verification passed |
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,
 notarisation, signed-update, clean-machine, or public-release proof.
+The first private-vault launch of this new ad-hoc identity reached the expected
+macOS Keychain password sheet. No password was entered or captured, so the
+private retained-run reopen and final profile purge remain an explicit
+interactive follow-up rather than a claimed pass.
 
 ## Historical 48-operation source candidate
 
