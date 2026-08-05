@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-05 — Final native workflow correction and private aggregate proof
+
+- Kept an unlocked vault session open until explicit manual lock or app exit,
+  added recoverable partial-audit loading, pre-intake Ollama/LM Studio model
+  discovery and loading, natural-language AI-assisted intake, honest audit ETA,
+  cited post-search analysis, source geography, and AI-assisted connections.
+- Added exact-name physical profile deletion and validated renderer/backend
+  deletion behavior without retaining a deleted subject in navigation state.
+- Corrected the native profile-step banner and profile-choice layout, then
+  passed 154 frontend tests, typecheck, lint, production packaging, generated
+  contract drift, 90 Rust tests plus one manual Keychain ignore, a 442-file
+  privacy scan, deep strict signature verification, and requested/abrupt
+  packaged lifecycle checks.
+- Completed a private ignored depth-2/request-budget-150 audit with all 55
+  frontier tasks terminal, 20 exact-source results, and a 20-citation local
+  Qwen analysis. Only aggregate counts are recorded in Git.
+
 ## 2026-07-23 — Streamlined foreground audit completion
 
 - Made explicit named-profile selection the native entry point and prevented

@@ -1,6 +1,6 @@
 # Codename Ariadne — Test Results
 
-Last updated: 2026-07-23
+Last updated: 2026-08-05
 Current status: **streamlined foreground workflow, 57-operation/55-path source aggregate, frozen sidecar, and packaged macOS lifecycle pass**
 
 No confidential-reference content, name, or claim is reproduced in these results. Tests use synthetic fixtures except for the aggregate-only, ephemeral local benchmark described below.
@@ -14,15 +14,15 @@ operations and one confirmed physical-profile deletion operation.
 
 | Category | Current result |
 |---|---|
-| Python quality | Ruff passed across **171 files**; strict mypy passed across **94 source files** |
-| Python full aggregate | **500 passed, 4 intentional skips in 462.80 seconds** |
+| Python quality | Ruff passed across **169 files**; strict mypy passed across **93 source files** |
+| Python full aggregate | **500 passed, 5 intentional skips** |
 | Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **57 operations / 55 paths** |
-| Rust | Format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual macOS Keychain test in **15.16 seconds** |
-| Frontend | **153/153 passed across 38 files**; typecheck, lint, and production build passed |
+| Rust | Format and strict all-target Clippy clean; **90 passed, 0 failed, 1 ignored** manual macOS Keychain test in **13.33 seconds** |
+| Frontend | **154/154 passed across 38 files**; typecheck, lint, and production build passed |
 | Focused workflow | **16/16 frontend workflow tests**, the backend profile-to-audit integration, and one complete native-renderer Playwright journey passed |
 | Live local Qwen | Post-relocation opt-in `qwen3:30b` workspace, summary, connections, and gap-analysis run: **4/4 passed in 30.23 seconds**; Ollama reported a bounded 19 GB runtime, 8K context, and 100% GPU execution from the SSD-backed model store |
 | Focused screenshots | Nine 1720×1000 primary-journey screens captured and reviewed once; zero external requests/runtime problems and no blocking visual defect |
-| Privacy | **445 candidate files passed** |
+| Privacy | **442 candidate files passed** |
 | Frozen/package | Schema-0011 frozen/staged inspection, deep strict ad-hoc signature, and normal/abrupt packaged lifecycle passed |
 
 The streamlined-workflow tests verify explicit named-profile routing, refusal
@@ -39,6 +39,15 @@ identity data, rejects a mismatched confirmation name, deletes with the current
 revision and exact name, and confirms that no row with that vault/profile scope
 remains in any installed table. Renderer tests verify the fixed native command,
 response scope, exact-name prompt, and navigation-memory reset.
+
+An ignored private validation used the user-supplied local source file without
+copying any identifier, URL, result text, or screenshot into the repository.
+At depth 2 with a request budget of 150, all **55/55** frontier tasks became
+terminal, producing **20** exact-source results, **41** connected leads, **2**
+review proposals, and **57** receipts. Selected Qwen intake completed (the
+deterministic extractor had already found all 14 candidates), and cited
+post-search analysis completed with all **20** citations resolving to the
+bounded result catalog.
 
 ## Current 57-operation frozen/package verification
 
@@ -58,11 +67,11 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 | Package evidence | Current 57-operation result |
 |---|---|
-| Requested quit | 2,318 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
-| Abrupt parent exit | 1,908 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Requested quit | 7,230 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 2,805 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
 | Runtime permissions | `0700` directory; `0600` socket in both runs |
-| Signed packaged sidecar | 21,061,648 bytes; arm64/minimum macOS 11.0; SHA-256 `c9a24bfa73dc61d79b78514ad748ce3834938ddfe3bec4e316be2aae10c4c3f2`; CDHash `5eb416c4e6a35d6cfac6062103e86224d62e04b6` |
-| Desktop executable | 17,815,088 bytes; arm64/minimum macOS 14.0; SHA-256 `eb3f0dcf58d3c90bf99a6630d9ef56b5dd0894b71aa9ee001897c0e4573add97`; CDHash `0edc27da42d9b3a8bac4995511c53a99e5f90d7e` |
+| Signed packaged sidecar | 21,062,832 bytes; arm64/minimum macOS 11.0; SHA-256 `e1ebcdd61b2f80d450a85b80d133f7a33e3a9ada3de504a233fb199e9e6432e9`; CDHash `8ce5b76633c65a4fcc6dd04f9c708fa77748a011` |
+| Desktop executable | 17,770,320 bytes; arm64/minimum macOS 14.0; SHA-256 `f45a29dd2f54add9ef3b468d7d411e042fd3c489a1a9996e2a90f2fa13a57def`; CDHash `d971b7b15bb0d7e8e46a76452509ada570e014ae` |
 | Bundle | 38,040 KiB allocated; deep strict ad-hoc signature verification passed |
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,

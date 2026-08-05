@@ -83,6 +83,21 @@ describe('native profile resume boundary', () => {
     usePhase3WorkflowStore.getState().reset()
   })
 
+  it('labels the native profile step as vault-backed', async () => {
+    render(
+      <MemoryRouter initialEntries={['/new-audit']}>
+        <AppShell>
+          <div data-testid="native-profile-step" />
+        </AppShell>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Native vault-backed screen')).toBeVisible()
+    expect(
+      screen.queryByText('Synthetic demonstration · not your vault data'),
+    ).not.toBeInTheDocument()
+  })
+
   it('requires explicit resume and purges the prior route state on profile switch', async () => {
     const user = userEvent.setup()
     render(

@@ -1,12 +1,12 @@
 # Codename Ariadne — Project Status
 
-Last updated: 2026-07-23
+Last updated: 2026-08-05
 Overall state: **streamlined foreground identity-audit workflow complete and packaged at the 57-operation/55-path candidate; production release readiness remains incomplete**
 
 ## Implemented at the current source boundary
 
 - The generated contract contains **57 narrow operations (4 GET, 53 POST; 55 distinct paths)** at schema head `0011_profile_purge`.
-- The current frontend passes typecheck, lint, production build, and **153/153 Vitest tests across 38 files**.
+- The current frontend passes typecheck, lint, production build, and **154/154 Vitest tests across 38 files**.
 - Native vault creation now leads to explicit named-profile creation or
   selection. Intake refuses to create a hidden generic profile, and the default
   native route enters the persistent People workspace.
@@ -35,12 +35,17 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 ### Current 57-operation source evidence
 
 - Generated contract: **57 operations / 55 paths (4 GET, 53 POST)**; drift check passes.
-- Python: Ruff passes across **171 files**, strict mypy across **94 source files**, and the full aggregate completes with **500 passed and 4 intentional skips in 462.80 seconds**.
-- Rust: format and strict all-target Clippy clean; **95 passed, 0 failed, 1 ignored** manual Keychain test in 15.16 seconds.
-- Frontend: typecheck, lint, production build, and **153/153 Vitest tests across 38 files** pass.
+- Python: Ruff passes across **169 files**, strict mypy across **93 source files**, and the full aggregate completes with **500 passed and 5 intentional skips**.
+- Rust: format and strict all-target Clippy clean; **90 passed, 0 failed, 1 ignored** manual Keychain test in 13.33 seconds.
+- Frontend: typecheck, lint, production build, and **154/154 Vitest tests across 38 files** pass.
 - Focused end-to-end backend: the synthetic named-profile → intake → decision →
   audit execution → cited AI → proposal promotion → reopen workflow passes.
-- Privacy: **445 candidate files passed**.
+- Privacy: **442 candidate files passed**.
+- Private ignored validation: a depth-2, request-budget-150 run completed all
+  **55/55** frontier tasks, retained **20** exact-source results and **41**
+  connected leads, and completed a Qwen post-analysis with **20 valid
+  citations**. Only aggregate counts are documented; its identifiers, URLs,
+  model text, vault, and screenshots remain outside Git.
 - Live local Qwen after SSD relocation: fresh opt-in `qwen3:30b` run **4/4
   passed in 30.23 seconds**; Ollama reported a bounded 19 GB runtime, 8K
   context, and 100% GPU execution.
@@ -60,9 +65,9 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 Current 57-operation local package evidence:
 
 - Frozen/staged sidecar: 21,061,664 bytes, arm64/minimum macOS 11.0, SHA-256 `780924ee5c553b38a80f05b4055e35f10051f66f573142b0ea611efb2c7ce5a9`.
-- Signed packaged sidecar: 21,061,648 bytes, SHA-256 `c9a24bfa73dc61d79b78514ad748ce3834938ddfe3bec4e316be2aae10c4c3f2`, CDHash `5eb416c4e6a35d6cfac6062103e86224d62e04b6`.
-- Desktop executable: 17,815,088 bytes, arm64/minimum macOS 14.0, SHA-256 `eb3f0dcf58d3c90bf99a6630d9ef56b5dd0894b71aa9ee001897c0e4573add97`, CDHash `0edc27da42d9b3a8bac4995511c53a99e5f90d7e`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 2,318/1,908 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Signed packaged sidecar: 21,062,832 bytes, SHA-256 `e1ebcdd61b2f80d450a85b80d133f7a33e3a9ada3de504a233fb199e9e6432e9`, CDHash `8ce5b76633c65a4fcc6dd04f9c708fa77748a011`.
+- Desktop executable: 17,770,320 bytes, arm64/minimum macOS 14.0, SHA-256 `f45a29dd2f54add9ef3b468d7d411e042fd3c489a1a9996e2a90f2fa13a57def`, CDHash `d971b7b15bb0d7e8e46a76452509ada570e014ae`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 7,230/2,805 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 
 ### Historical 48- and 45-operation candidate evidence
 

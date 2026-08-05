@@ -120,6 +120,7 @@ const routeNames: Array<[RegExp, string]> = [
 ]
 
 const nativeVaultRoutes = [
+  /^\/new-audit/,
   /^\/people/,
   /^\/identity\/audits/,
   /^\/audits\/new\/intake/,

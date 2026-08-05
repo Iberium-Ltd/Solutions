@@ -1,6 +1,6 @@
 # Codename Ariadne — Progress Estimate
 
-Last updated: 2026-07-23
+Last updated: 2026-08-05
 Estimated overall completion: **96%**
 Confidence: **moderate**
 
@@ -28,7 +28,7 @@ readiness or unlimited provider coverage.
 
 The active source candidate contains **57 operations across 55 paths (4 GET, 53 POST)** at schema head `0011_profile_purge`. A named person profile now retains reviewed identifiers, exact sources, audit history, durable frontier state, results, cited AI analysis, and review proposals. **Run full audit** executes DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency checks automatically within explicit budgets; optional HIBP remains authentication-gated. Positive proposal review can promote knowledge into canonical entities with exact source provenance. Profile deletion requires an exact-name confirmation, erases every profile-owned table in dependency order, removes linked jobs/idempotency records, enables SQLite secure deletion, and vacuums freed pages.
 
-The current gate has passed strict Python formatting/lint/type checking, the full Python aggregate (**500 passed, 4 intentional skips**), **95 Rust tests plus one manual Keychain ignore**, **153/153 frontend tests across 38 files**, the focused backend profile-to-audit integration, and a complete primary-renderer Playwright journey. After moving the complete Ollama model store to the external SSD, a fresh **4/4 live `qwen3:30b`** run passed in **30.23 seconds** with task-specific structured output, exact citation constraints, an 8K context, and the model blob verified open from the SSD. Production build, generated-contract drift, a **445-file privacy scan**, fresh schema-0011 frozen/staged inspection, and normal/abrupt packaged-app lifecycle verification also pass. Every 48-operation and earlier package identity remains historical evidence and has not been relabelled.
+The current gate has passed strict Python formatting/lint/type checking, the full Python aggregate (**500 passed, 5 intentional skips**), **90 Rust tests plus one manual Keychain ignore**, **154/154 frontend tests across 38 files**, the focused backend profile-to-audit integration, and a complete primary-renderer Playwright journey. After moving the complete Ollama model store to the external SSD, a fresh **4/4 live `qwen3:30b`** run passed in **30.23 seconds** with task-specific structured output, exact citation constraints, an 8K context, and the model blob verified open from the SSD. A private, ignored depth-2/request-budget-150 validation also completed 55/55 frontier tasks, retained 20 exact-source results, and produced a 20-citation Qwen analysis without copying its identifiers or sources into Git. Production build, generated-contract drift, a **442-file privacy scan**, fresh schema-0011 frozen/staged inspection, and normal/abrupt packaged-app lifecycle verification pass. Every 48-operation and earlier package identity remains historical evidence and has not been relabelled.
 
 ## What remains most significant
 

@@ -102,6 +102,14 @@
 .wizard-steps li.is-complete > span { border-color: rgb(112 229 162 / 28%); color: var(--color-success); }
 
 .audit-mode-grid { padding: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.audit-profile-mode { padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.audit-profile-mode > button { min-block-size: 72px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text-muted); display: flex; align-items: center; gap: 11px; text-align: start; cursor: pointer; }
+.audit-profile-mode > button:hover:not(:disabled) { border-color: var(--color-border-strong); background: var(--color-surface-raised); }
+.audit-profile-mode > button.is-selected { border-color: rgb(88 223 245 / 40%); background: linear-gradient(145deg, rgb(88 223 245 / 10%), var(--color-surface-raised)); color: var(--color-accent); box-shadow: inset 0 1px 0 rgb(88 223 245 / 10%); }
+.audit-profile-mode > button:disabled { cursor: not-allowed; opacity: 0.55; }
+.audit-profile-mode > button > span { min-inline-size: 0; display: flex; flex-direction: column; gap: 4px; }
+.audit-profile-mode strong { color: var(--color-text-secondary); font-size: calc(11px * var(--font-scale)); }
+.audit-profile-mode small { color: var(--color-text-muted); font-size: calc(10px * var(--font-scale)); line-height: 1.35; }
 .audit-mode-card { position: relative; min-block-size: 165px; padding: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text-muted); display: flex; flex-direction: column; align-items: flex-start; text-align: start; cursor: pointer; }
 .audit-mode-card:hover { border-color: var(--color-border-strong); background: var(--color-surface-raised); }
 .audit-mode-card.is-selected { border-color: rgb(88 223 245 / 40%); background: linear-gradient(145deg, rgb(88 223 245 / 10%), var(--color-surface-raised)); box-shadow: inset 0 1px 0 rgb(88 223 245 / 10%); }
@@ -344,6 +352,7 @@
   .dashboard-run__body { grid-template-columns: 100px minmax(220px, 1fr) minmax(145px, .62fr); gap: 14px; }
   .dashboard-run__summary { display: flex; }
   .coverage-dial { inline-size: 100px; }
+  .audit-profile-mode { grid-template-columns: 1fr; }
   .audit-mode-grid { grid-template-columns: 1fr; }
   .audit-mode-card { min-block-size: 104px; padding-inline-start: 57px; }
   .audit-mode-card__icon { position: absolute; inset-block-start: 13px; inset-inline-start: 12px; }
