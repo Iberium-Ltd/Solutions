@@ -98,6 +98,17 @@ describe('local AI native boundary', () => {
         }),
       ),
     ).toThrow('connection response is invalid')
+
+    expect(() =>
+      localAiBoundaryParsers.connection(
+        response({
+          status: 'AVAILABLE',
+          reachable: true,
+          modelCount: 1,
+          selectedModelAvailable: false,
+        }),
+      ),
+    ).toThrow('connection response is invalid')
   })
 
   it('uses only route-specific discovery and update commands', async () => {

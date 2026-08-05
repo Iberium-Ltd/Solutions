@@ -160,7 +160,10 @@ export function IdentityAuditPage() {
             endpoint: settings.endpoint,
             selectedModel: settings.selectedModel,
           })
-          if (ready.status !== 'AVAILABLE') {
+          if (
+            ready.status !== 'AVAILABLE' ||
+            ready.selectedModelAvailable !== true
+          ) {
             throw new Error('The selected model could not be loaded')
           }
           current = await executeIdentityAuditBatch({

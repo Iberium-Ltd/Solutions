@@ -137,4 +137,62 @@ describe('terminal native identity audit workflow', () => {
     ))
     expect(await screen.findByText('Ready to export')).toBeVisible()
   })
+
+  it('does not analyse with a merely reachable but unavailable selected model', async () => {
+    const partialWithoutAnalysis = {
+      ...completedAuditDetail,
+      audit: {
+        ...completedAuditDetail.audit,
+        state: 'PARTIAL' as const,
+        stage: 'COMPLETE' as const,
+        stopReason: 'REQUEST_BUDGET_EXHAUSTED' as const,
+      },
+      aiAnalysis: null,
+    }
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'core_get_identity_audit') {
+        return { requestId, data: partialWithoutAnalysis }
+      }
+      if (command === 'core_get_local_ai_settings') {
+        return {
+          requestId,
+          data: {
+            enabled: true,
+            provider: 'OLLAMA',
+            endpoint: 'http://127.0.0.1:11434',
+            selectedModel: completedAuditDetail.audit.selectedModel,
+            revision: 2,
+          },
+        }
+      }
+      if (command === 'core_test_local_ai_connection') {
+        return {
+          requestId,
+          data: {
+            status: 'AVAILABLE',
+            reachable: true,
+            modelCount: 1,
+            selectedModelAvailable: false,
+          },
+        }
+      }
+      throw new Error(`Unexpected command ${command}`)
+    })
+
+    render(
+      <MemoryRouter initialEntries={[`/identity/audits/${completedAuditDetail.audit.auditId}`]}>
+        <Routes>
+          <Route path="/identity/audits/:auditId" element={<IdentityAuditPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The audit stopped safely before its next commit.',
+    )
+    expect(invokeMock).not.toHaveBeenCalledWith(
+      'core_execute_identity_audit_batch',
+      expect.anything(),
+    )
+  })
 })

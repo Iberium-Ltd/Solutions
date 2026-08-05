@@ -247,7 +247,10 @@ export function PeoplePage() {
           selectedModel: localAI.selectedModel,
         })
         setLocalAIStatus(connection.status)
-        if (connection.status !== 'AVAILABLE') {
+        if (
+          connection.status !== 'AVAILABLE' ||
+          connection.selectedModelAvailable !== true
+        ) {
           setError('The selected local model is not available. Start its local server or choose another model.')
           return
         }
@@ -286,7 +289,10 @@ export function PeoplePage() {
         selectedModel: model,
       })
       setLocalAIStatus(connection.status)
-      if (connection.status !== 'AVAILABLE') {
+      if (
+        connection.status !== 'AVAILABLE' ||
+        connection.selectedModelAvailable !== true
+      ) {
         setLocalAIError('That model is listed but could not be loaded by the configured local AI server.')
         return
       }

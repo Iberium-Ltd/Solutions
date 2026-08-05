@@ -233,21 +233,43 @@ function NativeNewAuditPage() {
           if (cancelled) return
           const models = discovered.models.map((model) => model.modelId)
           setAIModels(models)
-          setSelectedAIModel(
+          const configuredModel =
             settings.selectedModel !== null &&
               models.includes(settings.selectedModel)
               ? settings.selectedModel
-              : models[0] ?? '',
-          )
-          setModelLoadState(
-            settings.enabled &&
-              settings.selectedModel !== null &&
-              models.includes(settings.selectedModel)
-              ? 'READY'
-              : 'IDLE',
-          )
+              : models[0] ?? ''
+          setSelectedAIModel(configuredModel)
           if (models.length === 0) {
+            setModelLoadState('IDLE')
             setModelError('The configured local AI server reports no served models.')
+          } else if (
+            settings.enabled &&
+            settings.selectedModel !== null &&
+            configuredModel === settings.selectedModel
+          ) {
+            // Listing a saved model proves only that it exists. Preload it on
+            // entry so READY means the exact model accepted a content-free
+            // inference request during this app session.
+            setModelLoadState('LOADING')
+            const ready = await testLocalAIConnection({
+              provider: settings.provider,
+              endpoint: settings.endpoint,
+              selectedModel: configuredModel,
+            })
+            if (cancelled) return
+            if (
+              ready.status === 'AVAILABLE' &&
+              ready.selectedModelAvailable === true
+            ) {
+              setModelLoadState('READY')
+            } else {
+              setModelLoadState('ERROR')
+              setModelError(
+                'The saved model is listed but did not finish loading. Load it again before intake.',
+              )
+            }
+          } else {
+            setModelLoadState('IDLE')
           }
         } catch {
           if (cancelled) return
@@ -305,7 +327,10 @@ function NativeNewAuditPage() {
         endpoint: aiEndpoint,
         selectedModel: selectedAIModel,
       })
-      if (result.status !== 'AVAILABLE' || !result.selectedModelAvailable) {
+      if (
+        result.status !== 'AVAILABLE' ||
+        result.selectedModelAvailable !== true
+      ) {
         throw new Error('Selected model did not become ready')
       }
       const saved = await updateLocalAISettings({

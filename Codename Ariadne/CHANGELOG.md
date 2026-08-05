@@ -9,8 +9,10 @@
 - Added exact-name physical profile deletion and validated renderer/backend
   deletion behavior without retaining a deleted subject in navigation state.
 - Corrected the native profile-step banner and profile-choice layout, then
-  passed 154 frontend tests, typecheck, lint, production packaging, generated
-  contract drift, 90 Rust tests plus one manual Keychain ignore, a 442-file
+  made saved-model restoration perform a real content-free preload and reject
+  mismatched readiness states at audit start and analysis recovery. The final
+  gate passed 156 frontend tests, typecheck, lint, production packaging, generated
+  contract drift, 90 Rust tests plus one manual Keychain ignore, a 443-file
   privacy scan, deep strict signature verification, and requested/abrupt
   packaged lifecycle checks.
 - Completed a private ignored depth-2/request-budget-150 audit with all 55

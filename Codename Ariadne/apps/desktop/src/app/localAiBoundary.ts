@@ -162,6 +162,7 @@ function parseConnection(value: unknown): LocalAIConnectionResult {
       typeof data.selectedModelAvailable === 'boolean'
     ) ||
     (data.status === 'AVAILABLE' && !data.reachable) ||
+    (data.status === 'AVAILABLE' && data.selectedModelAvailable === false) ||
     (data.status === 'MODEL_UNAVAILABLE' &&
       (!data.reachable || data.selectedModelAvailable !== false)) ||
     (['TIMEOUT', 'UNAVAILABLE', 'INVALID_RESPONSE'].includes(
