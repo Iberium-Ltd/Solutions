@@ -850,8 +850,11 @@ class IntakeIdentityRepository:
                 if removed.rowcount != 1:
                     raise RevisionConflict("profile purge conflict")
                 deleted_rows += 1
-            connection.exec_driver_sql("VACUUM")
-            connection.commit()
+            # ``secure_delete`` overwrites deleted cells during the transaction.
+            # Do not VACUUM here: it requires a database-wide exclusive lock and
+            # can make an otherwise valid foreground purge fail while the
+            # unlocked desktop is reading another profile-scoped view. File
+            # compaction belongs in an explicit idle maintenance operation.
         return deleted_rows
 
     def purge_expired_temporary_content(

@@ -1,12 +1,12 @@
 # Codename Ariadne — Project Status
 
-Last updated: 2026-08-05
+Last updated: 2026-08-06
 Overall state: **streamlined foreground identity-audit workflow implemented and packaged at the 57-operation/55-path candidate; final private-vault interaction awaits one macOS Keychain approval and production release readiness remains incomplete**
 
 ## Implemented at the current source boundary
 
 - The generated contract contains **57 narrow operations (4 GET, 53 POST; 55 distinct paths)** at schema head `0011_profile_purge`.
-- The current frontend passes typecheck, lint, production build, and **158/158 Vitest tests across 39 files**.
+- The current frontend passes typecheck, lint, production build, and **162/162 Vitest tests across 40 files**.
 - Native vault creation now leads to explicit named-profile creation or
   selection. Intake refuses to create a hidden generic profile, and the default
   native route enters the persistent People workspace.
@@ -23,7 +23,8 @@ Overall state: **streamlined foreground identity-audit workflow implemented and 
   the bounded display contract, and the UI offers retry/back recovery instead
   of an indefinite loader.
 - Positive proposal decisions promote reviewed knowledge into canonical entities and retain proposal-to-entity exact-source provenance.
-- A native **Delete active local profile** action requires typing the exact profile name, refreshes the profile revision, physically purges all profile-scoped rows and linked jobs/idempotency results in one transaction, uses SQLite secure deletion, and vacuums freed pages. The accidental July 23 workspace was removed from the live app and placed in a recoverable user Trash backup.
+- A native **Delete active local profile** action requires typing the exact profile name, refreshes the profile revision, and physically purges all profile-scoped rows plus linked jobs/idempotency results in one secure-delete transaction. Synchronous `VACUUM` is intentionally excluded from the foreground path because its database-wide exclusive lock could reject deletion while the unlocked app is reading.
+- Link Map overlays bounded, dashed, provisional connections only when a latest completed AI or deterministic-fallback analysis cites at least two exact retained result URLs. The projection is read-only, exposes its rationale/model/source URLs, and never promotes model output into the reviewed graph.
 - The Discovery Console combines bounded DuckDuckGo HTML and unauthenticated GitHub-user search, official HIBP account/domain checks, a deterministic multi-identifier planner, fixed manual portals, and a local advanced query composer. The composer shows the exact query assembled from `site`, `filetype`, `intitle`, `inurl`, exclusion, date, and optional raw provider-specific operators; it can create user-opened handoffs for Google, Bing, DuckDuckGo, Brave, Ecosia, Startpage, and Mojeek or load the query into the bounded DuckDuckGo form. It does not scrape, import evidence automatically, or bypass controls.
 - HIBP keys are supplied only for the request. Direct email transmission requires explicit self-audit and direct-transmission authorization; domain enumeration requires provider verification. The planner is deterministic and non-executing, and exposes exact routes, transmission classes, ordering, and unmet prerequisites.
 - An official HIBP direct synthetic live smoke returned `SUCCEEDED`/`COMPLETE`, HTTP 200, and exactly one breach with an exact source. The official k-anonymity endpoint returned HTTP 401 for the public test key because that capability is plan/subscription gated; no k-anonymity success is claimed.
@@ -41,13 +42,13 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 - Generated contract: **57 operations / 55 paths (4 GET, 53 POST)**; drift check passes.
 - Python: Ruff passes across **169 files**, strict mypy across **93 source files**,
-  **500 non-contract tests pass with 5 intentional skips**, and the regenerated
-  contract suite passes **4/4**.
+  and **501 tests pass with 5 intentional skips**; generated-contract drift
+  also passes.
 - Rust: format and strict all-target Clippy clean; **91 passed, 0 failed, 1 ignored** manual Keychain test.
-- Frontend: typecheck, lint, production build, and **158/158 Vitest tests across 39 files** pass.
+- Frontend: typecheck, lint, production build, and **162/162 Vitest tests across 40 files** pass.
 - Focused end-to-end backend: the synthetic named-profile → intake → decision →
   audit execution → cited AI → proposal promotion → reopen workflow passes.
-- Privacy: **443 candidate files passed**.
+- Privacy: **445 candidate files passed** before the final documentation-only update.
 - Private ignored validation: a depth-2, request-budget-150 run completed all
   **55/55** frontier tasks, retained **20** exact-source results and **41**
   connected leads, and completed a Qwen post-analysis with **20 valid
@@ -71,10 +72,10 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 Current 57-operation local package evidence:
 
-- Frozen/staged sidecar: 21,062,240 bytes, arm64/minimum macOS 11.0, SHA-256 `dc18c0dbe17c57b47bfd5c41543bc2ac8cf0c86e2ed3f3803ee9c6952f18d675`.
-- Signed packaged sidecar: 21,062,224 bytes, SHA-256 `4e3c23203847dc22219f3517a518d7ba72e22778dc167f73915ac2ecc976b3ae`, CDHash `f231413af3949aa9648b8a53eabe84ac7ef983c3`.
-- Desktop executable: 17,755,520 bytes, arm64/minimum macOS 14.0, SHA-256 `be422f744fbebba1553f71fec658d130c59bb4aa31aed49ba2b535645b9dc6df`, CDHash `70dc60af6bfeae62190ad42cd07f4a8e9a0dffa6`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 4,767/3,094 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Frozen/staged sidecar: 21,060,704 bytes, arm64/minimum macOS 11.0, SHA-256 `8426c71e40a83a440d469f941fbbd1cd93d53cf0d4115dd8b988c002e01b93df`.
+- Signed packaged sidecar: 21,060,688 bytes, SHA-256 `9b37d23b9280041341183fd4009caf4fb13aab955c1a56f3aee4ca43e1e81af2`, CDHash `aa1b5d9ab5b05cba456c64e05500dbc9116cc2f6`.
+- Desktop executable: 17,755,520 bytes, arm64/minimum macOS 14.0, SHA-256 `be6d0030d9197f92a355f1573d027be1ab0ae1c48b1e8b3eec2270dd47617f9a`, CDHash `9a3e5ec2f5bf3d8171f76f616f79e79d9e1df2e8`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 5,660/4,351 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 - A final private-vault launch reached the expected macOS Keychain password
   sheet because the ad-hoc binary identity changed. Live reopen and deletion
   were not claimed past that sheet; the user must approve the newly signed

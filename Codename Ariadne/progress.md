@@ -1,12 +1,12 @@
 # Codename Ariadne — Progress Estimate
 
-Last updated: 2026-08-05
+Last updated: 2026-08-06
 Estimated overall completion: **96%**
 Confidence: **moderate**
 
 This is a planning estimate, not a release claim. It may move up or down when testing exposes additional work.
 
-Current scoped goal — streamlined foreground workflow: **99% implemented and
+Current scoped goal — streamlined foreground workflow: **100% implemented and
 automatically verified**. Named profile → intake → entity review → complete
 audit → proposal review → cited package is covered. The rebuilt local package
 still needs one interactive macOS Keychain approval before the final private
@@ -29,12 +29,12 @@ provider coverage.
 | Phase 8 — Global provider expansion | Seven credential-free public surfaces execute automatically; credentialed and specialist provider coverage remains | 42% |
 | Phase 9 — Hardening and release | Current schema-0011 local package/lifecycle proof passes; production signing, notarisation, physical lifecycle, and clean-machine release work remain | 45% |
 
-The active source candidate contains **57 operations across 55 paths (4 GET, 53 POST)** at schema head `0011_profile_purge`. A named person profile now retains reviewed identifiers, exact sources, audit history, durable frontier state, results, cited AI analysis, and review proposals. **Run full audit** executes DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency checks automatically within explicit budgets; optional HIBP remains authentication-gated. Positive proposal review can promote knowledge into canonical entities with exact source provenance. Profile deletion requires an exact-name confirmation, erases every profile-owned table in dependency order, removes linked jobs/idempotency records, enables SQLite secure deletion, and vacuums freed pages.
+The active source candidate contains **57 operations across 55 paths (4 GET, 53 POST)** at schema head `0011_profile_purge`. A named person profile now retains reviewed identifiers, exact sources, audit history, durable frontier state, results, cited AI analysis, and review proposals. **Run full audit** executes DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency checks automatically within explicit budgets; optional HIBP remains authentication-gated. Positive proposal review can promote knowledge into canonical entities with exact source provenance. Profile deletion requires an exact-name confirmation, erases every profile-owned table in dependency order, removes linked jobs/idempotency records, and enables SQLite secure deletion. It deliberately avoids synchronous `VACUUM`, whose exclusive lock could reject a foreground purge while the unlocked app is reading.
 
-The current gate has passed strict Python formatting/lint/type checking, **500
-non-contract Python tests with 5 intentional skips plus the regenerated 4/4
-contract suite**, **91 Rust tests plus one manual Keychain ignore**, **158/158
-frontend tests across 39 files**, the focused backend profile-to-audit
+The current gate has passed strict Python formatting/lint/type checking, **501
+Python tests with 5 intentional skips**, regenerated-contract drift,
+**91 Rust tests plus one manual Keychain ignore**, **162/162
+frontend tests across 40 files**, the focused backend profile-to-audit
 integration, and a complete primary-renderer Playwright journey. Retained audit
 responses now fail per-route instead of killing Core or relocking the vault;
 legacy local-model prose is normalized into the current bounded display
@@ -51,6 +51,11 @@ generated-contract drift, fresh schema-0011 frozen/staged inspection, and
 normal/abrupt packaged-app lifecycle verification pass. Every 48-operation and
 earlier package identity remains historical evidence and has not been
 relabelled.
+
+Link Map now overlays bounded, exact-URL-cited `CONNECTION` insights from the
+latest successful or deterministic-fallback audit analysis. These dashed
+nodes/edges are explicitly provisional, remain separate from reviewed graph
+facts, and require human review.
 
 ## What remains most significant
 

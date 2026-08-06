@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-06 — Foreground purge reliability and cited Link Map projection
+
+- Removed synchronous database-wide compaction from profile deletion so an
+  unlocked foreground reader cannot make an otherwise valid secure purge fail;
+  exact-name/revision confirmation and SQLite secure deletion remain enforced.
+- Preserved native string/object deletion failures in the UI instead of
+  incorrectly claiming that deletion requires a locked vault.
+- Added a bounded read-only Link Map overlay for exact-URL-cited connection
+  insights from the latest successful or deterministic-fallback audit analysis.
+  Dashed result nodes and edges are explicitly provisional and never become
+  reviewed graph facts without human action.
+- Passed 501 Python tests with five intentional skips, 162/162 frontend tests,
+  strict Python/TypeScript quality gates, generated-contract drift, the privacy
+  scan, fresh frozen-sidecar inspection/staging, production build, deep strict
+  bundle verification, and requested/abrupt packaged lifecycle checks.
+
 ## 2026-08-05 — Final native workflow correction and private aggregate proof
 
 - Prevented a malformed retained-audit response from terminating Core and
@@ -61,8 +77,7 @@
 - Added exact-name/revision-confirmed local profile deletion across Python,
   generated contracts, Rust/Tauri, and the native profile switcher. The purge
   removes every profile-scoped row plus linked jobs/idempotency state,
-  preserves normal immutable-record protection, enables secure deletion, and
-  vacuums after commit.
+  preserves normal immutable-record protection and enables secure deletion.
 - Removed the accidental live vault from the application data directory into a
   recoverable user Trash backup. No private-reference material was copied.
 - The 57-operation/55-path schema-0011 candidate passes 498 Python tests with

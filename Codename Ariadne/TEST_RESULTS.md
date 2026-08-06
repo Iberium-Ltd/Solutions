@@ -1,6 +1,6 @@
 # Codename Ariadne — Test Results
 
-Last updated: 2026-08-05
+Last updated: 2026-08-06
 Current status: **streamlined foreground workflow, 57-operation/55-path source aggregate, frozen sidecar, and packaged macOS lifecycle pass; final private-vault interaction awaits one Keychain approval**
 
 No confidential-reference content, name, or claim is reproduced in these results. Tests use synthetic fixtures except for the aggregate-only, ephemeral local benchmark described below.
@@ -15,14 +15,14 @@ operations and one confirmed physical-profile deletion operation.
 | Category | Current result |
 |---|---|
 | Python quality | Ruff passed across **169 files**; strict mypy passed across **93 source files** |
-| Python aggregate | **500 non-contract tests passed, 5 intentional skips**; regenerated contract suite **4/4 passed** |
+| Python aggregate | **501 tests passed, 5 intentional skips**; generated-contract drift passed |
 | Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **57 operations / 55 paths** |
 | Rust | Format and strict all-target Clippy clean; **91 passed, 0 failed, 1 ignored** manual macOS Keychain test |
-| Frontend | **158/158 passed across 39 files**; typecheck, lint, and production build passed |
+| Frontend | **162/162 passed across 40 files**; typecheck, lint, and production build passed |
 | Focused workflow | **16/16 frontend workflow tests**, the backend profile-to-audit integration, and one complete native-renderer Playwright journey passed |
 | Live local Qwen | Post-relocation opt-in `qwen3:30b` workspace, summary, connections, and gap-analysis run: **4/4 passed in 30.23 seconds**; Ollama reported a bounded 19 GB runtime, 8K context, and 100% GPU execution from the SSD-backed model store |
 | Focused screenshots | Nine 1720×1000 primary-journey screens captured and reviewed once; zero external requests/runtime problems and no blocking visual defect |
-| Privacy | **443 candidate files passed** |
+| Privacy | **445 candidate files passed** before the final documentation-only update |
 | Frozen/package | Schema-0011 frozen/staged inspection, deep strict ad-hoc signature, and normal/abrupt packaged lifecycle passed |
 
 The streamlined-workflow tests verify explicit named-profile routing, refusal
@@ -62,8 +62,8 @@ bounded result catalog.
 Schema/archive:   0011_profile_purge
 Architecture:     arm64
 Minimum macOS:    11.0
-Frozen/staged:    21,062,240 bytes
-Staged SHA-256:   dc18c0dbe17c57b47bfd5c41543bc2ac8cf0c86e2ed3f3803ee9c6952f18d675
+Frozen/staged:    21,060,704 bytes
+Staged SHA-256:   8426c71e40a83a440d469f941fbbd1cd93d53cf0d4115dd8b988c002e01b93df
 ```
 
 Fresh frozen and staged inspections both passed authenticated development TCP
@@ -74,11 +74,11 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 | Package evidence | Current 57-operation result |
 |---|---|
-| Requested quit | 4,767 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
-| Abrupt parent exit | 3,094 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Requested quit | 5,660 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 4,351 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
 | Runtime permissions | `0700` directory; `0600` socket in both runs |
-| Signed packaged sidecar | 21,062,224 bytes; arm64/minimum macOS 11.0; SHA-256 `4e3c23203847dc22219f3517a518d7ba72e22778dc167f73915ac2ecc976b3ae`; CDHash `f231413af3949aa9648b8a53eabe84ac7ef983c3` |
-| Desktop executable | 17,755,520 bytes; arm64/minimum macOS 14.0; SHA-256 `be422f744fbebba1553f71fec658d130c59bb4aa31aed49ba2b535645b9dc6df`; CDHash `70dc60af6bfeae62190ad42cd07f4a8e9a0dffa6` |
+| Signed packaged sidecar | 21,060,688 bytes; arm64/minimum macOS 11.0; SHA-256 `9b37d23b9280041341183fd4009caf4fb13aab955c1a56f3aee4ca43e1e81af2`; CDHash `aa1b5d9ab5b05cba456c64e05500dbc9116cc2f6` |
+| Desktop executable | 17,755,520 bytes; arm64/minimum macOS 14.0; SHA-256 `be6d0030d9197f92a355f1573d027be1ab0ae1c48b1e8b3eec2270dd47617f9a`; CDHash `9a3e5ec2f5bf3d8171f76f616f79e79d9e1df2e8` |
 | Bundle | 38,040 KiB allocated; deep strict ad-hoc signature verification passed |
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,
@@ -383,7 +383,8 @@ The repository contains the following tested slices. Package evidence applies on
 | Schema | Forward-only `0011_profile_purge` after persistent identity-audit/AI revisions `0009`/`0010` and historical `0008` | Current contract, full aggregate, frozen sidecar, and package gates pass at 57 operations/55 paths |
 | Persistent identity audits | Named profiles retain knowledge, configuration, frontier tasks, exact results/sources, proposals, receipts, progress, and cited selected-local-AI analyses across routes/restarts | Repository/API/Rust/frontend tests, full aggregate, frozen UDS, and package gates pass |
 | Automatic provider fleet | One explicit run works through bounded DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency tasks with honest failure/coverage states | Provider unit/integration tests, durable frontier tests, complete source aggregate, and packaged candidate pass |
-| Profile deletion | Exact-name and revision-confirmed native action physically removes all profile-scoped rows plus linked jobs/idempotency state, with secure delete and vacuum | Backend whole-schema deletion integration, generated/Rust boundary validation, renderer interaction test, full aggregate, and package build pass |
+| Profile deletion | Exact-name and revision-confirmed native action physically removes all profile-scoped rows plus linked jobs/idempotency state with secure deletion; foreground `VACUUM` is excluded to avoid exclusive-lock rejection | Backend whole-schema deletion integration, generated/Rust boundary validation, renderer interaction/error tests, full aggregate, and package build pass |
+| Cited AI Link Map | Latest successful or deterministic-fallback `CONNECTION` insights become bounded provisional nodes/edges only when at least two exact result citations resolve | Pure projection tests, frontend aggregate, production build, and package gates pass; model proposals remain review-only |
 | Native Graph | Persisted snapshot/provenance through Python → Rust → Tauri → Graph screen; bounded evidence/truncation and lock clearing | Focused, aggregate, and packaged candidate gates passed |
 | Local-AI settings | Encrypted selectable Ollama/OpenAI-compatible loopback settings, model discovery, connection test, exact generated/Rust/UI boundary | Focused, aggregate, and packaged candidate gates passed |
 | Selected-model intake | Restricted-value-redacted model input, review-only probable suggestions, provenance, deterministic fallback on disabled/error/timeout/invalid response | Focused, aggregate, and packaged candidate gates passed |

@@ -196,4 +196,43 @@ describe('native profile resume boundary', () => {
       })
     })
   })
+
+  it('shows native string deletion errors without claiming the vault must lock', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'core_capabilities') return capabilities
+      if (command === 'core_session') return session
+      if (command === 'core_list_profiles') return profiles
+      if (command === 'core_delete_profile') throw 'Synthetic purge conflict'
+      throw new Error('Unexpected native command')
+    })
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/audits/new/intake']}>
+        <AppShell><IntakePage /></AppShell>
+      </MemoryRouter>,
+    )
+
+    const selector = await screen.findByRole('combobox', {
+      name: 'Active local profile',
+    })
+    await waitFor(() => expect(selector).toBeEnabled())
+    await user.selectOptions(selector, firstProfileId)
+    await user.click(screen.getByRole('button', {
+      name: 'Delete active local profile',
+    }))
+    await user.type(
+      await screen.findByRole('textbox', { name: 'Profile name' }),
+      'Synthetic primary profile',
+    )
+    await user.click(screen.getByRole('button', {
+      name: 'Delete profile permanently',
+    }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Synthetic purge conflict',
+    )
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      'while the vault is unlocked',
+    )
+  })
 })

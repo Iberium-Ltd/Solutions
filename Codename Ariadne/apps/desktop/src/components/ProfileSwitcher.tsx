@@ -20,6 +20,17 @@ function initials(label: string): string {
     .join('')
 }
 
+/** Preserve useful native error text without assuming Tauri rejects with Error. */
+function deletionErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim() !== '') return error.message
+  if (typeof error === 'string' && error.trim() !== '') return error
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = Reflect.get(error, 'message')
+    if (typeof message === 'string' && message.trim() !== '') return message
+  }
+  return 'The profile could not be deleted. The vault remains unlocked; retry after current work finishes.'
+}
+
 export function NativeProfileSwitcher() {
   const activeProfileId = usePhase3WorkflowStore((state) => state.profileId)
   const setProfileId = usePhase3WorkflowStore((state) => state.setProfileId)
@@ -120,11 +131,7 @@ export function NativeProfileSwitcher() {
       setConfirmationLabel('')
       setDeleteDialogOpen(false)
     } catch (error) {
-      setDeleteError(
-        error instanceof Error
-          ? error.message
-          : 'The profile could not be deleted while the vault is unlocked.',
-      )
+      setDeleteError(deletionErrorMessage(error))
     } finally {
       setDeleting(false)
     }

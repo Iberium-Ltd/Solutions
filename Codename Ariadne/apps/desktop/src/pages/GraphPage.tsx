@@ -21,7 +21,7 @@ import {
   graphNodes,
 } from '@ariadne/synthetic-data'
 import type {
-  GraphEdge,
+  AuditDetail,
   GraphSnapshot,
 } from '../../../../packages/contracts/src/generated/api'
 import {
@@ -32,6 +32,18 @@ import {
   Progress,
 } from '../components/Primitives'
 import { nativeRuntimeAvailable } from '../app/coreBoundary'
+import {
+  positionGraphNodes,
+  projectAuditConnections,
+} from '../app/graphAuditProjection'
+import type {
+  GraphViewEdge,
+  GraphViewNode,
+} from '../app/graphAuditProjection'
+import {
+  getIdentityAudit,
+  getIdentityWorkspace,
+} from '../app/identityDiscoveryBoundary'
 import { loadGraphSnapshot } from '../app/phase3Boundary'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { Toggle } from '../components/Toggle'
@@ -43,28 +55,6 @@ type GraphSelection = {
 }
 
 const privateNodeTypes = new Set(['email', 'location'])
-
-type GraphViewNode = {
-  readonly data: {
-    readonly id: string
-    readonly label: string
-    readonly type: string
-    readonly confidence: number
-    readonly private: boolean
-  }
-  readonly position: { readonly x: number; readonly y: number }
-}
-
-type GraphViewEdge = {
-  readonly data: {
-    readonly id: string
-    readonly source: string
-    readonly target: string
-    readonly label: string
-    readonly confidence: number
-    readonly nativeEdge?: GraphEdge
-  }
-}
 
 const simulatedNodes: ReadonlyArray<GraphViewNode> = graphNodes.map((node) => ({
   data: {
@@ -149,6 +139,7 @@ export function GraphPage() {
 function NativeGraphPage() {
   const profileId = usePhase3WorkflowStore((state) => state.profileId)
   const [snapshot, setSnapshot] = useState<GraphSnapshot | null>(null)
+  const [latestAudit, setLatestAudit] = useState<AuditDetail | null>(null)
   const [loadState, setLoadState] = useState<
     'NO_PROFILE' | 'LOADING' | 'READY' | 'ERROR'
   >(profileId === null ? 'NO_PROFILE' : 'LOADING')
@@ -156,10 +147,12 @@ function NativeGraphPage() {
   useEffect(() => {
     if (profileId === null) {
       setSnapshot(null)
+      setLatestAudit(null)
       setLoadState('NO_PROFILE')
       return
     }
     let cancelled = false
+    setLatestAudit(null)
     setLoadState('LOADING')
     void loadGraphSnapshot({
       profileId,
@@ -179,6 +172,20 @@ function NativeGraphPage() {
         setSnapshot(null)
         setLoadState('ERROR')
       })
+    void (async () => {
+      try {
+        const workspace = await getIdentityWorkspace({ profileId })
+        const audit = workspace.audits[0]
+        if (!audit) return
+        const detail = await getIdentityAudit({
+          profileId,
+          auditId: audit.auditId,
+        })
+        if (!cancelled && detail.profileId === profileId) setLatestAudit(detail)
+      } catch {
+        // The reviewed graph remains useful when no audit analysis exists.
+      }
+    })()
     return () => {
       cancelled = true
     }
@@ -213,12 +220,7 @@ function NativeGraphPage() {
     )
   }
 
-  const nodeCount = snapshot.nodes.length
-  const nodes: ReadonlyArray<GraphViewNode> = snapshot.nodes.map((node, index) => {
-    const angle = nodeCount === 0 ? 0 : (Math.PI * 2 * index) / nodeCount
-    const radiusX = nodeCount < 4 ? 190 : 300
-    const radiusY = nodeCount < 4 ? 130 : 210
-    return {
+  const reviewedNodes: ReadonlyArray<GraphViewNode> = snapshot.nodes.map((node) => ({
       data: {
         id: node.nodeId,
         label: node.displayLabel,
@@ -226,13 +228,9 @@ function NativeGraphPage() {
         confidence: 100,
         private: node.sensitivity !== 'PUBLIC',
       },
-      position: {
-        x: 480 + Math.cos(angle) * radiusX,
-        y: 270 + Math.sin(angle) * radiusY,
-      },
-    }
-  })
-  const edges: ReadonlyArray<GraphViewEdge> = snapshot.edges.map((edge) => ({
+      position: { x: 0, y: 0 },
+    }))
+  const reviewedEdges: ReadonlyArray<GraphViewEdge> = snapshot.edges.map((edge) => ({
     data: {
       id: edge.edgeId,
       source: edge.fromNodeId,
@@ -242,12 +240,21 @@ function NativeGraphPage() {
       nativeEdge: edge,
     },
   }))
+  const analysisProjection = projectAuditConnections(latestAudit)
+  const nodes = positionGraphNodes([
+    ...reviewedNodes,
+    ...analysisProjection.nodes,
+  ])
+  const edges: ReadonlyArray<GraphViewEdge> = [
+    ...reviewedEdges,
+    ...analysisProjection.edges,
+  ]
 
   return (
     <GraphWorkspace
       nodes={nodes}
       edges={edges}
-      truncated={snapshot.truncated}
+      truncated={snapshot.truncated || analysisProjection.truncated}
       mode="NATIVE"
     />
   )
@@ -378,6 +385,12 @@ function GraphWorkspace({
           },
         },
         {
+          selector: 'node[provisional]',
+          style: {
+            'border-style': 'dashed',
+          },
+        },
+        {
           selector: 'node[type = "evidence"]',
           style: {
             shape: 'barrel',
@@ -403,6 +416,14 @@ function GraphWorkspace({
             'text-background-opacity': 0.9,
             'text-background-padding': '2px',
             'overlay-opacity': 0,
+          },
+        },
+        {
+          selector: 'edge[analysisEdge]',
+          style: {
+            'line-style': 'dashed',
+            'line-color': color('--signal-violet', '#b99cff'),
+            'target-arrow-color': color('--signal-violet', '#b99cff'),
           },
         },
         {
@@ -490,6 +511,7 @@ function GraphWorkspace({
   const nodeLabel = (id: string) =>
     nodes.find((node) => node.data.id === id)?.data.label ?? id
   const selectedNativeEdge = selectedEdge?.data.nativeEdge
+  const selectedAnalysisEdge = selectedEdge?.data.analysisEdge
   const selectedEvidence = selectedNativeEdge?.evidence[0]
   const simulatedExplanation = selectedEdge
     ? edgeExplanations[selectedEdge.data.id]
@@ -497,24 +519,35 @@ function GraphWorkspace({
   const hiddenPrivateCount = nodes.filter((node) => node.data.private).length
   const selectedExplanation =
     selectedNativeEdge?.explanation ??
+    selectedAnalysisEdge?.rationale ??
     simulatedExplanation?.explanation ??
     'No explanation is available.'
   const selectedSource = selectedEvidence
     ? `Source ${selectedEvidence.sourceId} · segment ${selectedEvidence.segmentOrdinal + 1}`
+    : selectedAnalysisEdge
+      ? `${selectedAnalysisEdge.citations.length} exact cited result URLs`
     : simulatedExplanation?.source ?? 'Local source unavailable'
   const selectedVisibility = selectedEvidence
     ? words(selectedEvidence.visibility)
+    : selectedAnalysisEdge
+      ? 'Public sources · local proposal'
     : simulatedExplanation?.visibility ?? 'Unknown'
   const selectedObserved = selectedEvidence
     ? observedTime(selectedEvidence.observedAtUs)
+    : selectedAnalysisEdge
+      ? observedTime(selectedAnalysisEdge.createdAtUs)
     : '11 Jul 2026 · 14:36 UTC'
   const selectedOrigin = selectedEvidence
     ? words(selectedEvidence.originType)
+    : selectedAnalysisEdge
+      ? `Local AI · ${selectedAnalysisEdge.provider ?? 'provider unavailable'} · ${selectedAnalysisEdge.modelId ?? 'model unavailable'}`
     : 'Automated · human review pending'
   const selectedContradiction = selectedNativeEdge
     ? selectedNativeEdge.contradictionCount > 0
       ? `${selectedNativeEdge.contradictionCount} contradictory observation${selectedNativeEdge.contradictionCount === 1 ? '' : 's'} recorded. Inspect the evidence samples before relying on this relationship.`
       : 'No contradictory observation is currently recorded; absence of contradiction is not independent confirmation.'
+    : selectedAnalysisEdge
+      ? `Provisional AI proposal: ${selectedAnalysisEdge.statement} Human review is required before treating this as a verified relationship.`
     : simulatedExplanation?.contradiction ??
       'No contradiction note is available.'
 
@@ -665,7 +698,7 @@ function GraphWorkspace({
                 </div>
                 <div className="graph-evidence-link">
                   <span className="status-icon status-icon--green"><FileCheck2 size={14} /></span>
-                  <div><strong>{selectedNativeEdge ? `${selectedNativeEdge.supportCount} supporting · ${selectedNativeEdge.contradictionCount} contradicting` : 'Evidence 04'}</strong><small>{selectedNativeEdge ? `${selectedNativeEdge.evidence.length} bounded source sample${selectedNativeEdge.evidence.length === 1 ? '' : 's'}${selectedNativeEdge.evidenceTruncated ? ' · more available' : ''}` : 'Encrypted artifact · hash verified'}</small></div>
+                  <div><strong>{selectedNativeEdge ? `${selectedNativeEdge.supportCount} supporting · ${selectedNativeEdge.contradictionCount} contradicting` : selectedAnalysisEdge ? `${selectedAnalysisEdge.citations.length} cited public results` : 'Evidence 04'}</strong><small>{selectedNativeEdge ? `${selectedNativeEdge.evidence.length} bounded source sample${selectedNativeEdge.evidence.length === 1 ? '' : 's'}${selectedNativeEdge.evidenceTruncated ? ' · more available' : ''}` : selectedAnalysisEdge ? 'Provisional connection · human review required' : 'Encrypted artifact · hash verified'}</small></div>
                   {mode === 'SIMULATED' ? <Link to="/findings/finding_syn_profile" aria-label="Open evidence for selected relationship"><ArrowUpRight size={14} /></Link> : null}
                 </div>
                 {selectedNativeEdge && selectedNativeEdge.evidence.length > 0 ? (
@@ -689,6 +722,22 @@ function GraphWorkspace({
                     </div>
                   </details>
                 ) : null}
+                {selectedAnalysisEdge ? (
+                  <details className="graph-index" open>
+                    <summary>Exact cited result URLs <span className="mono">{selectedAnalysisEdge.citations.length}</span></summary>
+                    <div className="graph-index__content graph-source-index">
+                      <ul>
+                        {selectedAnalysisEdge.citations.map((citation) => (
+                          <li key={citation.referenceId}>
+                            <span>{citation.title}</span>
+                            <small className="mono wrap-anywhere">{citation.url}</small>
+                            <small>Analysis reference {citation.referenceId}</small>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </details>
+                ) : null}
               </>
             ) : selectedNode ? (
               <>
@@ -696,7 +745,7 @@ function GraphWorkspace({
                   <span className="eyebrow">Selected node</span>
                   <Badge tone="violet">{selectedNode.data.type}</Badge>
                   <h2>{selectedNode.data.label}</h2>
-                  <p>{mode === 'NATIVE' ? 'Reviewed local graph entity' : 'Reviewed synthetic graph entity'}</p>
+                  <p>{selectedNode.data.provisional ? 'Provisional cited audit result · human review required' : mode === 'NATIVE' ? 'Reviewed local graph entity' : 'Reviewed synthetic graph entity'}</p>
                 </div>
                 <div className="graph-inspector__confidence">
                   <div><span>Entity confidence</span><strong>{selectedNode.data.confidence}%</strong></div>
