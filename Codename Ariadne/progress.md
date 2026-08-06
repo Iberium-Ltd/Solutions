@@ -9,10 +9,11 @@ This is a planning estimate, not a release claim. It may move up or down when te
 Current scoped goal — streamlined foreground workflow: **100% implemented and
 automatically verified and repackaged**. Named profile → intake → entity review → complete
 audit → proposal review → cited package is covered. The rebuilt local package
-still needs one interactive macOS Keychain approval before the final private
-vault reopen and profile-purge check can be repeated; no credential was guessed
-or captured. This does not mean production release readiness or unlimited
-provider coverage.
+was approved through the normal macOS Keychain sheet without exposing the
+credential. Both remaining local profiles were then deleted through Ariadne's
+confirmed UI; People reported no profiles, Mission Control reported no audit
+data, and the vault stayed unlocked across navigation. This does not mean
+production release readiness or unlimited provider coverage.
 
 ## Current position
 
@@ -73,9 +74,8 @@ current foreground workflow implementation is complete: persistent profile selec
 one-time intake/review, automatic public-provider execution, honest progress,
 citations, selectable local AI, proposal review, exact sources, terminal
 Markdown/JSON packaging, history, and deletion are implemented. Final
-private-vault interaction awaits the one macOS Keychain approval described
-above. The wider
-remaining work is provider breadth, general evidence streaming/retention,
+private-vault deletion and the honest pre-audit empty state are now verified.
+The wider remaining work is provider breadth, general evidence streaming/retention,
 durable saved-artifact management, and production distribution. This is not
 100% overall and not public release readiness.
 

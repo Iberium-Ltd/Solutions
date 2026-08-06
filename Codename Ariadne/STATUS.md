@@ -1,7 +1,7 @@
 # Codename Ariadne — Project Status
 
 Last updated: 2026-08-06
-Overall state: **streamlined foreground identity-audit workflow implemented and packaged at the 58-operation/56-path candidate; final private-vault interaction awaits one macOS Keychain approval and production release readiness remains incomplete**
+Overall state: **streamlined foreground identity-audit workflow implemented, packaged, and live-verified at the 58-operation/56-path candidate; production release readiness remains incomplete**
 
 ## Implemented at the current source boundary
 
@@ -90,10 +90,11 @@ Current 58-operation local package evidence:
 - Signed packaged sidecar: 21,064,544 bytes, SHA-256 `b27b425bc1386f70e9c853e40615e82ff606b1fb380f688d1b84a6f7bbb5535b`.
 - Desktop executable: 17,829,360 bytes, arm64/minimum macOS 14.0, SHA-256 `dd15431d4aec86c85b681156ae739eacfceac268a1eabc224d45f5b4efa85ba7`.
 - Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 6,344/3,253 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
-- A final private-vault launch reached the expected macOS Keychain password
-  sheet because the ad-hoc binary identity changed. Live reopen and deletion
-  were not claimed past that sheet; the user must approve the newly signed
-  local build once.
+- The rebuilt ad-hoc app was approved through the normal macOS Keychain sheet
+  without exposing or capturing the credential. Both remaining local profiles
+  were deleted through the exact-name UI. People then reported no profiles,
+  Mission Control reported no audit data, and the vault remained unlocked
+  across navigation until explicit lock or app exit.
 
 ### Historical 48- and 45-operation candidate evidence
 
@@ -136,9 +137,9 @@ Those identities remain historical evidence only and are not relabelled as 48-op
 ## Next milestone
 
 The current scoped implementation and automated package gate are complete.
-After the one interactive Keychain approval, repeat the private retained-run
-reopen and delete the remaining local validation profile. Optional follow-on work is evidence
-streaming/retention, authorised connectors, specialist providers, saved-artifact
+The interactive Keychain reopen, confirmed profile purge, and honest empty
+state are also live-verified. Optional follow-on work is evidence streaming/
+retention, authorised connectors, specialist providers, saved-artifact
 management, and production release validation. Background scheduling is not a
 current priority. Preserve earlier artifact identities as historical local
 proof, not evidence for this source or a distributable release.

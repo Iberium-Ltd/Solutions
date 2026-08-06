@@ -22,6 +22,10 @@
   with the current profile → AI-assisted intake → bounded audit → cited analysis
   → export path. The guide now states that native screens stay empty until an
   audit supplies persisted data.
+- Completed the final legitimate Keychain reopen and deleted both remaining
+  local profiles through Ariadne's exact-name confirmation UI. The live People
+  and Mission Control screens returned to their real empty states while the
+  vault remained unlocked across navigation.
 - Passed 503 Python tests with five skips, 92 Rust tests with one manual
   Keychain ignore, 164 frontend tests, 27 Chromium E2E tests, privacy/contract/
   quality gates, nine checkpoint screenshots, a fresh arm64 sidecar build, and

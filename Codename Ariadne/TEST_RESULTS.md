@@ -1,7 +1,7 @@
 # Codename Ariadne — Test Results
 
 Last updated: 2026-08-06
-Current status: **streamlined foreground workflow, 58-operation/56-path source aggregate, frozen sidecar, and packaged macOS lifecycle pass; final private-vault interaction awaits one Keychain approval**
+Current status: **streamlined foreground workflow, 58-operation/56-path source aggregate, frozen sidecar, packaged macOS lifecycle, and final private-vault deletion pass**
 
 No confidential-reference content, name, or claim is reproduced in these results. Tests use synthetic fixtures except for the aggregate-only, ephemeral local benchmark described below.
 
@@ -85,10 +85,11 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,
 notarisation, signed-update, clean-machine, or public-release proof.
-The first private-vault launch of this new ad-hoc identity reached the expected
-macOS Keychain password sheet. No password was entered or captured, so the
-private retained-run reopen and final profile purge remain an explicit
-interactive follow-up rather than a claimed pass.
+The rebuilt identity was approved through the expected macOS Keychain sheet;
+the credential was neither exposed nor captured. Both remaining profiles were
+deleted through Ariadne's confirmed UI. The live People screen then showed no
+profiles, Mission Control showed no audit data, and the vault remained unlocked
+across navigation.
 
 ## Historical 48-operation source candidate
 
