@@ -24,62 +24,58 @@ const workflowSteps = [
   },
   {
     number: '02',
-    title: 'Add source material in Intake',
+    title: 'Create or select the person profile',
     detail:
-      'Paste text or choose a supported local file. Intake creates or resumes a local profile and extracts candidates for review.',
+      'Give the profile a clear name or resume an existing person. Choose and load an Ollama or LM Studio model here if AI should assist the run.',
     icon: FileInput,
-    to: '/audits/new/intake',
+    to: '/audits/new',
   },
   {
     number: '03',
-    title: 'Review extracted entities',
+    title: 'Import and review identifiers',
     detail:
-      'Confirm, reject, or edit the extracted identifiers before treating them as part of the profile.',
+      'Paste natural-language clues or choose a supported file. Deterministic extraction runs first; the selected local model can suggest additional identifiers before one review step.',
     icon: ListChecks,
-    to: '/audits/new/entities',
+    to: '/audits/new/intake',
   },
   {
     number: '04',
-    title: 'Review findings and evidence',
+    title: 'Run the complete identity audit',
     detail:
-      'Findings is the persisted review queue. Open a finding to add local evidence and record your attribution decision.',
+      'People starts the bounded provider frontier with your depth and request budget. Progress, ETA, provider actions, exact URLs, and failures are persisted while you navigate.',
     icon: FileSearch,
-    to: '/findings',
+    to: '/people',
   },
   {
     number: '05',
-    title: 'Compare, organise, and report',
+    title: 'Review cited AI analysis and export',
     detail:
-      'Create checkpoints in Compare Runs, organise follow-up in Removal Tracker, then generate a local JSON or Markdown report.',
+      'Load the selected model if needed, review its source-cited facts and connections, resolve proposals, then generate the final local Markdown or JSON package.',
     icon: FileCheck2,
     links: [
-      ['/compare', 'Compare Runs'],
-      ['/remediation', 'Removal Tracker'],
+      ['/ai/workspace', 'AI Workspace'],
+      ['/graph', 'Link Map'],
       ['/reports', 'Reports'],
     ] as const,
   },
 ] as const
 
 const nativeScreens = [
-  'Intake and Entity Review',
-  'Link Map',
-  'Findings and finding detail',
-  'Compare Runs and Removal Tracker',
-  'Reports',
+  'Mission Control and People',
+  'Intake and entity review',
+  'Operations and findings',
+  'Link Map and Geographic Map',
+  'Case Desk and reports',
   'Discovery Console',
   'AI Workspace with exact citations',
   'Corpus AI for cited multi-file analysis',
-  'Local AI and privacy settings',
-  'Transmission planning',
+  'Source Coverage and Transmission Preflight',
+  'Compare Runs and Removal Tracker',
 ] as const
 
 const syntheticScreens = [
-  'Mission Control',
-  'New Audit planner',
-  'Operations console',
-  'Geographic Map',
-  'Case Desk',
-  'Source Radar',
+  'Browser-only fixture previews',
+  'State laboratory',
 ] as const
 
 export function GettingStartedPage() {
@@ -90,7 +86,7 @@ export function GettingStartedPage() {
       <PageHeader
         eyebrow="Help · five-step workflow"
         title="Getting started"
-        description="Follow the vault-backed path below for your own local records. Ariadne also contains clearly labelled synthetic demonstration screens that do not represent a live audit."
+        description="Follow the vault-backed path below for your own local records. Native screens remain empty until your first audit supplies persisted data."
         meta={
           <Badge tone={native ? 'green' : 'amber'} dot>
             {native ? 'Native app' : 'Browser preview'}
@@ -174,8 +170,8 @@ export function GettingStartedPage() {
         </Panel>
         <Panel
           className="getting-started__screen-panel getting-started__screen-panel--synthetic"
-          eyebrow="Exploration only"
-          title="Synthetic demonstration screens"
+          eyebrow="Outside the native app"
+          title="Browser-only demonstration surfaces"
           action={<FlaskConical size={17} aria-hidden="true" />}
         >
           <ul>

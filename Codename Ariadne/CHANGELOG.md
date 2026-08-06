@@ -18,6 +18,10 @@
   identifier clusters, reviewed evidence edges, and separately labelled
   provisional cited-AI connections. No hidden model chain-of-thought is exposed;
   Operations and receipts provide the inspectable action/evidence trace.
+- Replaced the stale five-step help flow and its obsolete synthetic-screen list
+  with the current profile → AI-assisted intake → bounded audit → cited analysis
+  → export path. The guide now states that native screens stay empty until an
+  audit supplies persisted data.
 - Passed 503 Python tests with five skips, 92 Rust tests with one manual
   Keychain ignore, 164 frontend tests, 27 Chromium E2E tests, privacy/contract/
   quality gates, nine checkpoint screenshots, a fresh arm64 sidecar build, and

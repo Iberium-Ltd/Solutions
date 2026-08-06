@@ -31,15 +31,15 @@ describe('getting-started guide', () => {
       name: 'Recommended Ariadne workflow',
     })
     expect(within(firstSteps).getByText('Create or unlock the vault')).toBeVisible()
-    expect(within(firstSteps).getByText('Add source material in Intake')).toBeVisible()
-    expect(within(firstSteps).getByText('Review extracted entities')).toBeVisible()
-    expect(within(firstSteps).getByText('Review findings and evidence')).toBeVisible()
-    expect(within(firstSteps).getByText('Compare, organise, and report')).toBeVisible()
+    expect(within(firstSteps).getByText('Create or select the person profile')).toBeVisible()
+    expect(within(firstSteps).getByText('Import and review identifiers')).toBeVisible()
+    expect(within(firstSteps).getByText('Run the complete identity audit')).toBeVisible()
+    expect(within(firstSteps).getByText('Review cited AI analysis and export')).toBeVisible()
     expect(
       screen.getByRole('heading', { name: 'Native vault-backed screens' }),
     ).toBeVisible()
     expect(
-      screen.getByRole('heading', { name: 'Synthetic demonstration screens' }),
+      screen.getByRole('heading', { name: 'Browser-only demonstration surfaces' }),
     ).toBeVisible()
     expect(screen.getByRole('link', { name: 'Reports' })).toHaveAttribute(
       'href',

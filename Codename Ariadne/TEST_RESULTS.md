@@ -76,11 +76,11 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 | Package evidence | Current 58-operation result |
 |---|---|
-| Requested quit | 2,827 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
-| Abrupt parent exit | 2,181 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Requested quit | 6,344 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 3,253 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
 | Runtime permissions | `0700` directory; `0600` socket in both runs |
 | Signed packaged sidecar | 21,064,544 bytes; arm64/minimum macOS 11.0; SHA-256 `b27b425bc1386f70e9c853e40615e82ff606b1fb380f688d1b84a6f7bbb5535b` |
-| Desktop executable | 17,829,360 bytes; arm64/minimum macOS 14.0; SHA-256 `ef64c2d09f0d4f5bcc9a4971542589eaba475c18ca7b411ebedd6390949a7e2e` |
+| Desktop executable | 17,829,360 bytes; arm64/minimum macOS 14.0; SHA-256 `dd15431d4aec86c85b681156ae739eacfceac268a1eabc224d45f5b4efa85ba7` |
 | Bundle | Deep strict ad-hoc signature verification passed |
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,

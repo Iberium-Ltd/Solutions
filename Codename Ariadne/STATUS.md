@@ -88,8 +88,8 @@ Current 58-operation local package evidence:
 
 - Frozen/staged sidecar: 21,064,560 bytes, arm64/minimum macOS 11.0, SHA-256 `06b0f2260174e83d9711f13566249d69c959d25d9d1371b5411348fd8d9f9ca3`.
 - Signed packaged sidecar: 21,064,544 bytes, SHA-256 `b27b425bc1386f70e9c853e40615e82ff606b1fb380f688d1b84a6f7bbb5535b`.
-- Desktop executable: 17,829,360 bytes, arm64/minimum macOS 14.0, SHA-256 `ef64c2d09f0d4f5bcc9a4971542589eaba475c18ca7b411ebedd6390949a7e2e`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 2,827/2,181 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Desktop executable: 17,829,360 bytes, arm64/minimum macOS 14.0, SHA-256 `dd15431d4aec86c85b681156ae739eacfceac268a1eabc224d45f5b4efa85ba7`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 6,344/3,253 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 - A final private-vault launch reached the expected macOS Keychain password
   sheet because the ad-hoc binary identity changed. Live reopen and deletion
   were not claimed past that sheet; the user must approve the newly signed
