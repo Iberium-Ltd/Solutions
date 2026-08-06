@@ -177,7 +177,7 @@ def test_ollama_preloads_exact_model_without_workspace_content() -> None:
         "model": "qwen-local:7b",
         "prompt": "",
         "stream": False,
-        "keep_alive": "10m",
+        "keep_alive": "1h",
     }
 
 
@@ -253,7 +253,15 @@ def test_ollama_executes_bounded_grounded_structured_enrichment() -> None:
     assert payload["stream"] is False
     assert payload["think"] is False
     assert payload["format"]["additionalProperties"] is False
-    assert payload["keep_alive"] == "10m"
+    assert list(payload["format"]["properties"]["entities"]["items"]["properties"]) == [
+        "entity_type",
+        "surface",
+        "start",
+        "end",
+        "confidence_micros",
+        "explanation_code",
+    ]
+    assert payload["keep_alive"] == "1h"
     assert payload["options"] == {
         "num_ctx": 8192,
         "num_predict": 1024,
@@ -297,6 +305,40 @@ def test_openai_compatible_uses_strict_json_schema_and_explicit_model() -> None:
     assert payload["max_tokens"] == 512
     assert payload["response_format"]["type"] == "json_schema"
     assert payload["response_format"]["json_schema"]["strict"] is True
+
+
+def test_enrichment_retries_one_schema_invalid_model_completion() -> None:
+    text = "Morgan Vale worked at Northbridge Systems."
+    transport = RecordingTransport(
+        [
+            _json_response({"model": "qwen-local:7b", "message": {"content": '{"entities":[]}'}}),
+            _json_response(
+                {"model": "qwen-local:7b", "message": {"content": json.dumps(_model_output())}}
+            ),
+        ]
+    )
+
+    result = LocalAIClient(
+        LocalAIConfig(enabled=True),
+        transport=transport,
+    ).enrich(EnrichmentRequest(redacted_text=text), model_id="qwen-local:7b")
+
+    assert len(result.entities) == 2
+    assert len(transport.requests) == 2
+
+
+def test_enrichment_stops_after_two_schema_invalid_completions() -> None:
+    invalid = _json_response({"model": "qwen-local:7b", "message": {"content": '{"entities":[]}'}})
+    transport = RecordingTransport([invalid, invalid])
+
+    with pytest.raises(LocalAIError) as raised:
+        LocalAIClient(LocalAIConfig(enabled=True), transport=transport).enrich(
+            EnrichmentRequest(redacted_text="Synthetic text"),
+            model_id="qwen-local:7b",
+        )
+
+    assert raised.value.code is LocalAIErrorCode.INVALID_RESPONSE
+    assert len(transport.requests) == 2
 
 
 def test_enrichment_never_chooses_a_model_implicitly() -> None:

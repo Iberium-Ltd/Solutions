@@ -2,6 +2,14 @@
 
 ## 2026-08-06 — Audit-backed native surfaces and reliable local AI
 
+- Fixed Qwen intake enrichment for larger structured inputs by preserving the
+  model schema's declared property order instead of alphabetically rewriting
+  nested keys. Intake now preloads the selected model at execution time, keeps
+  it resident for one hour, accepts a bounded two-minute cold load, retries one
+  schema-invalid completion, and reports invalid response, timeout, and service
+  unavailability separately. A cold private-source probe passed end to end in
+  68.1 seconds without printing or retaining source/model content.
+
 - Replaced native Mission Control, Operations, Case Desk, Source Coverage, and
   Transmission placeholders with active-profile audit projections and honest
   pre-audit empty states. Added real audit notifications.
@@ -26,8 +34,8 @@
   local profiles through Ariadne's exact-name confirmation UI. The live People
   and Mission Control screens returned to their real empty states while the
   vault remained unlocked across navigation.
-- Passed 503 Python tests with five skips, 92 Rust tests with one manual
-  Keychain ignore, 164 frontend tests, 27 Chromium E2E tests, privacy/contract/
+- Passed 505 Python tests with five skips, 92 Rust tests with one manual
+  Keychain ignore, 165 frontend tests, 27 Chromium E2E tests, privacy/contract/
   quality gates, nine checkpoint screenshots, a fresh arm64 sidecar build, and
   normal/abrupt packaged-app lifecycle verification.
 

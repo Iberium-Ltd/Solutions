@@ -49,6 +49,7 @@ LOCAL_AI_ENRICHMENT_ENGINE_VERSION = "1"
 LOCAL_AI_WORKSPACE_ENGINE_VERSION = "1"
 OPENAI_RESPONSES_WORKSPACE_ENGINE_VERSION = "1"
 _OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+_OLLAMA_KEEP_ALIVE = "1h"
 _EXPLANATION_CODE_PATTERN = re.compile(r"[a-z0-9][a-z0-9_.-]{0,63}$", re.ASCII)
 _REFERENCE_PATTERN = re.compile(r"[a-z][a-z0-9_-]{0,31}:[^\x00-\x20\x7f]{1,150}$", re.ASCII)
 
@@ -881,7 +882,7 @@ class _OllamaAdapter:
             "model": model_id,
             "prompt": "",
             "stream": False,
-            "keep_alive": "10m",
+            "keep_alive": _OLLAMA_KEEP_ALIVE,
         }
 
     def validate_preload(self, payload: object, *, model_id: str) -> None:
@@ -905,7 +906,7 @@ class _OllamaAdapter:
             "stream": False,
             "think": False,
             "format": _OLLAMA_MODEL_OUTPUT_SCHEMA,
-            "keep_alive": "10m",
+            "keep_alive": _OLLAMA_KEEP_ALIVE,
             "options": {
                 "num_ctx": 8192,
                 "num_predict": max_output_tokens,
@@ -1149,17 +1150,29 @@ class LocalAIClient:
             redacted_text=request.redacted_text,
             max_output_tokens=self._config.max_output_tokens,
         )
-        payload = self._request_json("POST", self._adapter.enrichment_path(), body=body)
-        try:
-            content = self._adapter.parse_enrichment_content(payload, model_id=selected_model)
-            if len(content.encode("utf-8")) > self._config.max_response_bytes:
-                raise LocalAIError(LocalAIErrorCode.RESPONSE_LIMIT)
-            model_output = _ModelOutput.model_validate_json(content)
-            entities, relationships = _ground_output(model_output, request.redacted_text)
-        except LocalAIError:
-            raise
-        except (UnicodeError, ValidationError, ValueError):
-            raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE) from None
+        # Grammar-constrained local models can still occasionally return a
+        # schema-invalid completion. Retry that model-output failure once; do
+        # not retry transport, timeout, HTTP, or outer-envelope failures.
+        for attempt in range(2):
+            payload = self._request_json("POST", self._adapter.enrichment_path(), body=body)
+            try:
+                content = self._adapter.parse_enrichment_content(
+                    payload,
+                    model_id=selected_model,
+                )
+                if len(content.encode("utf-8")) > self._config.max_response_bytes:
+                    raise LocalAIError(LocalAIErrorCode.RESPONSE_LIMIT)
+                model_output = _ModelOutput.model_validate_json(content)
+                entities, relationships = _ground_output(model_output, request.redacted_text)
+                break
+            except LocalAIError as error:
+                if error.code is LocalAIErrorCode.INVALID_RESPONSE and attempt == 0:
+                    continue
+                raise
+            except (UnicodeError, ValidationError, ValueError):
+                if attempt == 0:
+                    continue
+                raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE) from None
         return LocalAIEnrichment(
             provider=self._adapter.provider,
             model_id=selected_model,
@@ -1222,7 +1235,10 @@ class LocalAIClient:
                 body,
                 ensure_ascii=True,
                 separators=(",", ":"),
-                sort_keys=True,
+                # Preserve the declared JSON-schema property order. Ollama's
+                # grammar-constrained generation can emit truncated JSON when
+                # every nested schema key is alphabetically reordered.
+                sort_keys=False,
             ).encode("utf-8")
             if len(encoded) > self._config.max_request_bytes:
                 raise LocalAIError(LocalAIErrorCode.REQUEST_LIMIT)

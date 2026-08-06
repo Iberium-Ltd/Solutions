@@ -190,6 +190,50 @@ describe('native Phase 3 UI flow', () => {
     })
   })
 
+  it('distinguishes an invalid model completion from an unavailable local service', async () => {
+    usePhase3WorkflowStore.getState().setProfileId(profileId)
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'core_get_local_ai_settings') {
+        return response({
+          enabled: true,
+          provider: 'OLLAMA',
+          endpoint: 'http://127.0.0.1:11434',
+          selectedModel: 'synthetic-local:1b',
+          revision: 1,
+        })
+      }
+      if (command === 'core_intake_paste') {
+        return response({
+          ...receipt,
+          quarantineCount: 0,
+          localAiStatus: 'INVALID_RESPONSE',
+          localAiProvider: 'OLLAMA',
+          localAiModel: 'synthetic-local:1b',
+          localAiEngineVersion: '1',
+        })
+      }
+      throw new Error('Unexpected native command')
+    })
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <IntakePage />
+      </MemoryRouter>,
+    )
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Local source text' }),
+      'Synthetic natural-language identity clue.',
+    )
+    await user.click(screen.getByRole('button', { name: 'Extract locally' }))
+
+    expect(
+      (await screen.findAllByText(/did not pass Ariadne’s grounding contract/))[0],
+    ).toBeVisible()
+    expect(screen.getByText('Invalid response · deterministic result kept')).toBeVisible()
+    expect(screen.queryByText(/enriched by the selected local model/)).not.toBeInTheDocument()
+  })
+
   it('requires an explicitly named profile before intake', () => {
     render(
       <MemoryRouter>

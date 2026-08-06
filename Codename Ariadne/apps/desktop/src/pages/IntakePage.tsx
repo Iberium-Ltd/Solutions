@@ -194,11 +194,26 @@ function NativeIntakePage() {
   const localAiDetail =
     receipt?.localAiStatus === 'SUCCEEDED'
       ? `${receipt.localAiSuggestionCount} probable · ${receipt.localAiProvider ?? 'local'} model`
-      : localAiFailed
-        ? 'Unavailable · deterministic result kept'
+      : receipt?.localAiStatus === 'TIMEOUT'
+        ? 'Timed out · deterministic result kept'
+        : receipt?.localAiStatus === 'INVALID_RESPONSE'
+          ? 'Invalid response · deterministic result kept'
+          : receipt?.localAiStatus === 'UNAVAILABLE'
+            ? 'Service unavailable · deterministic result kept'
         : localAiSkipped
           ? 'Deterministic only'
           : 'queued'
+  const localAiOutcomeMessage = receipt?.localAiStatus === 'SUCCEEDED'
+    ? `Local AI added ${receipt.localAiSuggestionCount} grounded suggestion${receipt.localAiSuggestionCount === 1 ? '' : 's'} for review.`
+    : receipt?.localAiStatus === 'TIMEOUT'
+      ? 'The selected local model did not finish within two minutes. Deterministic extraction was kept.'
+      : receipt?.localAiStatus === 'INVALID_RESPONSE'
+        ? 'The selected local model returned output that did not pass Ariadne’s grounding contract after one retry. Deterministic extraction was kept.'
+        : receipt?.localAiStatus === 'UNAVAILABLE'
+          ? 'The selected local model service could not be reached. Deterministic extraction was kept.'
+          : activeModel === null
+            ? 'Deterministic extraction · no model selected'
+            : 'Deterministic extraction completed without local-model suggestions.'
   const pipelineState = ready
     ? (['complete', 'complete', 'complete', localAiFailed ? 'fallback' : localAiSkipped ? 'skipped' : 'complete', 'active'] as const)
     : pending
@@ -267,7 +282,7 @@ function NativeIntakePage() {
       <div className="compact-workflow-action compact-workflow-action--intake" role="region" aria-label="Intake step action">
         <div>
           <strong>{ready ? `${candidateCount} candidates ready` : pending ? activeModel === null ? 'Processing locally' : `Extracting with ${activeModel}` : 'Extraction required'}</strong>
-          <span>{quarantineCount > 0 ? `${quarantineCount} restricted value${quarantineCount === 1 ? '' : 's'} quarantined` : activeModel === null ? 'Deterministic extraction · no model selected' : 'Natural-language clues are enriched by the selected local model'}</span>
+          <span>{quarantineCount > 0 ? `${quarantineCount} restricted value${quarantineCount === 1 ? '' : 's'} quarantined` : ready ? localAiOutcomeMessage : activeModel === null ? 'Deterministic extraction · no model selected' : 'Natural-language clues will be enriched by the selected local model'}</span>
         </div>
         <Link className={`button button--primary ${!ready ? 'is-disabled' : ''}`} to={ready ? '/audits/new/entities' : '#'} aria-disabled={!ready}>
           Review candidates <ArrowRight size={14} />
@@ -346,7 +361,7 @@ function NativeIntakePage() {
           {localAiFailed && (
             <div className="callout callout--warning" role="status">
               <ShieldAlert size={14} />
-              <span>Local AI enrichment was unavailable. Deterministic extraction completed safely; no model suggestion was applied.</span>
+              <span>{localAiOutcomeMessage}</span>
             </div>
           )}
         </Panel>

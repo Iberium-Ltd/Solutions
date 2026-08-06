@@ -32,16 +32,19 @@ production release readiness or unlimited provider coverage.
 
 The active source candidate contains **58 operations across 56 paths (4 GET, 54 POST)** at schema head `0011_profile_purge`. A named person profile now retains reviewed identifiers, exact sources, audit history, durable frontier state, results, cited AI analysis, and review proposals. **Run full audit** executes DuckDuckGo, GitHub, GitLab, npm, RDAP, Wayback CDX, and certificate-transparency checks automatically within explicit budgets; optional HIBP remains authentication-gated. Positive proposal review can promote knowledge into canonical entities with exact source provenance. Profile deletion requires an exact-name confirmation, erases every profile-owned table in dependency order, removes linked jobs/idempotency records, and enables SQLite secure deletion. It deliberately avoids synchronous `VACUUM`, whose exclusive lock could reject a foreground purge while the unlocked app is reading. The local-model header control can now release an Ollama model without clearing the selected model.
 
-The current gate has passed strict Python formatting/lint/type checking, **503
+The current gate has passed strict Python formatting/lint/type checking, **505
 Python tests with 5 intentional skips**, regenerated-contract drift,
-**92 Rust tests plus one manual Keychain ignore**, **164/164
+**92 Rust tests plus one manual Keychain ignore**, **165/165
 frontend tests across 40 files**, the focused backend profile-to-audit
 integration, and a complete primary-renderer Playwright journey. Retained audit
 responses now fail per-route instead of killing Core or relocking the vault;
 legacy local-model prose is normalized into the current bounded display
 contract; a failed initial reopen shows retry/back controls instead of an
 endless loader; and Geographic Map is correctly labelled vault-backed with
-proper metric cards. After moving the complete Ollama model store to the
+proper metric cards. Intake preserves Ollama's declared schema order, preloads
+the exact selected model at execution time, permits a bounded two-minute cold
+load, retries one invalid completion, and displays the precise fallback
+category. After moving the complete Ollama model store to the
 external SSD, a fresh **4/4 live `qwen3:30b`** run passed in **30.23 seconds**
 with task-specific structured output, exact citation constraints, an 8K
 context, and the model blob verified open from the SSD. A private, ignored

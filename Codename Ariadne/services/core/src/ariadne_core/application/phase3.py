@@ -108,6 +108,7 @@ _RETENTION_US: Final = 86_400_000_000
 _IDEMPOTENCY_RESERVATION_US: Final = 60_000_000
 _IDEMPOTENCY_REPLAY_US: Final = 86_400_000_000
 _COMPILER_CONFIGURATION_PREFIX: Final = "ariadne-intake-compiler-v1"
+_LOCAL_AI_INTAKE_TIMEOUT_SECONDS: Final = 120
 
 _SEARCH_TO_STORAGE: Final = {
     SearchPolicy.ALLOW: "SEARCH_ALLOWED",
@@ -582,15 +583,23 @@ class Phase3Coordinator:
             engine_version=LOCAL_AI_ENRICHMENT_ENGINE_VERSION,
         )
         try:
-            enrichment = LocalAIClient(
+            client = LocalAIClient(
                 LocalAIConfig(
                     enabled=True,
                     provider=provider,
                     endpoint=settings.local_ai_endpoint,
-                    timeout_seconds=60,
+                    # A cold 24 GB model can take longer than one minute to
+                    # become resident on an otherwise healthy local runtime.
+                    timeout_seconds=_LOCAL_AI_INTAKE_TIMEOUT_SECONDS,
                 ),
                 transport=self._local_ai_transport,
-            ).enrich(
+            )
+            # The saved selection is configuration, not proof that a large
+            # model is still resident. Preload the exact model immediately
+            # before enrichment so a stale Ollama keep-alive cannot make the
+            # first structured completion fail during a cold load.
+            client.preload(model_id=model_id)
+            enrichment = client.enrich(
                 EnrichmentRequest(redacted_text=prepared.deterministic.redacted_text),
                 model_id=model_id,
             )

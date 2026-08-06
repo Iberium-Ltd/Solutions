@@ -69,7 +69,7 @@ function LocalModelControl() {
     ? `${settings.selectedModel} is unloaded; Ariadne will load it on the next AI action`
     : error
       ? `The model could not be unloaded; retry ${settings.selectedModel}`
-    : `Unload local model ${settings.selectedModel}`
+    : `Release selected local model ${settings.selectedModel} if it is resident`
   return (
     <button
       className="icon-button"

@@ -342,12 +342,13 @@ async def test_selected_local_model_enriches_only_redacted_intake_and_requires_r
     }
     transport = ScriptedTransport(
         [
+            _json_response({"model": "qwen-local:7b", "done": True}),
             _json_response(
                 {
                     "model": "qwen-local:7b",
                     "message": {"content": json.dumps(model_output)},
                 }
-            )
+            ),
         ]
     )
     manager = VaultManager(tmp_path / "vault", MemoryKeyCustodian())
@@ -398,8 +399,11 @@ async def test_selected_local_model_enriches_only_redacted_intake_and_requires_r
         assert suggestion["transmissionPolicy"] == "POLICY_CONTROLLED"
         assert suggestion["confidenceMicros"] == 850_000
 
-    assert len(transport.requests) == 1
-    wire_body = (transport.requests[0].body or b"").decode()
+    assert len(transport.requests) == 2
+    preload_body = (transport.requests[0].body or b"").decode()
+    wire_body = (transport.requests[1].body or b"").decode()
+    assert secret not in preload_body
+    assert surface not in preload_body
     assert secret not in wire_body
     assert surface in wire_body
     assert json.loads(wire_body)["model"] == "qwen-local:7b"
@@ -445,7 +449,12 @@ async def test_local_ai_failure_keeps_deterministic_intake_ready(
 ) -> None:
     manager = VaultManager(tmp_path / error_code.value, MemoryKeyCustodian())
     manager.create(display_name="Synthetic local AI fallback vault")
-    transport = ScriptedTransport([LocalAIError(error_code)])
+    transport = ScriptedTransport(
+        [
+            _json_response({"model": "qwen-local:7b", "done": True}),
+            LocalAIError(error_code),
+        ]
+    )
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=_app(manager, transport)),
         base_url=f"http://{HOST}",
@@ -473,5 +482,5 @@ async def test_local_ai_failure_keeps_deterministic_intake_ready(
         assert receipt["localAiSuggestionCount"] == 0
         assert receipt["localAiProvider"] == "OLLAMA"
         assert receipt["localAiModel"] == "qwen-local:7b"
-    assert len(transport.requests) == 1
+    assert len(transport.requests) == 2
     manager.lock()

@@ -16,10 +16,10 @@ operation honestly.
 | Category | Current result |
 |---|---|
 | Python quality | Ruff passed across **169 files**; strict mypy passed across **93 source files** |
-| Python aggregate | **503 tests passed, 5 intentional skips in 472.06 seconds**; generated-contract drift passed |
+| Python aggregate | **505 tests passed, 5 intentional skips in 461.17 seconds**; generated-contract drift passed |
 | Generated contracts | OpenAPI/TypeScript/Rust generation and drift checks passed at **58 operations / 56 paths** |
 | Rust | Format and strict all-target Clippy clean; **92 passed, 0 failed, 1 ignored** manual macOS Keychain test |
-| Frontend | **164/164 passed across 40 files**; typecheck, lint, and production build passed |
+| Frontend | **165/165 passed across 40 files**; typecheck, lint, and production build passed |
 | Focused workflow | **16/16 frontend workflow tests**, the backend profile-to-audit integration, and one complete native-renderer Playwright journey passed |
 | Live local Qwen | Post-relocation opt-in `qwen3:30b` workspace, summary, connections, and gap-analysis run: **4/4 passed in 30.23 seconds**; Ollama reported a bounded 19 GB runtime, 8K context, and 100% GPU execution from the SSD-backed model store |
 | Browser E2E | **27/27 Chromium tests passed**: 21 route/accessibility screens, two Discovery/display tests, three display-preference tests, and one complete native-shaped workflow |
@@ -35,6 +35,13 @@ audit execution, exact results, cited local AI, proposal promotion, and reopen.
 The Playwright journey uses only synthetic name, username, URL, workplace, and
 location clues and traverses every primary UI handoff through a downloaded
 cited package.
+
+The local-intake regression preserves Ollama schema-property order, preloads
+the exact selected model immediately before enrichment, allows a bounded
+two-minute cold load, and retries one schema-invalid completion. An ignored
+private-source cold probe completed deterministic redaction, Qwen enrichment,
+and grounding in 68.1 seconds with three admitted semantic suggestions. It
+printed only aggregate status/counts and retained neither source nor model text.
 
 The profile-deletion integration test creates a synthetic profile with ingested
 identity data, rejects a mismatched confirmation name, deletes with the current
@@ -64,8 +71,8 @@ bounded result catalog.
 Schema/archive:   0011_profile_purge
 Architecture:     arm64
 Minimum macOS:    11.0
-Frozen/staged:    21,064,560 bytes
-Staged SHA-256:   06b0f2260174e83d9711f13566249d69c959d25d9d1371b5411348fd8d9f9ca3
+Frozen/staged:    21,064,656 bytes
+Staged SHA-256:   8d3a1003f849bd669070e865a4719c6f025622877698ede75f3edafe7096814f
 ```
 
 Fresh frozen and staged inspections both passed authenticated development TCP
@@ -76,11 +83,11 @@ review, manual-finding, two-checkpoint, and report operations, while wrong-token
 
 | Package evidence | Current 58-operation result |
 |---|---|
-| Requested quit | 6,344 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
-| Abrupt parent exit | 3,253 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
+| Requested quit | 2,945 ms startup; exit 0; two sidecar processes; cleanup true; zero TCP |
+| Abrupt parent exit | 2,373 ms startup; exit -9; two sidecar processes; cleanup true; zero TCP |
 | Runtime permissions | `0700` directory; `0600` socket in both runs |
-| Signed packaged sidecar | 21,064,544 bytes; arm64/minimum macOS 11.0; SHA-256 `b27b425bc1386f70e9c853e40615e82ff606b1fb380f688d1b84a6f7bbb5535b` |
-| Desktop executable | 17,829,360 bytes; arm64/minimum macOS 14.0; SHA-256 `dd15431d4aec86c85b681156ae739eacfceac268a1eabc224d45f5b4efa85ba7` |
+| Signed packaged sidecar | 21,064,640 bytes; arm64/minimum macOS 11.0; SHA-256 `ee7e89a608139c0fc1fed4fa2890306cf4c3945984ee79352a7800f37a4cc25b` |
+| Desktop executable | 17,829,360 bytes; arm64/minimum macOS 14.0; SHA-256 `df06fe819355363b19cd571dda8e8f8d08cb7b342c2d44c60dda6264e745950b` |
 | Bundle | Deep strict ad-hoc signature verification passed |
 
 This is local ad-hoc candidate proof. It is not Developer ID, hardened-runtime,

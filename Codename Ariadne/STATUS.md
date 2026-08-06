@@ -6,7 +6,11 @@ Overall state: **streamlined foreground identity-audit workflow implemented, pac
 ## Implemented at the current source boundary
 
 - The generated contract contains **58 narrow operations (4 GET, 54 POST; 56 distinct paths)** at schema head `0011_profile_purge`.
-- The current frontend passes typecheck, lint, production build, and **164/164 Vitest tests across 40 files**.
+- The current frontend passes typecheck, lint, production build, and **165/165 Vitest tests across 40 files**.
+- Ollama enrichment preserves declared schema-field order, preloads the exact
+  selected model immediately before intake, permits a bounded two-minute cold
+  load, retries one schema-invalid completion, and reports timeout, invalid
+  response, and unavailable service as distinct UI outcomes.
 - Native Mission Control, Operations, Case Desk, Source Coverage, Transmission
   Preflight, notifications, and Link Map now use the active profile's latest
   audit and remain honestly empty before the first audit; simulated Morgan Vale
@@ -52,17 +56,21 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 - Generated contract: **58 operations / 56 paths (4 GET, 54 POST)**; drift check passes.
 - Python: Ruff passes across **169 files**, strict mypy across **93 source files**,
-  and **503 tests pass with 5 intentional skips**; generated-contract drift
+  and **505 tests pass with 5 intentional skips**; generated-contract drift
   also passes.
 - Rust: format and strict all-target Clippy clean; **92 passed, 0 failed, 1 ignored** manual Keychain test.
-- Frontend: typecheck, lint, production build, and **164/164 Vitest tests across 40 files** pass.
+- Frontend: typecheck, lint, production build, and **165/165 Vitest tests across 40 files** pass.
 - Browser: **27/27 Chromium E2E tests pass**, including 21 route/accessibility
   screens, Discovery Console layouts, display controls, and the complete
   synthetic native workflow. Nine workflow screenshots were captured; setup
   and final cited-package screens were inspected with no blocking defect.
 - Focused end-to-end backend: the synthetic named-profile → intake → decision →
   audit execution → cited AI → proposal promotion → reopen workflow passes.
-- Privacy: **445 candidate files passed** before the final documentation-only update.
+- Privacy: **450 candidate files passed** before the final documentation-only update.
+- Cold local-intake regression: an ignored private source passed the complete
+  deterministic-redaction → preload → `qwen3.6:35b-a3b` → grounding path in
+  68.1 seconds with three admitted semantic suggestions; neither source nor
+  model output was printed or retained by the probe.
 - Private ignored validation: a depth-2, request-budget-150 run completed all
   **55/55** frontier tasks, retained **20** exact-source results and **41**
   connected leads, and completed a Qwen post-analysis with **20 valid
@@ -86,10 +94,10 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 Current 58-operation local package evidence:
 
-- Frozen/staged sidecar: 21,064,560 bytes, arm64/minimum macOS 11.0, SHA-256 `06b0f2260174e83d9711f13566249d69c959d25d9d1371b5411348fd8d9f9ca3`.
-- Signed packaged sidecar: 21,064,544 bytes, SHA-256 `b27b425bc1386f70e9c853e40615e82ff606b1fb380f688d1b84a6f7bbb5535b`.
-- Desktop executable: 17,829,360 bytes, arm64/minimum macOS 14.0, SHA-256 `dd15431d4aec86c85b681156ae739eacfceac268a1eabc224d45f5b4efa85ba7`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 6,344/3,253 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Frozen/staged sidecar: 21,064,656 bytes, arm64/minimum macOS 11.0, SHA-256 `8d3a1003f849bd669070e865a4719c6f025622877698ede75f3edafe7096814f`.
+- Signed packaged sidecar: 21,064,640 bytes, SHA-256 `ee7e89a608139c0fc1fed4fa2890306cf4c3945984ee79352a7800f37a4cc25b`.
+- Desktop executable: 17,829,360 bytes, arm64/minimum macOS 14.0, SHA-256 `df06fe819355363b19cd571dda8e8f8d08cb7b342c2d44c60dda6264e745950b`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 2,945/2,373 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 - The rebuilt ad-hoc app was approved through the normal macOS Keychain sheet
   without exposing or capturing the credential. Both remaining local profiles
   were deleted through the exact-name UI. People then reported no profiles,
