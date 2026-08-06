@@ -1,5 +1,6 @@
 /** Policy-bound provider planning and network-free preflight; compilation is not dispatch. */
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   AlertTriangle,
   Ban,
@@ -27,6 +28,7 @@ import {
   loadQueryProviders,
 } from '../app/queryBoundary'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
+import { useIdentityOverview } from '../app/useIdentityOverview'
 import type {
   QueryPlanCell,
   QueryPlanResult,
@@ -268,6 +270,7 @@ function SimulatedTransmissionPage() {
 
 function NativeTransmissionPage() {
   const profileId = usePhase3WorkflowStore((state) => state.profileId)
+  const overview = useIdentityOverview()
   const [providers, setProviders] = useState<ReadonlyArray<QueryProviderSummary>>(
     [],
   )
@@ -282,7 +285,7 @@ function NativeTransmissionPage() {
 
   useEffect(() => {
     document.title = 'Transmission · Codename Ariadne'
-    if (profileId === null) return
+    if (profileId === null || overview.status !== 'READY') return
     let cancelled = false
     setError(null)
     void loadQueryProviders({ profileId })
@@ -297,7 +300,7 @@ function NativeTransmissionPage() {
     return () => {
       cancelled = true
     }
-  }, [profileId])
+  }, [overview.status, profileId])
 
   const buildPlan = async () => {
     if (profileId === null || selected.length === 0) return
@@ -352,19 +355,16 @@ function NativeTransmissionPage() {
     }
   }
 
-  if (profileId === null) {
+  if (profileId === null || overview.status !== 'READY') {
     return (
       <div className="page controls-page transmission-page" data-testid="route-ready">
         <PageHeader
-          eyebrow="Transmission control · Native preflight"
-          title="Confirm entities before planning"
-          description="Create a local audit profile, review extracted entities, and confirm the entities you authorise for query planning."
+          eyebrow="Transmission control · Optional advanced preflight"
+          title="No audit transmission record yet"
+          description="The main audit workflow applies its selected provider and budget policy automatically. This advanced screen appears after a run and lets you inspect a local, network-free preflight."
           meta={<Badge tone="cyan">No identifiers transmitted</Badge>}
         />
-        <div className="controls-callout controls-callout--amber" role="status">
-          <AlertTriangle size={16} aria-hidden="true" />
-          <span>No active in-memory profile is available.</span>
-        </div>
+        <div className="empty-state"><h2>No transmission data</h2><p>{overview.status === 'ERROR' ? overview.error : 'Start an audit first; no placeholder policy records are shown.'}</p><Link className="button button--primary" to="/audits/new">Start an audit</Link></div>
       </div>
     )
   }

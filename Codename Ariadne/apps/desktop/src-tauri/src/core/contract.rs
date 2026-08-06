@@ -217,6 +217,7 @@ pub(super) enum CoreRoute {
     UpdateLocalAiSettings,
     DiscoverLocalAiModels,
     TestLocalAiConnection,
+    UnloadLocalAiModel,
     AnalyzeLocalAiWorkspace,
     AnalyzeLocalAiCorpus,
     CapturePublicDiscovery,
@@ -282,6 +283,7 @@ impl CoreRoute {
             Self::UpdateLocalAiSettings => "local_ai.settings.update",
             Self::DiscoverLocalAiModels => "local_ai.models.discover",
             Self::TestLocalAiConnection => "local_ai.connection.test",
+            Self::UnloadLocalAiModel => "local_ai.model.unload",
             Self::AnalyzeLocalAiWorkspace => "local_ai.workspace.analyze",
             Self::AnalyzeLocalAiCorpus => "local_ai.corpus.analyze",
             Self::CapturePublicDiscovery => "discovery.public.capture",
@@ -359,6 +361,7 @@ impl CoreRoute {
             "local_ai.settings.update" => Some(Self::UpdateLocalAiSettings),
             "local_ai.models.discover" => Some(Self::DiscoverLocalAiModels),
             "local_ai.connection.test" => Some(Self::TestLocalAiConnection),
+            "local_ai.model.unload" => Some(Self::UnloadLocalAiModel),
             "local_ai.workspace.analyze" => Some(Self::AnalyzeLocalAiWorkspace),
             "local_ai.corpus.analyze" => Some(Self::AnalyzeLocalAiCorpus),
             "discovery.public.capture" => Some(Self::CapturePublicDiscovery),
@@ -582,6 +585,21 @@ pub struct CoreLocalAiConnectionResult {
     pub model_count: u16,
     #[serde(deserialize_with = "deserialize_required_nullable")]
     pub selected_model_available: Option<bool>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CoreLocalAiUnloadStatus {
+    Unloaded,
+    Unsupported,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoreLocalAiUnloadResult {
+    pub provider: CoreLocalAiProvider,
+    pub model_id: String,
+    pub status: CoreLocalAiUnloadStatus,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -4053,6 +4071,10 @@ mod tests {
             Some(CoreRoute::TestLocalAiConnection)
         );
         assert_eq!(
+            CoreRoute::from_method_and_path("POST", "/v1/local-ai/unload"),
+            Some(CoreRoute::UnloadLocalAiModel)
+        );
+        assert_eq!(
             CoreRoute::from_method_and_path("POST", "/v1/local-ai/workspace/analyze"),
             Some(CoreRoute::AnalyzeLocalAiWorkspace)
         );
@@ -4266,6 +4288,7 @@ mod tests {
             CoreRoute::UpdateLocalAiSettings,
             CoreRoute::DiscoverLocalAiModels,
             CoreRoute::TestLocalAiConnection,
+            CoreRoute::UnloadLocalAiModel,
             CoreRoute::AnalyzeLocalAiWorkspace,
             CoreRoute::AnalyzeLocalAiCorpus,
             CoreRoute::CapturePublicDiscovery,
@@ -4334,6 +4357,7 @@ mod tests {
                     | CoreRoute::UpdateLocalAiSettings
                     | CoreRoute::DiscoverLocalAiModels
                     | CoreRoute::TestLocalAiConnection
+                    | CoreRoute::UnloadLocalAiModel
                     | CoreRoute::AnalyzeLocalAiWorkspace
                     | CoreRoute::AnalyzeLocalAiCorpus
                     | CoreRoute::CapturePublicDiscovery

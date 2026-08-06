@@ -136,6 +136,7 @@ from ariadne_core.api.schemas import (
     LocalAIModelDiscoveryResult,
     LocalAISettings,
     LocalAISettingsUpdateRequest,
+    LocalAIUnloadResult,
     LockState,
     SafeCoreEvent,
     SessionState,
@@ -1965,6 +1966,35 @@ async def test_local_ai_connection(
             _local_ai_service(request).test_connection,
             body,
         )
+    except Exception as error:
+        _raise_local_ai(error)
+
+
+@router.post(
+    "/local-ai/unload",
+    response_model=LocalAIUnloadResult,
+    responses=ERROR_RESPONSES,
+    operation_id="unloadLocalAIModel",
+    openapi_extra={
+        "x-ariadne-capability": {
+            "routeId": "local_ai.model.unload",
+            "maxRequestBytes": LOCAL_AI_REQUEST_BYTES,
+            "maxResponseBytes": 2048,
+            "requiredLockState": "UNLOCKED",
+            "scopeClass": "VAULT",
+            "revealClass": "NONE",
+            "authorizationClass": "USER_GESTURE",
+        }
+    },
+)
+async def unload_local_ai_model(
+    body: LocalAIEndpointRequest,
+    request: Request,
+) -> LocalAIUnloadResult:
+    """Release the selected local model while retaining its saved selection."""
+
+    try:
+        return await anyio.to_thread.run_sync(_local_ai_service(request).unload, body)
     except Exception as error:
         _raise_local_ai(error)
 

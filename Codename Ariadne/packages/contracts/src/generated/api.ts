@@ -636,6 +636,14 @@ export interface LocalAISettingsUpdateRequest {
   readonly expectedRevision: number
 }
 
+export interface LocalAIUnloadResult {
+  readonly provider: LocalAIProvider
+  readonly modelId: string
+  readonly status: LocalAIUnloadStatus
+}
+
+export type LocalAIUnloadStatus = "UNLOADED" | "UNSUPPORTED"
+
 export type LocalAIWorkspaceConfidence = "HIGH" | "MEDIUM" | "LOW"
 
 export interface LocalAIWorkspaceConnection {
@@ -2055,6 +2063,19 @@ export const ROUTE_CAPABILITIES = [
     "responseSchemaSha256": "59bdd9d3f7c231fb2fe50827b5491ce2ea1a2822dde17a8ae796bc263c2fc29c",
     "revealClass": "NONE",
     "routeId": "local_ai.connection.test",
+    "scopeClass": "VAULT"
+  },
+  {
+    "authorizationClass": "USER_GESTURE",
+    "maxRequestBytes": 1024,
+    "maxResponseBytes": 2048,
+    "method": "POST",
+    "path": "/v1/local-ai/unload",
+    "requestSchemaSha256": "146739618690731e299df65da30912add3dd945f6264616f1bde2b2cd6e7b6e3",
+    "requiredLockState": "UNLOCKED",
+    "responseSchemaSha256": "e286f409bedcdeed664b81430a505c4f873e7e6ca22367c9a0b562468bd72672",
+    "revealClass": "NONE",
+    "routeId": "local_ai.model.unload",
     "scopeClass": "VAULT"
   },
   {

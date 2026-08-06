@@ -33,6 +33,7 @@ import {
 } from '../components/Primitives'
 import { nativeRuntimeAvailable } from '../app/coreBoundary'
 import {
+  connectProfileGraph,
   positionGraphNodes,
   projectAuditConnections,
 } from '../app/graphAuditProjection'
@@ -140,6 +141,8 @@ function NativeGraphPage() {
   const profileId = usePhase3WorkflowStore((state) => state.profileId)
   const [snapshot, setSnapshot] = useState<GraphSnapshot | null>(null)
   const [latestAudit, setLatestAudit] = useState<AuditDetail | null>(null)
+  const [auditResolved, setAuditResolved] = useState(false)
+  const [profileLabel, setProfileLabel] = useState('Selected profile')
   const [loadState, setLoadState] = useState<
     'NO_PROFILE' | 'LOADING' | 'READY' | 'ERROR'
   >(profileId === null ? 'NO_PROFILE' : 'LOADING')
@@ -153,6 +156,7 @@ function NativeGraphPage() {
     }
     let cancelled = false
     setLatestAudit(null)
+    setAuditResolved(false)
     setLoadState('LOADING')
     void loadGraphSnapshot({
       profileId,
@@ -175,8 +179,14 @@ function NativeGraphPage() {
     void (async () => {
       try {
         const workspace = await getIdentityWorkspace({ profileId })
-        const audit = workspace.audits[0]
-        if (!audit) return
+        if (!cancelled) setProfileLabel(workspace.person.displayName)
+        const audit = [...workspace.audits].sort(
+          (left, right) => right.createdAtUs - left.createdAtUs,
+        )[0]
+        if (!audit) {
+          if (!cancelled) setAuditResolved(true)
+          return
+        }
         const detail = await getIdentityAudit({
           profileId,
           auditId: audit.auditId,
@@ -184,6 +194,8 @@ function NativeGraphPage() {
         if (!cancelled && detail.profileId === profileId) setLatestAudit(detail)
       } catch {
         // The reviewed graph remains useful when no audit analysis exists.
+      } finally {
+        if (!cancelled) setAuditResolved(true)
       }
     })()
     return () => {
@@ -195,26 +207,30 @@ function NativeGraphPage() {
     profileId === null ||
     loadState !== 'READY' ||
     snapshot === null ||
-    snapshot.profileId !== profileId
+    snapshot.profileId !== profileId ||
+    !auditResolved ||
+    latestAudit === null
   ) {
     const noProfile = profileId === null
     const visiblyLoading =
       !noProfile &&
       (loadState === 'LOADING' ||
-        (snapshot !== null && snapshot.profileId !== profileId))
+        (snapshot !== null && snapshot.profileId !== profileId) ||
+        !auditResolved)
+    const noAudit = auditResolved && latestAudit === null && loadState === 'READY'
     return (
       <div className="page graph-page" data-testid="route-ready">
         <PageHeader
           eyebrow="Identity and provenance graph"
           title="Link Map"
           description="The native graph is scoped to the active local profile and exposes only persisted, reviewed relationships."
-          meta={<Badge tone={loadState === 'ERROR' ? 'rose' : 'cyan'}>{noProfile ? 'No active profile' : visiblyLoading ? 'Loading local graph' : 'Graph unavailable'}</Badge>}
+          meta={<Badge tone={loadState === 'ERROR' ? 'rose' : 'cyan'}>{noProfile ? 'No active profile' : visiblyLoading ? 'Loading local graph' : noAudit ? 'No audit yet' : 'Graph unavailable'}</Badge>}
         />
         <Panel className="empty-state panel--raised">
           <Network size={26} />
-          <h2>{noProfile ? 'Start with local intake' : visiblyLoading ? 'Loading the encrypted graph…' : 'The graph could not be loaded'}</h2>
-          <p>{noProfile ? 'Create or resume a profile through Intake, review its entities, then return here.' : loadState === 'ERROR' ? 'Confirm the vault is unlocked, then retry by reopening this screen.' : 'Reading profile-scoped nodes, edges, and provenance.'}</p>
-          {noProfile ? <Link className="button button--primary" to="/intake">Open Intake</Link> : null}
+          <h2>{noProfile ? 'Start with local intake' : visiblyLoading ? 'Loading the encrypted graph…' : noAudit ? 'Run an audit to build the evidence web' : 'The graph could not be loaded'}</h2>
+          <p>{noProfile ? 'Create or resume a profile through Intake, review its entities, then return here.' : noAudit ? 'No placeholder graph is shown. The first audit will connect reviewed profile records, cited results, and model-assisted hypotheses.' : loadState === 'ERROR' ? 'Confirm the vault is unlocked, then retry by reopening this screen.' : 'Reading profile-scoped nodes, edges, and provenance.'}</p>
+          {noProfile ? <Link className="button button--primary" to="/audits/new">Open Intake</Link> : null}
         </Panel>
       </div>
     )
@@ -241,14 +257,15 @@ function NativeGraphPage() {
     },
   }))
   const analysisProjection = projectAuditConnections(latestAudit)
-  const nodes = positionGraphNodes([
+  const connected = connectProfileGraph(profileId, profileLabel, [
     ...reviewedNodes,
     ...analysisProjection.nodes,
-  ])
-  const edges: ReadonlyArray<GraphViewEdge> = [
+  ], [
     ...reviewedEdges,
     ...analysisProjection.edges,
-  ]
+  ])
+  const nodes = positionGraphNodes(connected.nodes)
+  const edges = connected.edges
 
   return (
     <GraphWorkspace
@@ -427,6 +444,15 @@ function GraphWorkspace({
           },
         },
         {
+          selector: 'edge[structuralEdge]',
+          style: {
+            'line-style': 'dotted',
+            'line-color': color('--signal-cyan', '#58dff5'),
+            'target-arrow-color': color('--signal-cyan', '#58dff5'),
+            opacity: 0.58,
+          },
+        },
+        {
           selector: ':selected',
           style: {
             'border-width': 3,
@@ -512,6 +538,7 @@ function GraphWorkspace({
     nodes.find((node) => node.data.id === id)?.data.label ?? id
   const selectedNativeEdge = selectedEdge?.data.nativeEdge
   const selectedAnalysisEdge = selectedEdge?.data.analysisEdge
+  const selectedStructuralEdge = selectedEdge?.data.structuralEdge
   const selectedEvidence = selectedNativeEdge?.evidence[0]
   const simulatedExplanation = selectedEdge
     ? edgeExplanations[selectedEdge.data.id]
@@ -520,36 +547,47 @@ function GraphWorkspace({
   const selectedExplanation =
     selectedNativeEdge?.explanation ??
     selectedAnalysisEdge?.rationale ??
+    selectedStructuralEdge?.explanation ??
     simulatedExplanation?.explanation ??
     'No explanation is available.'
   const selectedSource = selectedEvidence
     ? `Source ${selectedEvidence.sourceId} · segment ${selectedEvidence.segmentOrdinal + 1}`
     : selectedAnalysisEdge
       ? `${selectedAnalysisEdge.citations.length} exact cited result URLs`
-    : simulatedExplanation?.source ?? 'Local source unavailable'
+      : selectedStructuralEdge
+        ? selectedStructuralEdge.source
+        : simulatedExplanation?.source ?? 'Local source unavailable'
   const selectedVisibility = selectedEvidence
     ? words(selectedEvidence.visibility)
     : selectedAnalysisEdge
       ? 'Public sources · local proposal'
-    : simulatedExplanation?.visibility ?? 'Unknown'
+      : selectedStructuralEdge
+        ? 'Local profile structure'
+        : simulatedExplanation?.visibility ?? 'Unknown'
   const selectedObserved = selectedEvidence
     ? observedTime(selectedEvidence.observedAtUs)
     : selectedAnalysisEdge
       ? observedTime(selectedAnalysisEdge.createdAtUs)
-    : '11 Jul 2026 · 14:36 UTC'
+      : selectedStructuralEdge
+        ? 'Current persisted profile'
+        : '11 Jul 2026 · 14:36 UTC'
   const selectedOrigin = selectedEvidence
     ? words(selectedEvidence.originType)
     : selectedAnalysisEdge
       ? `Local AI · ${selectedAnalysisEdge.provider ?? 'provider unavailable'} · ${selectedAnalysisEdge.modelId ?? 'model unavailable'}`
-    : 'Automated · human review pending'
+      : selectedStructuralEdge
+        ? 'Deterministic profile projection'
+        : 'Automated · human review pending'
   const selectedContradiction = selectedNativeEdge
     ? selectedNativeEdge.contradictionCount > 0
       ? `${selectedNativeEdge.contradictionCount} contradictory observation${selectedNativeEdge.contradictionCount === 1 ? '' : 's'} recorded. Inspect the evidence samples before relying on this relationship.`
       : 'No contradictory observation is currently recorded; absence of contradiction is not independent confirmation.'
     : selectedAnalysisEdge
       ? `Provisional AI proposal: ${selectedAnalysisEdge.statement} Human review is required before treating this as a verified relationship.`
-    : simulatedExplanation?.contradiction ??
-      'No contradiction note is available.'
+      : selectedStructuralEdge
+        ? 'This structural link does not prove ownership or identity equivalence. Open a semantic relationship or cited result for stronger evidence.'
+        : simulatedExplanation?.contradiction ??
+          'No contradiction note is available.'
 
   const focusElement = (id: string, kind: GraphSelection['kind']) => {
     const cy = coreRef.current
@@ -676,7 +714,7 @@ function GraphWorkspace({
                   <span className="eyebrow">Selected relationship</span>
                   <Badge tone="cyan">{selectedEdge.data.label}</Badge>
                   <h2>{nodeLabel(selectedEdge.data.source)} <ChevronRight size={14} /> {nodeLabel(selectedEdge.data.target)}</h2>
-                  <p>Directional, evidence-backed relationship</p>
+                  <p>{selectedStructuralEdge ? 'Profile structure · not an ownership claim' : 'Directional, evidence-backed relationship'}</p>
                 </div>
                 <div className="graph-inspector__confidence">
                   <div><span>Confidence</span><strong>{selectedEdge.data.confidence}%</strong></div>
@@ -698,7 +736,7 @@ function GraphWorkspace({
                 </div>
                 <div className="graph-evidence-link">
                   <span className="status-icon status-icon--green"><FileCheck2 size={14} /></span>
-                  <div><strong>{selectedNativeEdge ? `${selectedNativeEdge.supportCount} supporting · ${selectedNativeEdge.contradictionCount} contradicting` : selectedAnalysisEdge ? `${selectedAnalysisEdge.citations.length} cited public results` : 'Evidence 04'}</strong><small>{selectedNativeEdge ? `${selectedNativeEdge.evidence.length} bounded source sample${selectedNativeEdge.evidence.length === 1 ? '' : 's'}${selectedNativeEdge.evidenceTruncated ? ' · more available' : ''}` : selectedAnalysisEdge ? 'Provisional connection · human review required' : 'Encrypted artifact · hash verified'}</small></div>
+                  <div><strong>{selectedNativeEdge ? `${selectedNativeEdge.supportCount} supporting · ${selectedNativeEdge.contradictionCount} contradicting` : selectedAnalysisEdge ? `${selectedAnalysisEdge.citations.length} cited public results` : selectedStructuralEdge ? 'Profile membership only' : 'Evidence 04'}</strong><small>{selectedNativeEdge ? `${selectedNativeEdge.evidence.length} bounded source sample${selectedNativeEdge.evidence.length === 1 ? '' : 's'}${selectedNativeEdge.evidenceTruncated ? ' · more available' : ''}` : selectedAnalysisEdge ? 'Provisional connection · human review required' : selectedStructuralEdge ? 'Select semantic edges for exact evidence' : 'Encrypted artifact · hash verified'}</small></div>
                   {mode === 'SIMULATED' ? <Link to="/findings/finding_syn_profile" aria-label="Open evidence for selected relationship"><ArrowUpRight size={14} /></Link> : null}
                 </div>
                 {selectedNativeEdge && selectedNativeEdge.evidence.length > 0 ? (
@@ -745,7 +783,7 @@ function GraphWorkspace({
                   <span className="eyebrow">Selected node</span>
                   <Badge tone="violet">{selectedNode.data.type}</Badge>
                   <h2>{selectedNode.data.label}</h2>
-                  <p>{selectedNode.data.provisional ? 'Provisional cited audit result · human review required' : mode === 'NATIVE' ? 'Reviewed local graph entity' : 'Reviewed synthetic graph entity'}</p>
+                  <p>{selectedNode.data.id.startsWith('profile-root:') ? 'Central hub for this selected audit profile' : selectedNode.data.provisional ? 'Provisional cited audit result · human review required' : mode === 'NATIVE' ? 'Reviewed local graph entity' : 'Reviewed synthetic graph entity'}</p>
                 </div>
                 <div className="graph-inspector__confidence">
                   <div><span>Entity confidence</span><strong>{selectedNode.data.confidence}%</strong></div>

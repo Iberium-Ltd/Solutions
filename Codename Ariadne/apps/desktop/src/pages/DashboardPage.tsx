@@ -33,6 +33,8 @@ import {
   TextLink,
 } from '../components/Primitives'
 import { Sparkline } from '../components/Sparkline'
+import { nativeRuntimeAvailable } from '../app/coreBoundary'
+import { NativeDashboardPage } from './NativeDashboardPage'
 
 const toneMap = {
   cyan: 'cyan',
@@ -41,7 +43,7 @@ const toneMap = {
   amber: 'amber',
 } as const
 
-export function DashboardPage() {
+function SimulatedDashboardPage() {
   return (
     <div className="page dashboard-page" data-testid="route-ready">
       <PageHeader
@@ -199,4 +201,8 @@ export function DashboardPage() {
       </div>
     </div>
   )
+}
+
+export function DashboardPage() {
+  return nativeRuntimeAvailable() ? <NativeDashboardPage /> : <SimulatedDashboardPage />
 }

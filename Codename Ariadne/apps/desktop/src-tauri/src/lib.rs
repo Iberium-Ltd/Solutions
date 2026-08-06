@@ -24,9 +24,9 @@ use core::{
     CoreIdentityWorkspaceRequest, CoreIntakeReceipt, CoreInvestigationPlanRequest,
     CoreInvestigationPlanResult, CoreLocalAiConnectionResult, CoreLocalAiEndpointRequest,
     CoreLocalAiModelDiscoveryResult, CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest,
-    CoreLocalAiWorkspaceRequest, CoreLocalAiWorkspaceResult, CoreLocalCorpusAiRequest,
-    CoreLocalCorpusAiResult, CoreLocalReportGenerateRequest, CoreLocalReportGenerateResult,
-    CorePasteIntakeRequest, CorePhase5AttributionDecisionRequest,
+    CoreLocalAiUnloadResult, CoreLocalAiWorkspaceRequest, CoreLocalAiWorkspaceResult,
+    CoreLocalCorpusAiRequest, CoreLocalCorpusAiResult, CoreLocalReportGenerateRequest,
+    CoreLocalReportGenerateResult, CorePasteIntakeRequest, CorePhase5AttributionDecisionRequest,
     CorePhase5AttributionDecisionResult, CorePhase5FindingDetailRequest,
     CorePhase5FindingDetailResult, CorePhase5FindingListRequest, CorePhase5FindingListResult,
     CorePhase5ManualEvidenceImportRequest, CorePhase5ManualEvidenceImportResult,
@@ -197,6 +197,14 @@ async fn core_test_local_ai_connection(
     supervisor: tauri::State<'_, CoreSupervisor>,
 ) -> Result<CoreCommandResponse<CoreLocalAiConnectionResult>, CoreCommandError> {
     supervisor.test_local_ai_connection(request).await
+}
+
+#[tauri::command]
+async fn core_unload_local_ai_model(
+    request: CoreLocalAiEndpointRequest,
+    supervisor: tauri::State<'_, CoreSupervisor>,
+) -> Result<CoreCommandResponse<CoreLocalAiUnloadResult>, CoreCommandError> {
+    supervisor.unload_local_ai_model(request).await
 }
 
 #[tauri::command]
@@ -547,6 +555,7 @@ pub fn run() {
             core_update_local_ai_settings,
             core_discover_local_ai_models,
             core_test_local_ai_connection,
+            core_unload_local_ai_model,
             core_analyze_local_ai_workspace,
             core_analyze_local_ai_corpus,
             core_search_public_discovery,

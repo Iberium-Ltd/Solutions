@@ -198,6 +198,37 @@ def test_lm_studio_preload_uses_one_synthetic_token() -> None:
     assert json.loads(request.body or b"")["messages"] == [{"role": "user", "content": "Reply OK."}]
 
 
+def test_ollama_unloads_exact_model_without_workspace_content() -> None:
+    transport = RecordingTransport([_json_response({"model": "qwen-local:7b", "done": True})])
+    client = LocalAIClient(LocalAIConfig(enabled=True), transport=transport)
+
+    assert client.unload(model_id="qwen-local:7b") is True
+
+    request = transport.requests[0]
+    assert request.url == "http://127.0.0.1:11434/api/generate"
+    assert json.loads(request.body or b"") == {
+        "model": "qwen-local:7b",
+        "prompt": "",
+        "stream": False,
+        "keep_alive": 0,
+    }
+
+
+def test_lm_studio_unload_is_honestly_unsupported_without_a_request() -> None:
+    transport = RecordingTransport([])
+    config = LocalAIConfig(
+        enabled=True,
+        provider=LocalAIProvider.OPENAI_COMPATIBLE,
+        endpoint="http://127.0.0.1:1234",
+    )
+
+    assert (
+        LocalAIClient(config, transport=transport).unload(model_id="lmstudio-community/model-gguf")
+        is False
+    )
+    assert transport.requests == []
+
+
 def test_ollama_executes_bounded_grounded_structured_enrichment() -> None:
     text = "Morgan Vale worked at Northbridge Systems."
     transport = RecordingTransport(

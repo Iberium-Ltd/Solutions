@@ -17,6 +17,8 @@ import {
 } from '@ariadne/synthetic-data'
 import { Badge, Button, PageHeader, Panel } from '../components/Primitives'
 import '../styles/pages-controls.css'
+import { nativeRuntimeAvailable } from '../app/coreBoundary'
+import { NativeCaseDeskPage } from './NativeCaseDeskPage'
 
 type Classification =
   | 'Unresolved'
@@ -85,7 +87,7 @@ const evidenceGroups = [
   },
 ] as const
 
-export function ImpersonationPage() {
+function SimulatedImpersonationPage() {
   const [classification, setClassification] =
     useState<Classification>('Unresolved')
   const [rationale, setRationale] = useState('')
@@ -320,6 +322,10 @@ export function ImpersonationPage() {
       </Panel>
     </div>
   )
+}
+
+export function ImpersonationPage() {
+  return nativeRuntimeAvailable() ? <NativeCaseDeskPage /> : <SimulatedImpersonationPage />
 }
 
 export default ImpersonationPage

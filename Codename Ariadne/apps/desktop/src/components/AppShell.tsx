@@ -1,6 +1,6 @@
 /** Shared navigation and vault-state shell; route content owns domain operations. */
-import { Fragment, useEffect, useRef, type ReactNode } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import {
   Activity,
@@ -46,6 +46,109 @@ import {
   useDisplayPreferences,
 } from '../app/displayPreferences'
 import { NativeProfileSwitcher } from './ProfileSwitcher'
+import { useIdentityOverview } from '../app/useIdentityOverview'
+import { getLocalAISettings, unloadLocalAIModel } from '../app/localAiBoundary'
+
+/** Explicitly release the selected local model while keeping its saved choice. */
+function LocalModelControl() {
+  const [settings, setSettings] = useState<Awaited<ReturnType<typeof getLocalAISettings>> | null>(null)
+  const [pending, setPending] = useState(false)
+  const [unloaded, setUnloaded] = useState(false)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void getLocalAISettings().then((value) => {
+      if (active) setSettings(value)
+    }).catch(() => undefined)
+    return () => { active = false }
+  }, [])
+
+  if (!settings?.enabled || !settings.selectedModel) return null
+  const label = unloaded
+    ? `${settings.selectedModel} is unloaded; Ariadne will load it on the next AI action`
+    : error
+      ? `The model could not be unloaded; retry ${settings.selectedModel}`
+    : `Unload local model ${settings.selectedModel}`
+  return (
+    <button
+      className="icon-button"
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={pending || unloaded}
+      onClick={() => {
+        setPending(true)
+        setError(false)
+        void unloadLocalAIModel({
+          provider: settings.provider,
+          endpoint: settings.endpoint,
+          selectedModel: settings.selectedModel,
+        }).then((result) => {
+          if (result.status === 'UNLOADED') setUnloaded(true)
+        }).catch(() => setError(true)).finally(() => setPending(false))
+      }}
+    >
+      <BrainCircuit size={17} />
+      {!unloaded && <span className="model-loaded-dot" />}
+    </button>
+  )
+}
+
+/** Small audit-backed notification tray; no placeholder alerts are fabricated. */
+function NotificationCenter() {
+  const [open, setOpen] = useState(false)
+  const overview = useIdentityOverview()
+  const notices = overview.status === 'READY'
+    ? [
+        overview.audit.audit.state === 'PARTIAL'
+          ? `Audit “${overview.audit.audit.name}” finished partially.`
+          : null,
+        overview.audit.proposals.length > 0
+          ? `${overview.audit.proposals.length} audit proposals are available for review.`
+          : null,
+        overview.audit.tasks.some((task) => ['BLOCKED', 'AUTH_REQUIRED', 'RATE_LIMITED'].includes(task.state))
+          ? 'One or more provider tasks need access or retry review.'
+          : null,
+        overview.audit.aiAnalysis?.status === 'FALLBACK'
+          ? 'Local AI analysis used a deterministic fallback; open the audit for the reason.'
+          : null,
+      ].filter((notice): notice is string => notice !== null)
+    : []
+
+  useEffect(() => {
+    if (!open) return
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [open])
+
+  return (
+    <div className="topbar-notifications">
+      <button
+        className="icon-button"
+        type="button"
+        aria-label="Open notifications"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <Bell size={17} />
+        {notices.length > 0 && <span className="notification-dot" />}
+      </button>
+      {open && (
+        <div className="notification-popover" role="dialog" aria-label="Audit notifications">
+          <strong>Notifications</strong>
+          {overview.status === 'LOADING' ? <p>Checking the latest audit…</p>
+            : overview.status === 'ERROR' ? <p>{overview.error}</p>
+              : notices.length === 0 ? <p>No audit notifications.</p>
+                : <ul>{notices.map((notice) => <li key={notice}>{notice}</li>)}</ul>}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const navGroups = [
   {
@@ -54,7 +157,7 @@ const navGroups = [
       { label: 'Mission Control', to: '/dashboard', icon: LayoutDashboard },
       { label: 'People', to: '/people', icon: UserRound },
       { label: 'Import identifiers', to: '/audits/new', icon: Plus },
-      { label: 'Operations', to: `/operations/${syntheticRun.id}`, icon: Activity },
+      { label: 'Operations', to: '/operations/latest', icon: Activity },
       { label: 'Findings', to: '/findings', icon: FileSearch, count: 6 },
     ],
   },
@@ -68,9 +171,8 @@ const navGroups = [
       { label: 'Geographic Map', to: '/map', icon: Map },
       {
         label: 'Case Desk',
-        to: '/cases/impersonation/case-syn-0003',
+        to: '/cases/impersonation/current',
         icon: BriefcaseBusiness,
-        count: 1,
       },
     ],
   },
@@ -85,8 +187,8 @@ const navGroups = [
   {
     label: 'Control',
     items: [
-      { label: 'Source Radar', to: '/providers', icon: Radar },
-      { label: 'Transmission', to: '/privacy/transmission', icon: Globe2, count: 1 },
+      { label: 'Source Coverage', to: '/providers', icon: Radar },
+      { label: 'Transmission Preflight', to: '/privacy/transmission', icon: Globe2 },
       { label: 'Privacy & Settings', to: '/settings/privacy', icon: Settings2 },
       { label: 'Getting started', to: '/help/getting-started', icon: HelpCircle },
     ],
@@ -112,8 +214,8 @@ const routeNames: Array<[RegExp, string]> = [
   [/^\/compare/, 'Compare Runs'],
   [/^\/remediation/, 'Removal Tracker'],
   [/^\/reports/, 'Reports'],
-  [/^\/providers/, 'Source Radar'],
-  [/^\/privacy\/transmission/, 'Transmission'],
+  [/^\/providers/, 'Source Coverage'],
+  [/^\/privacy\/transmission/, 'Transmission Preflight'],
   [/^\/settings/, 'Privacy & Settings'],
   [/^\/help\/getting-started/, 'Getting Started'],
   [/^\/states/, 'State Laboratory'],
@@ -122,6 +224,7 @@ const routeNames: Array<[RegExp, string]> = [
 const nativeVaultRoutes = [
   /^\/new-audit/,
   /^\/people/,
+  /^\/dashboard/,
   /^\/identity\/audits/,
   /^\/audits\/new\/intake/,
   /^\/audits\/new\/entities/,
@@ -134,6 +237,9 @@ const nativeVaultRoutes = [
   /^\/compare/,
   /^\/remediation/,
   /^\/reports/,
+  /^\/operations/,
+  /^\/providers/,
+  /^\/cases/,
   /^\/privacy\/transmission/,
   /^\/settings/,
 ] as const
@@ -426,14 +532,19 @@ export function AppShell({ children }: { children: ReactNode }) {
                   const isActive =
                     location.pathname === item.to ||
                     (item.to !== '/dashboard' &&
-                      location.pathname.startsWith(`${item.to}/`))
+                      location.pathname.startsWith(`${item.to}/`)) ||
+                    (item.to === '/operations/latest' &&
+                      location.pathname.startsWith('/operations/')) ||
+                    (item.to === '/cases/impersonation/current' &&
+                      location.pathname.startsWith('/cases/'))
                   return (
                     <Tooltip.Root key={item.to}>
                       <Tooltip.Trigger asChild>
-                        <NavLink
+                        <Link
                           to={item.to}
                           className={clsx('nav-item', isActive && 'is-active')}
                           aria-label={item.label}
+                          aria-current={isActive ? 'page' : undefined}
                         >
                           <Icon size={17} strokeWidth={1.8} />
                           <span className="nav-item__label">{item.label}</span>
@@ -442,7 +553,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           item.count ? (
                             <span className="nav-item__count">{item.count}</span>
                           ) : null}
-                        </NavLink>
+                        </Link>
                       </Tooltip.Trigger>
                       <Tooltip.Portal>
                         <Tooltip.Content className="tooltip" side="right">
@@ -501,6 +612,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Badge tone="green" dot>
                 Local only
               </Badge>
+              {workspaceUnlocked && <LocalModelControl />}
               <button
                 className="icon-button"
                 type="button"
@@ -510,14 +622,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
               </button>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="Open notifications"
-              >
-                <Bell size={17} />
-                <span className="notification-dot" />
-              </button>
+              {workspaceUnlocked ? <NotificationCenter /> : (
+                <button className="icon-button" type="button" aria-label="Notifications unavailable while vault is locked" disabled>
+                  <Bell size={17} />
+                </button>
+              )}
               {coreBoundary.state.mode === 'SIMULATED' ? (
                 <button
                   className="profile-chip"

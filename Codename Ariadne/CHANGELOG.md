@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-08-06 — Audit-backed native surfaces and reliable local AI
+
+- Replaced native Mission Control, Operations, Case Desk, Source Coverage, and
+  Transmission placeholders with active-profile audit projections and honest
+  pre-audit empty states. Added real audit notifications.
+- Fixed the Rust unlocked-route metadata bug that rejected physical profile
+  deletion before it reached Core.
+- Increased bounded local-model deadlines so a large Qwen response can complete
+  or return Core's deterministic fallback; renderer errors now preserve the
+  safe native message. A real strict-schema `qwen3.6:35b-a3b` summary completed
+  in 39.15 seconds.
+- Added a header model-release action through Python, generated contracts,
+  Rust/Tauri, and the renderer. A live Ollama unload/reload check passed against
+  the SSD-backed Qwen model.
+- Reworked native Link Map around a central person/profile hub, semantic
+  identifier clusters, reviewed evidence edges, and separately labelled
+  provisional cited-AI connections. No hidden model chain-of-thought is exposed;
+  Operations and receipts provide the inspectable action/evidence trace.
+- Passed 503 Python tests with five skips, 92 Rust tests with one manual
+  Keychain ignore, 164 frontend tests, 27 Chromium E2E tests, privacy/contract/
+  quality gates, nine checkpoint screenshots, a fresh arm64 sidecar build, and
+  normal/abrupt packaged-app lifecycle verification.
+
 ## 2026-08-06 — Foreground purge reliability and cited Link Map projection
 
 - Removed synchronous database-wide compaction from profile deletion so an

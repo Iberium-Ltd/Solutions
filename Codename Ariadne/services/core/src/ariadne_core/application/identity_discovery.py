@@ -418,7 +418,7 @@ class IdentityDiscoveryCoordinator:
                     enabled=True,
                     provider=settings.local_ai_provider,
                     endpoint=settings.local_ai_endpoint,
-                    timeout_seconds=60,
+                    timeout_seconds=120,
                     max_output_tokens=2_048,
                 ),
                 transport=self._local_ai_transport,

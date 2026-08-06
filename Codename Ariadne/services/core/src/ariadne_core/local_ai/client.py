@@ -1104,6 +1104,33 @@ class LocalAIClient:
         except Exception:
             raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE) from None
 
+    def unload(self, *, model_id: str) -> bool:
+        """Unload an Ollama model; return false when the provider has no standard API."""
+
+        self._require_enabled()
+        selected_model = _validated_model_id(model_id, selection=True)
+        if self._adapter.provider is not LocalAIProvider.OLLAMA:
+            return False
+        payload = self._request_json(
+            "POST",
+            "/api/generate",
+            body={
+                "model": selected_model,
+                "prompt": "",
+                "stream": False,
+                "keep_alive": 0,
+            },
+        )
+        try:
+            root = _object_mapping(payload)
+            if root.get("model") != selected_model or root.get("done") is not True:
+                raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE)
+        except LocalAIError:
+            raise
+        except Exception:
+            raise LocalAIError(LocalAIErrorCode.INVALID_RESPONSE) from None
+        return True
+
     def enrich(
         self,
         request: EnrichmentRequest,

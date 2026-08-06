@@ -30,6 +30,8 @@ import {
   Progress,
 } from '../components/Primitives'
 import '../styles/pages-results.css'
+import { nativeRuntimeAvailable } from '../app/coreBoundary'
+import { NativeOperationsPage } from './NativeOperationsPage'
 
 const stateTone = {
   complete: 'green',
@@ -45,7 +47,7 @@ const logTone = {
   FOUND: 'violet',
 } as const
 
-export function OperationsPage() {
+function SimulatedOperationsPage() {
   const { simulationPaused, toggleSimulation } = usePrototypeStore()
   const [selectedTask, setSelectedTask] = useState<string>(operationTasks[2].id)
   const [logFilter, setLogFilter] = useState<'all' | 'warnings'>('all')
@@ -288,4 +290,8 @@ export function OperationsPage() {
       </div>
     </div>
   )
+}
+
+export function OperationsPage() {
+  return nativeRuntimeAvailable() ? <NativeOperationsPage /> : <SimulatedOperationsPage />
 }

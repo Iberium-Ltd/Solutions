@@ -19,6 +19,8 @@ import { providers, type Health } from '@ariadne/synthetic-data'
 import { Badge, Button, PageHeader, Panel, Progress } from '../components/Primitives'
 import { Toggle } from '../components/Toggle'
 import '../styles/pages-controls.css'
+import { nativeRuntimeAvailable } from '../app/coreBoundary'
+import { NativeProvidersPage } from './NativeProvidersPage'
 
 type ProviderRecord = {
   id: string
@@ -90,7 +92,7 @@ const riskTone = (risk: string) => {
   return 'rose' as const
 }
 
-export function ProvidersPage() {
+function SimulatedProvidersPage() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | Health | 'disabled'>('all')
   const [selectedId, setSelectedId] = useState('meridian-archive')
@@ -295,6 +297,10 @@ export function ProvidersPage() {
       </div>
     </div>
   )
+}
+
+export function ProvidersPage() {
+  return nativeRuntimeAvailable() ? <NativeProvidersPage /> : <SimulatedProvidersPage />
 }
 
 export default ProvidersPage

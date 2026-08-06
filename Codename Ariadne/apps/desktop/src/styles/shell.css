@@ -351,6 +351,55 @@ button.vault-card:disabled { cursor: wait; opacity: .68; }
   background: var(--color-warning);
 }
 
+.model-loaded-dot {
+  position: absolute;
+  inset-block-end: 5px;
+  inset-inline-end: 5px;
+  inline-size: 6px;
+  block-size: 6px;
+  border: 1px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--color-success);
+}
+
+.topbar-notifications {
+  position: relative;
+  display: inline-flex;
+}
+
+.notification-popover {
+  position: absolute;
+  z-index: 80;
+  inset-block-start: calc(100% + 10px);
+  inset-inline-end: 0;
+  inline-size: min(340px, 78vw);
+  padding: 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-text-secondary);
+}
+
+.notification-popover > strong {
+  color: var(--color-text);
+}
+
+.notification-popover p,
+.notification-popover ul {
+  margin: 9px 0 0;
+  font-size: calc(12px * var(--font-scale));
+  line-height: 1.5;
+}
+
+.notification-popover ul {
+  padding-inline-start: 18px;
+}
+
+.notification-popover li + li {
+  margin-block-start: 7px;
+}
+
 .profile-chip {
   block-size: 39px;
   padding: 0 8px 0 4px;

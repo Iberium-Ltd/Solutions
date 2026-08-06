@@ -458,13 +458,13 @@ test('native primary workflow reaches a cited final package @primary-workflow', 
   await capture(page, '04-audit-setup', screenshots)
 
   await page.locator('#run-full-audit').getByRole('button', {
-    name: /Start full audit/u,
+    name: /^Start (?:deterministic audit|with .+)/u,
   }).click()
   await expect(page).toHaveURL(
     new RegExp(`/identity/audits/${completedDetail.audit.auditId}$`, 'u'),
   )
   await expect(page.getByText(
-    'Executing the next bounded task batch…',
+    /Executing the next bounded task batch/u,
   )).toBeVisible()
   await capture(page, '05-durable-progress', screenshots)
 

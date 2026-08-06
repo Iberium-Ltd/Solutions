@@ -161,7 +161,7 @@ test('all Discovery Console tabs fit without invoking a provider', async ({ page
   await capture(page, 'discovery-query-composer-1440x900.png')
 
   await page.getByRole('tab', { name: 'Breach exposure' }).click()
-  await expect(page.getByText('Have I Been Pwned v3')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Have I Been Pwned v3' })).toBeVisible()
   await expect(page.getByLabel(/HIBP API key/)).toHaveAttribute('type', 'password')
   await expectNoPageOverflow(page)
 

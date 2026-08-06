@@ -7,6 +7,7 @@ import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { EntitiesPage } from '../pages/EntitiesPage'
 import { GraphPage } from '../pages/GraphPage'
 import { IntakePage } from '../pages/IntakePage'
+import { completedAuditDetail } from './identityAuditFixture'
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
 
@@ -621,8 +622,7 @@ describe('native Phase 3 UI flow', () => {
 
   it('renders the persisted native graph with source-linked evidence', async () => {
     usePhase3WorkflowStore.getState().setProfileId(profileId)
-    invokeMock.mockResolvedValue(
-      response({
+    const graphSnapshot = response({
         profileId,
         nodes: [
           {
@@ -669,8 +669,36 @@ describe('native Phase 3 UI flow', () => {
           },
         ],
         truncated: false,
-      }),
-    )
+      })
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'core_graph_snapshot') return graphSnapshot
+      if (command === 'core_identity_workspace') {
+        return response({
+          person: {
+            profileId,
+            displayName: 'Synthetic Person',
+            purpose: 'Synthetic graph test',
+            status: 'ACTIVE',
+            notes: '',
+            tags: [],
+            profileRevision: 1,
+            detailsRevision: 0,
+            identityCount: 2,
+            sourceCount: 1,
+            auditCount: 1,
+            unresolvedProposalCount: 0,
+          },
+          sources: [],
+          audits: [completedAuditDetail.audit],
+          hasMoreSources: false,
+          hasMoreAudits: false,
+        })
+      }
+      if (command === 'core_get_identity_audit') {
+        return response({ ...completedAuditDetail, profileId })
+      }
+      throw new Error(`Unexpected command: ${command}`)
+    })
 
     render(
       <MemoryRouter>
@@ -679,7 +707,7 @@ describe('native Phase 3 UI flow', () => {
     )
 
     expect(await screen.findByText('Native encrypted graph')).toBeVisible()
-    expect(screen.getByText('Synthetic Person')).toBeInTheDocument()
+    expect(screen.getAllByText('Synthetic Person')).not.toHaveLength(0)
     expect(screen.getByText('Synthetic relationship extracted locally.')).toBeVisible()
     expect(screen.getByText('1 supporting · 0 contradicting')).toBeVisible()
     expect(invokeMock).toHaveBeenCalledWith('core_graph_snapshot', {

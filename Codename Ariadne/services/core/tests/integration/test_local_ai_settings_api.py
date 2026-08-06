@@ -130,6 +130,7 @@ async def test_local_ai_settings_discovery_test_and_revisioned_selection(
             _json_response({"models": [{"model": "qwen-local:7b"}]}),
             _json_response({"models": [{"model": "qwen-local:7b"}]}),
             _json_response({"model": "qwen-local:7b", "done": True}),
+            _json_response({"model": "qwen-local:7b", "done": True}),
         ]
     )
 
@@ -183,6 +184,23 @@ async def test_local_ai_settings_discovery_test_and_revisioned_selection(
         assert transport.requests[2].url.endswith("/api/generate")
         assert json.loads(transport.requests[2].body or b"")["prompt"] == ""
 
+        unloaded = await client.post(
+            "/v1/local-ai/unload",
+            json={
+                "provider": "OLLAMA",
+                "endpoint": "http://127.0.0.1:11434",
+                "selectedModel": "qwen-local:7b",
+            },
+            headers=_headers(),
+        )
+        assert unloaded.status_code == 200
+        assert unloaded.json() == {
+            "provider": "OLLAMA",
+            "modelId": "qwen-local:7b",
+            "status": "UNLOADED",
+        }
+        assert json.loads(transport.requests[3].body or b"")["keep_alive"] == 0
+
         saved = await client.post(
             "/v1/local-ai/settings",
             json={
@@ -230,6 +248,7 @@ async def test_local_ai_settings_discovery_test_and_revisioned_selection(
         assert [request.url for request in transport.requests] == [
             "http://127.0.0.1:11434/api/tags",
             "http://127.0.0.1:11434/api/tags",
+            "http://127.0.0.1:11434/api/generate",
             "http://127.0.0.1:11434/api/generate",
         ]
     assert all(

@@ -168,6 +168,14 @@ def test_openapi_is_offline_only_and_has_exact_route_capabilities() -> None:
             "VAULT",
             "USER_GESTURE",
         ),
+        ("post", "/v1/local-ai/unload"): (
+            "local_ai.model.unload",
+            1024,
+            2048,
+            "UNLOCKED",
+            "VAULT",
+            "USER_GESTURE",
+        ),
         ("post", "/v1/local-ai/workspace/analyze"): (
             "local_ai.workspace.analyze",
             100_000,
@@ -544,6 +552,7 @@ def test_generated_allowlists_contain_only_route_specific_boundaries() -> None:
         "/v1/local-ai/settings",
         "/v1/local-ai/models",
         "/v1/local-ai/test",
+        "/v1/local-ai/unload",
         "/v1/local-ai/workspace/analyze",
         "/v1/local-ai/corpus/analyze",
         "/v1/query/providers",
@@ -587,7 +596,7 @@ def test_generated_allowlists_contain_only_route_specific_boundaries() -> None:
         assert route in rust
     assert typescript.count('"method": "GET"') == 4
     assert rust.count('method: "GET"') == 4
-    assert typescript.count('"method": "POST"') == 53
-    assert rust.count('method: "POST"') == 53
+    assert typescript.count('"method": "POST"') == 54
+    assert rust.count('method: "POST"') == 54
     assert "/v1/vaults/current/descriptor" not in typescript
     assert "/v1/providers" not in rust

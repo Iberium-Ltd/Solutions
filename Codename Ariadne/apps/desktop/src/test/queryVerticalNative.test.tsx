@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { usePhase3WorkflowStore } from '../app/phase3WorkflowStore'
 import { TransmissionPage } from '../pages/TransmissionPage'
+import { completedAuditDetail } from './identityAuditFixture'
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
 
@@ -55,6 +56,31 @@ describe('native query-policy preflight', () => {
     usePhase3WorkflowStore.getState().setProfileId(profileId)
     invokeMock.mockReset()
     invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'core_identity_workspace') {
+        return response({
+          person: {
+            profileId,
+            displayName: 'Synthetic Query Profile',
+            purpose: 'Synthetic query test',
+            status: 'ACTIVE',
+            notes: '',
+            tags: [],
+            profileRevision: 1,
+            detailsRevision: 0,
+            identityCount: 1,
+            sourceCount: 0,
+            auditCount: 1,
+            unresolvedProposalCount: 0,
+          },
+          sources: [],
+          audits: [completedAuditDetail.audit],
+          hasMoreSources: false,
+          hasMoreAudits: false,
+        })
+      }
+      if (command === 'core_get_identity_audit') {
+        return response({ ...completedAuditDetail, profileId })
+      }
       if (command === 'core_query_providers') {
         return response({
           profileId,

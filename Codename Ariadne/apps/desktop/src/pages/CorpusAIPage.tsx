@@ -50,9 +50,13 @@ const TASKS: ReadonlyArray<{
 ]
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error && error.message
-    ? error.message
-    : 'The local corpus analysis could not be completed.'
+  if (error instanceof Error && error.message.trim() !== '') return error.message
+  if (typeof error === 'string' && error.trim() !== '') return error
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = Reflect.get(error, 'message')
+    if (typeof message === 'string' && message.trim() !== '') return message
+  }
+  return 'The local corpus analysis could not be completed.'
 }
 
 function unique(values: readonly string[]): readonly string[] {

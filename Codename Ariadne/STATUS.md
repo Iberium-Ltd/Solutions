@@ -1,12 +1,22 @@
 # Codename Ariadne — Project Status
 
 Last updated: 2026-08-06
-Overall state: **streamlined foreground identity-audit workflow implemented and packaged at the 57-operation/55-path candidate; final private-vault interaction awaits one macOS Keychain approval and production release readiness remains incomplete**
+Overall state: **streamlined foreground identity-audit workflow implemented and packaged at the 58-operation/56-path candidate; final private-vault interaction awaits one macOS Keychain approval and production release readiness remains incomplete**
 
 ## Implemented at the current source boundary
 
-- The generated contract contains **57 narrow operations (4 GET, 53 POST; 55 distinct paths)** at schema head `0011_profile_purge`.
-- The current frontend passes typecheck, lint, production build, and **162/162 Vitest tests across 40 files**.
+- The generated contract contains **58 narrow operations (4 GET, 54 POST; 56 distinct paths)** at schema head `0011_profile_purge`.
+- The current frontend passes typecheck, lint, production build, and **164/164 Vitest tests across 40 files**.
+- Native Mission Control, Operations, Case Desk, Source Coverage, Transmission
+  Preflight, notifications, and Link Map now use the active profile's latest
+  audit and remain honestly empty before the first audit; simulated Morgan Vale
+  content is restricted to explicit browser-prototype mode.
+- The Link Map now uses a central person/profile hub, semantic identifier
+  clusters, reviewed evidence relationships, and separately styled provisional
+  AI connections with exact citations and limitations.
+- The header exposes a real Ollama model-unload action. A live
+  `qwen3.6:35b-a3b` check returned Ollama's `unload` result and then reloaded the
+  same SSD-backed model successfully.
 - Native vault creation now leads to explicit named-profile creation or
   selection. Intake refuses to create a hidden generic profile, and the default
   native route enters the persistent People workspace.
@@ -38,14 +48,18 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 
 ## Verification state
 
-### Current 57-operation source evidence
+### Current 58-operation source evidence
 
-- Generated contract: **57 operations / 55 paths (4 GET, 53 POST)**; drift check passes.
+- Generated contract: **58 operations / 56 paths (4 GET, 54 POST)**; drift check passes.
 - Python: Ruff passes across **169 files**, strict mypy across **93 source files**,
-  and **501 tests pass with 5 intentional skips**; generated-contract drift
+  and **503 tests pass with 5 intentional skips**; generated-contract drift
   also passes.
-- Rust: format and strict all-target Clippy clean; **91 passed, 0 failed, 1 ignored** manual Keychain test.
-- Frontend: typecheck, lint, production build, and **162/162 Vitest tests across 40 files** pass.
+- Rust: format and strict all-target Clippy clean; **92 passed, 0 failed, 1 ignored** manual Keychain test.
+- Frontend: typecheck, lint, production build, and **164/164 Vitest tests across 40 files** pass.
+- Browser: **27/27 Chromium E2E tests pass**, including 21 route/accessibility
+  screens, Discovery Console layouts, display controls, and the complete
+  synthetic native workflow. Nine workflow screenshots were captured; setup
+  and final cited-package screens were inspected with no blocking defect.
 - Focused end-to-end backend: the synthetic named-profile → intake → decision →
   audit execution → cited AI → proposal promotion → reopen workflow passes.
 - Privacy: **445 candidate files passed** before the final documentation-only update.
@@ -70,12 +84,12 @@ An earlier ephemeral, local-only benchmark used two confidential reference docum
 - HIBP k-anonymity public-key smoke: HTTP 401 correctly surfaced as an HIBP plan/subscription requirement; no successful result claimed.
 - OpenAI Responses: implementation and automated provider/citation tests pass; **no real paid-key live test**.
 
-Current 57-operation local package evidence:
+Current 58-operation local package evidence:
 
-- Frozen/staged sidecar: 21,060,704 bytes, arm64/minimum macOS 11.0, SHA-256 `8426c71e40a83a440d469f941fbbd1cd93d53cf0d4115dd8b988c002e01b93df`.
-- Signed packaged sidecar: 21,060,688 bytes, SHA-256 `9b37d23b9280041341183fd4009caf4fb13aab955c1a56f3aee4ca43e1e81af2`, CDHash `aa1b5d9ab5b05cba456c64e05500dbc9116cc2f6`.
-- Desktop executable: 17,755,520 bytes, arm64/minimum macOS 14.0, SHA-256 `be6d0030d9197f92a355f1573d027be1ab0ae1c48b1e8b3eec2270dd47617f9a`, CDHash `9a3e5ec2f5bf3d8171f76f616f79e79d9e1df2e8`.
-- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 5,660/4,351 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
+- Frozen/staged sidecar: 21,064,560 bytes, arm64/minimum macOS 11.0, SHA-256 `06b0f2260174e83d9711f13566249d69c959d25d9d1371b5411348fd8d9f9ca3`.
+- Signed packaged sidecar: 21,064,544 bytes, SHA-256 `b27b425bc1386f70e9c853e40615e82ff606b1fb380f688d1b84a6f7bbb5535b`.
+- Desktop executable: 17,829,360 bytes, arm64/minimum macOS 14.0, SHA-256 `ef64c2d09f0d4f5bcc9a4971542589eaba475c18ca7b411ebedd6390949a7e2e`.
+- Deep strict ad-hoc bundle signature passed; requested/abrupt starts completed in 2,827/2,181 ms with exit 0/-9, two sidecars, cleanup, zero TCP, and `0700`/`0600` runtime modes.
 - A final private-vault launch reached the expected macOS Keychain password
   sheet because the ad-hoc binary identity changed. Live reopen and deletion
   were not claimed past that sheet; the user must approve the newly signed

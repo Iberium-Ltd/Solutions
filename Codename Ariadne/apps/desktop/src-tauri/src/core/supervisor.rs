@@ -56,53 +56,54 @@ use super::contract::{
     CoreInvestigationPrerequisite, CoreInvestigationProvider, CoreInvestigationTransmission,
     CoreLocalAiConnectionResult, CoreLocalAiConnectionStatus, CoreLocalAiEndpointRequest,
     CoreLocalAiIntakeStatus, CoreLocalAiModelDiscoveryResult, CoreLocalAiProvider,
-    CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest, CoreLocalAiWorkspaceConnection,
-    CoreLocalAiWorkspaceDocument, CoreLocalAiWorkspaceDocumentKind, CoreLocalAiWorkspaceExecution,
-    CoreLocalAiWorkspaceFact, CoreLocalAiWorkspaceNextStep, CoreLocalAiWorkspaceRequest,
-    CoreLocalAiWorkspaceResult, CoreLocalAiWorkspaceScope, CoreLocalAiWorkspaceSection,
-    CoreLocalAiWorkspaceSource, CoreLocalAiWorkspaceSourceCounts, CoreLocalAiWorkspaceTask,
-    CoreLocalCorpusAiConnection, CoreLocalCorpusAiContentOrigin, CoreLocalCorpusAiCounts,
-    CoreLocalCorpusAiExecution, CoreLocalCorpusAiFact, CoreLocalCorpusAiNextStep,
-    CoreLocalCorpusAiReferenceKind, CoreLocalCorpusAiRequest, CoreLocalCorpusAiResult,
-    CoreLocalCorpusAiReviewNote, CoreLocalCorpusAiSection, CoreLocalCorpusAiSourceCatalogEntry,
-    CoreLocalCorpusAiSourcePointer, CoreLocalCorpusAiTask, CoreLocalCorpusAiTextLabel,
-    CoreLocalCorpusDocumentRequest, CoreLocalCorpusMediaType, CoreLocalReportArtifact,
-    CoreLocalReportArtifactDescriptor, CoreLocalReportGenerateRequest,
-    CoreLocalReportGenerateResult, CoreLocalReportSchema, CorePasteIntakeRequest,
-    CorePhase5ArtifactKind, CorePhase5AttributionAssessment, CorePhase5AttributionDecisionRequest,
-    CorePhase5AttributionDecisionResult, CorePhase5CaptureMethod, CorePhase5CheckOutcome,
-    CorePhase5ConfidenceBand, CorePhase5EvidenceArtifact, CorePhase5EvidenceViewport,
-    CorePhase5FindingDetailRequest, CorePhase5FindingDetailResult, CorePhase5FindingListRequest,
-    CorePhase5FindingListResult, CorePhase5FindingSummary, CorePhase5ManualArtifactKind,
-    CorePhase5ManualEvidenceImportRequest, CorePhase5ManualEvidenceImportResult,
-    CorePhase5ManualFindingCreateRequest, CorePhase5PositiveSignal,
-    CorePhase5RedactedDerivativeRequest, CorePhase5RedactedDerivativeResult, CorePhase5Severity,
-    CorePhase5Visibility, CorePhase6ActionDisposition, CorePhase6AuditRunListRequest,
-    CorePhase6AuditRunListResult, CorePhase6AuditRunSummary, CorePhase6CompareRunsRequest,
-    CorePhase6ComparisonResult, CorePhase6FindingDiff, CorePhase6FindingDiffState,
-    CorePhase6FindingLifecycle, CorePhase6LifecycleEvent, CorePhase6LocalCheckpointRequest,
-    CorePhase6LocalCheckpointResult, CorePhase6ProviderCoverageComparison,
-    CorePhase6ProviderResponse, CorePhase6RemediationAction, CorePhase6RemediationCase,
-    CorePhase6RemediationCaseSummary, CorePhase6RemediationCreateRequest,
-    CorePhase6RemediationDeadlineUpdateRequest, CorePhase6RemediationDetailRequest,
-    CorePhase6RemediationDetailResult, CorePhase6RemediationDraftUpdateRequest,
-    CorePhase6RemediationEventType, CorePhase6RemediationEvidenceLinkRequest,
-    CorePhase6RemediationHistoryEntry, CorePhase6RemediationListRequest,
-    CorePhase6RemediationListResult, CorePhase6RemediationProviderResponseRequest,
-    CorePhase6RemediationReappearanceRequest, CorePhase6RemediationRequireApprovalRequest,
-    CorePhase6RemediationStatus, CorePhase6RemediationStatusTransitionRequest,
-    CorePhase6SnapshotRunState, CorePhase6UnresolvedAbsence, CoreProfileCreateRequest,
-    CoreProfileDeleteRequest, CoreProfileDeleteResult, CoreProfileListResult, CoreProfileSummary,
-    CoreProviderCatalogRequest, CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest,
-    CorePublicDiscoveryCaptureResult, CorePublicDiscoveryProvider, CorePublicDiscoveryReason,
-    CorePublicDiscoverySearchRequest, CorePublicDiscoverySearchResult, CorePublicDiscoveryState,
-    CoreQueryCheckState, CoreQueryCoverageOutcome, CoreQueryDryRunRequest, CoreQueryPlanCell,
-    CoreQueryPlanRequest, CoreQueryPlanResult, CoreQueryPolicyMode, CoreReportArtifactFormat,
-    CoreReportExportMode, CoreReviewState, CoreRoute, CoreSearchPolicy, CoreSensitivity,
-    CoreSession, CoreTransmissionPolicy, CoreVaultLifecycleResult, EventReplayRequest,
-    EventReplayResult, MAX_BOOTSTRAP_BYTES, MAX_READINESS_BYTES, MAX_RESPONSE_BYTES,
-    ReadinessMessage, ReadinessTransport, SessionCredential, SessionLockState, VaultCreateRequest,
-    VaultState, VaultUnlockRequest, encode_json_line_bounded,
+    CoreLocalAiSettings, CoreLocalAiSettingsUpdateRequest, CoreLocalAiUnloadResult,
+    CoreLocalAiUnloadStatus, CoreLocalAiWorkspaceConnection, CoreLocalAiWorkspaceDocument,
+    CoreLocalAiWorkspaceDocumentKind, CoreLocalAiWorkspaceExecution, CoreLocalAiWorkspaceFact,
+    CoreLocalAiWorkspaceNextStep, CoreLocalAiWorkspaceRequest, CoreLocalAiWorkspaceResult,
+    CoreLocalAiWorkspaceScope, CoreLocalAiWorkspaceSection, CoreLocalAiWorkspaceSource,
+    CoreLocalAiWorkspaceSourceCounts, CoreLocalAiWorkspaceTask, CoreLocalCorpusAiConnection,
+    CoreLocalCorpusAiContentOrigin, CoreLocalCorpusAiCounts, CoreLocalCorpusAiExecution,
+    CoreLocalCorpusAiFact, CoreLocalCorpusAiNextStep, CoreLocalCorpusAiReferenceKind,
+    CoreLocalCorpusAiRequest, CoreLocalCorpusAiResult, CoreLocalCorpusAiReviewNote,
+    CoreLocalCorpusAiSection, CoreLocalCorpusAiSourceCatalogEntry, CoreLocalCorpusAiSourcePointer,
+    CoreLocalCorpusAiTask, CoreLocalCorpusAiTextLabel, CoreLocalCorpusDocumentRequest,
+    CoreLocalCorpusMediaType, CoreLocalReportArtifact, CoreLocalReportArtifactDescriptor,
+    CoreLocalReportGenerateRequest, CoreLocalReportGenerateResult, CoreLocalReportSchema,
+    CorePasteIntakeRequest, CorePhase5ArtifactKind, CorePhase5AttributionAssessment,
+    CorePhase5AttributionDecisionRequest, CorePhase5AttributionDecisionResult,
+    CorePhase5CaptureMethod, CorePhase5CheckOutcome, CorePhase5ConfidenceBand,
+    CorePhase5EvidenceArtifact, CorePhase5EvidenceViewport, CorePhase5FindingDetailRequest,
+    CorePhase5FindingDetailResult, CorePhase5FindingListRequest, CorePhase5FindingListResult,
+    CorePhase5FindingSummary, CorePhase5ManualArtifactKind, CorePhase5ManualEvidenceImportRequest,
+    CorePhase5ManualEvidenceImportResult, CorePhase5ManualFindingCreateRequest,
+    CorePhase5PositiveSignal, CorePhase5RedactedDerivativeRequest,
+    CorePhase5RedactedDerivativeResult, CorePhase5Severity, CorePhase5Visibility,
+    CorePhase6ActionDisposition, CorePhase6AuditRunListRequest, CorePhase6AuditRunListResult,
+    CorePhase6AuditRunSummary, CorePhase6CompareRunsRequest, CorePhase6ComparisonResult,
+    CorePhase6FindingDiff, CorePhase6FindingDiffState, CorePhase6FindingLifecycle,
+    CorePhase6LifecycleEvent, CorePhase6LocalCheckpointRequest, CorePhase6LocalCheckpointResult,
+    CorePhase6ProviderCoverageComparison, CorePhase6ProviderResponse, CorePhase6RemediationAction,
+    CorePhase6RemediationCase, CorePhase6RemediationCaseSummary,
+    CorePhase6RemediationCreateRequest, CorePhase6RemediationDeadlineUpdateRequest,
+    CorePhase6RemediationDetailRequest, CorePhase6RemediationDetailResult,
+    CorePhase6RemediationDraftUpdateRequest, CorePhase6RemediationEventType,
+    CorePhase6RemediationEvidenceLinkRequest, CorePhase6RemediationHistoryEntry,
+    CorePhase6RemediationListRequest, CorePhase6RemediationListResult,
+    CorePhase6RemediationProviderResponseRequest, CorePhase6RemediationReappearanceRequest,
+    CorePhase6RemediationRequireApprovalRequest, CorePhase6RemediationStatus,
+    CorePhase6RemediationStatusTransitionRequest, CorePhase6SnapshotRunState,
+    CorePhase6UnresolvedAbsence, CoreProfileCreateRequest, CoreProfileDeleteRequest,
+    CoreProfileDeleteResult, CoreProfileListResult, CoreProfileSummary, CoreProviderCatalogRequest,
+    CoreProviderCatalogResult, CorePublicDiscoveryCaptureRequest, CorePublicDiscoveryCaptureResult,
+    CorePublicDiscoveryProvider, CorePublicDiscoveryReason, CorePublicDiscoverySearchRequest,
+    CorePublicDiscoverySearchResult, CorePublicDiscoveryState, CoreQueryCheckState,
+    CoreQueryCoverageOutcome, CoreQueryDryRunRequest, CoreQueryPlanCell, CoreQueryPlanRequest,
+    CoreQueryPlanResult, CoreQueryPolicyMode, CoreReportArtifactFormat, CoreReportExportMode,
+    CoreReviewState, CoreRoute, CoreSearchPolicy, CoreSensitivity, CoreSession,
+    CoreTransmissionPolicy, CoreVaultLifecycleResult, EventReplayRequest, EventReplayResult,
+    MAX_BOOTSTRAP_BYTES, MAX_READINESS_BYTES, MAX_RESPONSE_BYTES, ReadinessMessage,
+    ReadinessTransport, SessionCredential, SessionLockState, VaultCreateRequest, VaultState,
+    VaultUnlockRequest, encode_json_line_bounded,
 };
 use super::key_lease::{KeyLeaseBroker, KeyLeaseError, KeyLeaseHandle, LeaseOperation};
 use super::vault_manifest::{VaultManifest, VaultManifestError, validate_create_destination};
@@ -110,7 +111,10 @@ use super::vault_manifest::{VaultManifest, VaultManifestError, validate_create_d
 const STARTUP_TIMEOUT: Duration = Duration::from_secs(30);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const KEYCHAIN_REQUEST_TIMEOUT: Duration = Duration::from_secs(125);
-const LOCAL_AI_WORKSPACE_REQUEST_TIMEOUT: Duration = Duration::from_secs(65);
+// Large local models can need more than a minute for a bounded structured
+// response on first use. Keep the shell deadline just beyond Core's hard
+// 120-second model deadline so Core can return its deterministic fallback.
+const LOCAL_AI_WORKSPACE_REQUEST_TIMEOUT: Duration = Duration::from_secs(125);
 const LOCAL_AI_CORPUS_REQUEST_TIMEOUT: Duration = Duration::from_secs(105);
 const LOCAL_AI_INTAKE_REQUEST_TIMEOUT: Duration = Duration::from_secs(75);
 const LOCAL_AI_PRELOAD_REQUEST_TIMEOUT: Duration = Duration::from_secs(125);
@@ -205,7 +209,7 @@ const MAX_IDENTITY_RECEIPTS: usize = 500;
 const MAX_IDENTITY_AI_INSIGHTS: usize = 100;
 const MAX_IDENTITY_AI_CITATIONS: usize = 200;
 const IDENTITY_REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
-const IDENTITY_AI_REQUEST_TIMEOUT: Duration = Duration::from_secs(75);
+const IDENTITY_AI_REQUEST_TIMEOUT: Duration = Duration::from_secs(125);
 const MAX_SAFE_JAVASCRIPT_INTEGER: u64 = 9_007_199_254_740_991;
 
 #[derive(Clone)]
@@ -903,6 +907,41 @@ impl CoreSupervisor {
         self.execute_unlocked_with_json(CoreRoute::TestLocalAiConnection, &request, move |result| {
             validate_local_ai_connection(result, selected_model.as_deref())
         })
+        .await
+    }
+
+    pub async fn unload_local_ai_model(
+        &self,
+        request: CoreLocalAiEndpointRequest,
+    ) -> Result<CoreCommandResponse<CoreLocalAiUnloadResult>, CoreCommandError> {
+        validate_local_ai_endpoint_request(&request)?;
+        let provider = request.provider;
+        let selected_model = request
+            .selected_model
+            .clone()
+            .ok_or(CoreError::InvalidLocalAiRequest)?;
+        self.execute_unlocked_with_json(
+            CoreRoute::UnloadLocalAiModel,
+            &request,
+            move |result: &CoreLocalAiUnloadResult| {
+                if result.provider != provider
+                    || result.model_id != selected_model
+                    || !matches!(
+                        (provider, result.status),
+                        (
+                            CoreLocalAiProvider::Ollama,
+                            CoreLocalAiUnloadStatus::Unloaded
+                        ) | (
+                            CoreLocalAiProvider::OpenaiCompatible,
+                            CoreLocalAiUnloadStatus::Unsupported
+                        )
+                    )
+                {
+                    return Err(CoreError::InvalidLocalAiResponse);
+                }
+                Ok(())
+            },
+        )
         .await
     }
 
@@ -2338,6 +2377,7 @@ fn unlocked_route_metadata_is_valid(route: CoreRoute) -> bool {
                 && capability.authorization_class == "USER_GESTURE_FILE_PICKER"
         }
         CoreRoute::IntakePaste
+        | CoreRoute::DeleteProfile
         | CoreRoute::ReviewEntities
         | CoreRoute::DecideEntity
         | CoreRoute::EntityOrigins
@@ -2347,7 +2387,8 @@ fn unlocked_route_metadata_is_valid(route: CoreRoute) -> bool {
         CoreRoute::GetLocalAiSettings
         | CoreRoute::UpdateLocalAiSettings
         | CoreRoute::DiscoverLocalAiModels
-        | CoreRoute::TestLocalAiConnection => {
+        | CoreRoute::TestLocalAiConnection
+        | CoreRoute::UnloadLocalAiModel => {
             capability.scope_class == "VAULT" && capability.authorization_class == "USER_GESTURE"
         }
         CoreRoute::AnalyzeLocalAiWorkspace => {
@@ -8497,6 +8538,11 @@ mod tests {
             validate_entity_origin_page_request(&oversized_request),
             Err(CoreError::InvalidPhase3Request)
         ));
+    }
+
+    #[test]
+    fn profile_deletion_route_is_accepted_by_the_unlocked_shell_boundary() {
+        assert!(unlocked_route_metadata_is_valid(CoreRoute::DeleteProfile));
     }
 
     #[test]

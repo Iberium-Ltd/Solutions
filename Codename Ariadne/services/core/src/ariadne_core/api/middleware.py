@@ -48,6 +48,7 @@ ROUTE_POLICIES: Final = {
     ("POST", "/v1/local-ai/settings"): RoutePolicy(1024),
     ("POST", "/v1/local-ai/models"): RoutePolicy(1024),
     ("POST", "/v1/local-ai/test"): RoutePolicy(1024),
+    ("POST", "/v1/local-ai/unload"): RoutePolicy(1024),
     ("POST", "/v1/local-ai/workspace/analyze"): RoutePolicy(100_000),
     ("POST", "/v1/local-ai/corpus/analyze"): RoutePolicy(MAX_LOCAL_CORPUS_API_REQUEST_BYTES),
     ("POST", "/v1/query/providers"): RoutePolicy(512),

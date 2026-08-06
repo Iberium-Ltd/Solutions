@@ -221,6 +221,17 @@ class LocalAIConnectionResult(ApiModel):
     selected_model_available: bool | None
 
 
+class LocalAIUnloadStatus(StrEnum):
+    UNLOADED = "UNLOADED"
+    UNSUPPORTED = "UNSUPPORTED"
+
+
+class LocalAIUnloadResult(ApiModel):
+    provider: LocalAIProvider
+    model_id: str = Field(min_length=1, max_length=256)
+    status: LocalAIUnloadStatus
+
+
 def _canonical_uuid(value: str, *, label: str) -> str:
     try:
         parsed = UUID(value)

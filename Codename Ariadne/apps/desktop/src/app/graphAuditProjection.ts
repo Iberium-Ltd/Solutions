@@ -38,6 +38,58 @@ export type GraphViewEdge = {
     readonly confidence: number
     readonly nativeEdge?: GraphEdge
     readonly analysisEdge?: AnalysisGraphEdge
+    readonly structuralEdge?: {
+      readonly explanation: string
+      readonly source: string
+    }
+  }
+}
+
+/**
+ * Add an explicit profile hub so reviewed identifiers and cited audit results
+ * form one navigable evidence web. These structural edges express membership
+ * in the selected audit profile, never proof that two external accounts share
+ * an owner.
+ */
+export function connectProfileGraph(
+  profileId: string,
+  profileLabel: string,
+  nodes: ReadonlyArray<GraphViewNode>,
+  edges: ReadonlyArray<GraphViewEdge>,
+): AuditGraphProjection {
+  const rootId = `profile-root:${profileId}`
+  const root: GraphViewNode = {
+    data: {
+      id: rootId,
+      label: profileLabel,
+      type: 'person',
+      confidence: 100,
+      private: true,
+    },
+    position: { x: 480, y: 270 },
+  }
+  const structuralEdges = nodes.map((node, index): GraphViewEdge => ({
+    data: {
+      id: `profile-membership:${index}:${node.data.id}`,
+      source: rootId,
+      target: node.data.id,
+      label: node.data.provisional ? 'Cited audit result' : 'Reviewed profile record',
+      confidence: node.data.confidence,
+      structuralEdge: {
+        source: node.data.provisional ? 'Persisted audit analysis' : 'Reviewed local profile',
+        explanation: node.data.provisional
+          ? 'This result is cited by the selected audit analysis. The link records audit membership, not identity ownership.'
+          : 'This reviewed entity belongs to the selected local profile. Profile membership alone is not independent proof of external account ownership.',
+      },
+    },
+  }))
+  return {
+    nodes: [root, ...nodes],
+    // Preserve evidence-backed and model-proposed relationships first so the
+    // inspector opens on the most informative connection. Structural profile
+    // membership remains available as navigation context.
+    edges: [...edges, ...structuralEdges],
+    truncated: false,
   }
 }
 
@@ -151,20 +203,38 @@ export function projectAuditConnections(
   return { nodes: [...nodes.values()], edges, truncated }
 }
 
-/** Positions reviewed and provisional nodes together in one deterministic ring. */
+/** Place node kinds in semantic clusters around the central profile hub. */
 export function positionGraphNodes(
   nodes: ReadonlyArray<GraphViewNode>,
 ): ReadonlyArray<GraphViewNode> {
-  const nodeCount = nodes.length
-  return nodes.map((node, index) => {
-    const angle = nodeCount === 0 ? 0 : (Math.PI * 2 * index) / nodeCount
-    const radiusX = nodeCount < 4 ? 190 : 300
-    const radiusY = nodeCount < 4 ? 130 : 210
+  const clusters: Record<string, { x: number; y: number; columns: number }> = {
+    person: { x: 470, y: 255, columns: 2 },
+    name: { x: 390, y: 60, columns: 3 },
+    alias: { x: 390, y: 60, columns: 3 },
+    username: { x: 720, y: 90, columns: 3 },
+    email: { x: 100, y: 95, columns: 2 },
+    phone: { x: 100, y: 360, columns: 2 },
+    organisation: { x: 280, y: 460, columns: 3 },
+    occupation: { x: 280, y: 460, columns: 3 },
+    education: { x: 470, y: 470, columns: 3 },
+    location: { x: 565, y: 455, columns: 2 },
+    finding: { x: 780, y: 345, columns: 3 },
+    evidence: { x: 840, y: 500, columns: 3 },
+  }
+  const counts = new Map<string, number>()
+  return nodes.map((node) => {
+    if (node.data.id.startsWith('profile-root:')) return { ...node, position: { x: 480, y: 270 } }
+    const kind = node.data.type.toLocaleLowerCase('en-US')
+    const cluster = clusters[kind] ?? { x: 620, y: 500, columns: 3 }
+    const index = counts.get(kind) ?? 0
+    counts.set(kind, index + 1)
+    const column = index % cluster.columns
+    const row = Math.floor(index / cluster.columns)
     return {
       ...node,
       position: {
-        x: 480 + Math.cos(angle) * radiusX,
-        y: 270 + Math.sin(angle) * radiusY,
+        x: cluster.x + column * 92,
+        y: cluster.y + row * 82,
       },
     }
   })

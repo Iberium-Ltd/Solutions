@@ -11,6 +11,7 @@ import type {
   LocalAIProvider,
   LocalAISettings,
   LocalAISettingsUpdateRequest,
+  LocalAIUnloadResult,
 } from '../../../../packages/contracts/src/generated/api'
 
 const UUID_PATTERN =
@@ -23,6 +24,7 @@ const CONNECTION_STATUSES = new Set([
   'UNAVAILABLE',
   'INVALID_RESPONSE',
 ])
+const UNLOAD_STATUSES = new Set(['UNLOADED', 'UNSUPPORTED'])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -175,6 +177,22 @@ function parseConnection(value: unknown): LocalAIConnectionResult {
   return data as unknown as LocalAIConnectionResult
 }
 
+function parseUnload(value: unknown): LocalAIUnloadResult {
+  const data = commandData(value)
+  if (
+    !isRecord(data) ||
+    !hasExactKeys(data, ['provider', 'modelId', 'status']) ||
+    !isProvider(data.provider) ||
+    !isModelId(data.modelId) ||
+    !UNLOAD_STATUSES.has(String(data.status)) ||
+    (data.provider === 'OLLAMA' && data.status !== 'UNLOADED') ||
+    (data.provider === 'OPENAI_COMPATIBLE' && data.status !== 'UNSUPPORTED')
+  ) {
+    throw new Error('Local AI unload response is invalid')
+  }
+  return data as unknown as LocalAIUnloadResult
+}
+
 async function invokeNative(command: string, request?: object): Promise<unknown> {
   const { invoke } = await import('@tauri-apps/api/core')
   return request === undefined
@@ -210,8 +228,16 @@ export async function testLocalAIConnection(
   )
 }
 
+export async function unloadLocalAIModel(
+  request: LocalAIEndpointRequest,
+): Promise<LocalAIUnloadResult> {
+  if (!request.selectedModel) throw new Error('Select a local model before unloading it.')
+  return parseUnload(await invokeNative('core_unload_local_ai_model', request))
+}
+
 export const localAiBoundaryParsers = {
   settings: parseSettings,
   models: parseModels,
   connection: parseConnection,
+  unload: parseUnload,
 }

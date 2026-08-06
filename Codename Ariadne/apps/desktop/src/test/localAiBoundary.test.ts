@@ -5,6 +5,7 @@ import {
   isLoopbackLocalAIEndpoint,
   localAiBoundaryParsers,
   updateLocalAISettings,
+  unloadLocalAIModel,
 } from '../app/localAiBoundary'
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
@@ -111,6 +112,19 @@ describe('local AI native boundary', () => {
     ).toThrow('connection response is invalid')
   })
 
+  it('accepts only provider-consistent unload results', () => {
+    expect(localAiBoundaryParsers.unload(response({
+      provider: 'OLLAMA',
+      modelId: 'qwen-local:7b',
+      status: 'UNLOADED',
+    }))).toMatchObject({ status: 'UNLOADED' })
+    expect(() => localAiBoundaryParsers.unload(response({
+      provider: 'OLLAMA',
+      modelId: 'qwen-local:7b',
+      status: 'UNSUPPORTED',
+    }))).toThrow('unload response is invalid')
+  })
+
   it('uses only route-specific discovery and update commands', async () => {
     invokeMock
       .mockResolvedValueOnce(
@@ -151,5 +165,20 @@ describe('local AI native boundary', () => {
       'core_update_local_ai_settings',
       { request: update },
     )
+  })
+
+  it('uses the narrow model-unload command', async () => {
+    invokeMock.mockResolvedValueOnce(response({
+      provider: 'OLLAMA',
+      modelId: 'qwen-local:7b',
+      status: 'UNLOADED',
+    }))
+    const request = {
+      provider: 'OLLAMA' as const,
+      endpoint: 'http://127.0.0.1:11434',
+      selectedModel: 'qwen-local:7b',
+    }
+    await unloadLocalAIModel(request)
+    expect(invokeMock).toHaveBeenLastCalledWith('core_unload_local_ai_model', { request })
   })
 })

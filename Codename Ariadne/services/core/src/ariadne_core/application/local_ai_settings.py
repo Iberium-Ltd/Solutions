@@ -14,6 +14,8 @@ from ariadne_core.api.schemas import (
     LocalAIModelSummary,
     LocalAISettings,
     LocalAISettingsUpdateRequest,
+    LocalAIUnloadResult,
+    LocalAIUnloadStatus,
 )
 from ariadne_core.application.vault import VaultManager
 from ariadne_core.domain.settings import VaultSettingsPatch
@@ -113,6 +115,18 @@ class LocalAISettingsService:
             reachable=True,
             model_count=len(models),
             selected_model_available=selected_available,
+        )
+
+    def unload(self, request: LocalAIEndpointRequest) -> LocalAIUnloadResult:
+        """Release one explicitly selected model without changing saved configuration."""
+
+        if request.selected_model is None:
+            raise LocalAISettingsConflict("a selected local model is required")
+        unloaded = self._client(request).unload(model_id=request.selected_model)
+        return LocalAIUnloadResult(
+            provider=request.provider,
+            model_id=request.selected_model,
+            status=(LocalAIUnloadStatus.UNLOADED if unloaded else LocalAIUnloadStatus.UNSUPPORTED),
         )
 
     def _client(self, request: LocalAIEndpointRequest) -> LocalAIClient:

@@ -45,7 +45,7 @@ export const majorVisualCases = [
     path: '/audits/new?fixture=full-audit-draft&capture=1',
     heading: 'Create a reviewed audit',
     documentTitle: 'New Audit · Codename Ariadne',
-    activeNavigation: 'New Audit',
+    activeNavigation: 'Import identifiers',
     proof: 'New-audit stepper, scope, profile, permissions, and budget summary',
   },
   {
@@ -55,7 +55,7 @@ export const majorVisualCases = [
     path: '/audits/new/intake?fixture=pasted-source&capture=1',
     heading: 'Add source material',
     documentTitle: 'Intake · Codename Ariadne',
-    activeNavigation: 'New Audit',
+    activeNavigation: 'Import identifiers',
     proof: 'Paste and file intake, local processing, validation, and quarantine feedback',
   },
   {
@@ -65,7 +65,7 @@ export const majorVisualCases = [
     path: '/audits/new/entities?fixture=review-mixed&capture=1',
     heading: 'Review extracted entities',
     documentTitle: 'Entity Review · Codename Ariadne',
-    activeNavigation: 'New Audit',
+    activeNavigation: 'Import identifiers',
     proof: 'Entity review, sensitivity, history, approval, exclusion, and transmission decisions',
   },
   {
@@ -74,8 +74,8 @@ export const majorVisualCases = [
     slug: 'tool-launcher',
     path: '/tools?fixture=standard&capture=1',
     heading: 'Tool Console',
-    documentTitle: 'Tool Console · Codename Ariadne',
-    activeNavigation: 'Tool Console',
+    documentTitle: 'Discovery Console · Codename Ariadne',
+    activeNavigation: 'Discovery Console',
     proof: 'Tool launcher, search, filtering, capabilities, jurisdiction, and transmission cues',
   },
   {
@@ -167,7 +167,7 @@ export const majorVisualCases = [
     path: '/providers?fixture=global-registry&capture=1',
     heading: 'Provider coverage has boundaries',
     documentTitle: 'Source Radar · Codename Ariadne',
-    activeNavigation: 'Source Radar',
+    activeNavigation: 'Source Coverage',
     proof: 'Provider health, jurisdictions, access basis, retention, terms, risk, and enable state',
   },
   {
@@ -177,7 +177,7 @@ export const majorVisualCases = [
     path: '/privacy/transmission?fixture=preflight&capture=1',
     heading: 'Know what leaves the device',
     documentTitle: 'Transmission · Codename Ariadne',
-    activeNavigation: 'Transmission',
+    activeNavigation: 'Transmission Preflight',
     proof: 'Boundary modes and preflight provider, purpose, masked payload, retention, cost, risk, and approval',
   },
   {
