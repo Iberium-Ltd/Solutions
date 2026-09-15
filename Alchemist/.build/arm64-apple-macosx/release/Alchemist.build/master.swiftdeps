@@ -1,0 +1,13 @@
+version: "Apple Swift version 6.0.2 (swiftlang-6.0.2.1.2 clang-1600.0.26.4)"
+options: "dc906f18f1577b377ecd8ea68e9a6fe1dd2362842d57f11e51c3b0ae5a0aa8c3"
+build_start_time: [1789452224, 224706000]
+build_end_time: [1789452229, 195778000]
+inputs:
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AlchemistApp.swift": [1789415130, 370718080]
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AppModel.swift": [1789419777, 458889965]
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Domain/Models.swift": [1789419372, 153725202]
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/HardwareProbe.swift": [1789415465, 537074556]
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/MediaProbe.swift": [1789415679, 131366691]
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/OutputPlanner.swift": [1789415684, 564501132]
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/TranscodeEngine.swift": [1789419672, 272964658]
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/UI/AppShellView.swift": [1789452214, 247797653]

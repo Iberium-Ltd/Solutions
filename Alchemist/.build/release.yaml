@@ -1,0 +1,66 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "Alchemist-arm64-apple-macosx16.0-release.exe": ["<Alchemist-arm64-apple-macosx16.0-release.exe>"]
+  "Alchemist-arm64-apple-macosx16.0-release.module": ["<Alchemist-arm64-apple-macosx16.0-release.module>"]
+  "PackageStructure": ["<PackageStructure>"]
+  "main": ["<Alchemist-arm64-apple-macosx16.0-release.exe>","<Alchemist-arm64-apple-macosx16.0-release.module>"]
+  "test": ["<Alchemist-arm64-apple-macosx16.0-release.exe>","<Alchemist-arm64-apple-macosx16.0-release.module>"]
+default: "main"
+nodes:
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AlchemistApp.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AppModel.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Domain/Models.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/HardwareProbe.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/MediaProbe.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/OutputPlanner.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/TranscodeEngine.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/UI/AppShellView.swift"]
+    outputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/sources"]
+    description: "Write auxiliary file /Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/sources"
+
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AlchemistApp.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppModel.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppShellView.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/HardwareProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/MediaProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/Models.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/OutputPlanner.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/TranscodeEngine.swift.o"]
+    outputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.product/Objects.LinkFileList"
+
+  "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Library/Developer/CommandLineTools/usr/bin/swiftc"]
+    outputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt"
+
+  "<Alchemist-arm64-apple-macosx16.0-release.exe>":
+    tool: phony
+    inputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist"]
+    outputs: ["<Alchemist-arm64-apple-macosx16.0-release.exe>"]
+
+  "<Alchemist-arm64-apple-macosx16.0-release.module>":
+    tool: phony
+    inputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AlchemistApp.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppModel.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/Models.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/HardwareProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/MediaProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/OutputPlanner.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/TranscodeEngine.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppShellView.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Modules/Alchemist.swiftmodule"]
+    outputs: ["<Alchemist-arm64-apple-macosx16.0-release.module>"]
+
+  "C.Alchemist-arm64-apple-macosx16.0-release.exe":
+    tool: shell
+    inputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AlchemistApp.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppModel.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppShellView.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/HardwareProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/MediaProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/Models.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/OutputPlanner.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/TranscodeEngine.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.product/Objects.LinkFileList"]
+    outputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist"]
+    description: "Linking ./.build/arm64-apple-macosx/release/Alchemist"
+    args: ["/Library/Developer/CommandLineTools/usr/bin/swiftc","-L","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release","-o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist","-module-name","Alchemist","-Xlinker","-no_warn_duplicate_libraries","-emit-executable","-Xlinker","-dead_strip","-Xlinker","-alias","-Xlinker","_Alchemist_main","-Xlinker","_main","-Xlinker","-rpath","-Xlinker","@loader_path","@/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.product/Objects.LinkFileList","-target","arm64-apple-macosx14.0","-framework","AVFoundation","-framework","VideoToolbox","-framework","CoreMedia","-framework","CoreVideo","-framework","AppKit","-sdk","/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk","-g"]
+
+  "C.Alchemist-arm64-apple-macosx16.0-release.module":
+    tool: shell
+    inputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AlchemistApp.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AppModel.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Domain/Models.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/HardwareProbe.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/MediaProbe.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/OutputPlanner.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/TranscodeEngine.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/UI/AppShellView.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/sources"]
+    outputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AlchemistApp.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppModel.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/Models.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/HardwareProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/MediaProbe.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/OutputPlanner.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/TranscodeEngine.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/AppShellView.swift.o","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Modules/Alchemist.swiftmodule"]
+    description: "Compiling Swift Module 'Alchemist' (8 sources)"
+    args: ["/Library/Developer/CommandLineTools/usr/bin/swiftc","-module-name","Alchemist","-emit-dependencies","-emit-module","-emit-module-path","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Modules/Alchemist.swiftmodule","-output-file-map","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/output-file-map.json","-whole-module-optimization","-num-threads","16","-c","@/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Alchemist.build/sources","-I","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/Modules","-target","arm64-apple-macosx14.0","-O","-j16","-DSWIFT_PACKAGE","-module-cache-path","/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/release/ModuleCache","-parseable-output","-Xfrontend","-entry-point-function-name","-Xfrontend","Alchemist_main","-swift-version","5","-sdk","/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk","-g","-Xcc","-isysroot","-Xcc","/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk","-Xcc","-fPIC","-Xcc","-g","-package-name","alchemist"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/","/Volumes/Predator SSD GM7000/New Start/Alchemist/Package.swift","/Volumes/Predator SSD GM7000/New Start/Alchemist/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+

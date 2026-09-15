@@ -1,0 +1,350 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.Alchemist-arm64-apple-macosx16.0-debug.module" : {
+      "executable" : "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "fileList" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/sources",
+      "importPath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AlchemistApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AppModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Domain/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/HardwareProbe.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/MediaProbe.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/OutputPlanner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/TranscodeEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/UI/AppShellView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "Alchemist",
+      "moduleOutputPath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Modules/Alchemist.swiftmodule",
+      "objects" : [
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AlchemistApp.swift.o",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AppModel.swift.o",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/Models.swift.o",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/HardwareProbe.swift.o",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/MediaProbe.swift.o",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/OutputPlanner.swift.o",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/TranscodeEngine.swift.o",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AppShellView.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-enable-batch-mode",
+        "-index-store-path",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j16",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-module-cache-path",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "Alchemist_main",
+        "-swift-version",
+        "5",
+        "-sdk",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "alchemist"
+      ],
+      "outputFileMapPath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AlchemistApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AppModel.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/Models.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/HardwareProbe.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/MediaProbe.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/OutputPlanner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/TranscodeEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AppShellView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Modules/Alchemist.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AlchemistApp.swift",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AppModel.swift",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Domain/Models.swift",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/HardwareProbe.swift",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/MediaProbe.swift",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/OutputPlanner.swift",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/TranscodeEngine.swift",
+        "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/UI/AppShellView.swift"
+      ],
+      "tempsPath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "Alchemist" : [
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "-module-name",
+      "Alchemist",
+      "-package-name",
+      "alchemist",
+      "-incremental",
+      "-c",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AlchemistApp.swift",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AppModel.swift",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Domain/Models.swift",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/HardwareProbe.swift",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/MediaProbe.swift",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/OutputPlanner.swift",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/TranscodeEngine.swift",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/UI/AppShellView.swift",
+      "-I",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-enable-batch-mode",
+      "-index-store-path",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j16",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-module-cache-path",
+      "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "Alchemist_main",
+      "-swift-version",
+      "5",
+      "-sdk",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "alchemist",
+      "-driver-use-frontend-path",
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "Alchemist" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "writeCommands" : {
+    "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist-entitlement.plist" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<entitlement-plist>"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<com.apple.security.get-task-allow>"
+        }
+      ],
+      "outputFilePath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist-entitlement.plist"
+    },
+    "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AlchemistApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/App/AppModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Domain/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/HardwareProbe.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/MediaProbe.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/OutputPlanner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/Services/TranscodeEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/Sources/Alchemist/UI/AppShellView.swift"
+        }
+      ],
+      "outputFilePath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/sources"
+    },
+    "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AlchemistApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AppModel.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/AppShellView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/HardwareProbe.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/MediaProbe.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/Models.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/OutputPlanner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.build/TranscodeEngine.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/Alchemist.product/Objects.LinkFileList"
+    },
+    "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Volumes/Predator SSD GM7000/New Start/Alchemist/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+    }
+  }
+}
