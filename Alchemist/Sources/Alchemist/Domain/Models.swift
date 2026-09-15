@@ -251,9 +251,15 @@ struct CompressionRecipe: Equatable, Codable {
 struct ExportOptions: Equatable, Codable {
     var mode: DestinationMode = .chosenFolder
     var folderURL: URL? = nil
+    /// Retained for compatibility with early local builds. Chosen-folder
+    /// exports now always retain the source name.
     var keepOriginalName: Bool = true
+    // Only applies to Same folder. The UI enables this automatically when that
+    // destination is selected; chosen-folder exports never replace a source.
     var replaceOriginal: Bool = false
-    var collisionPolicy: CollisionPolicy = .increment
+    /// Re-running a job replaces the previous output instead of producing
+    /// filename copies such as "Movie 2.mp4".
+    var collisionPolicy: CollisionPolicy = .overwrite
 
     func folder(for source: URL) -> URL {
         switch mode {

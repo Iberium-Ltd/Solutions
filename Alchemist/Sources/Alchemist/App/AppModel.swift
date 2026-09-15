@@ -177,6 +177,8 @@ final class AppModel: ObservableObject {
             export.mode = .chosenFolder
             export.folderURL = folder
             export.replaceOriginal = false
+            export.keepOriginalName = true
+            export.collisionPolicy = .overwrite
         }
     }
 

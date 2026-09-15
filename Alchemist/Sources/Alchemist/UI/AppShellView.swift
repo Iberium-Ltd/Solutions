@@ -622,7 +622,13 @@ private struct ExportCard: View {
                 get: { model.export.mode },
                 set: { mode in
                     model.export.mode = mode
-                    if mode != .sameFolder { model.export.replaceOriginal = false }
+                    if mode == .sameFolder {
+                        model.export.replaceOriginal = true
+                    } else {
+                        model.export.replaceOriginal = false
+                        model.export.keepOriginalName = true
+                        model.export.collisionPolicy = .overwrite
+                    }
                 }
             )) {
                 ForEach(DestinationMode.allCases) { option in
@@ -646,12 +652,9 @@ private struct ExportCard: View {
                     .background(Color.white.opacity(0.055), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                Toggle("Keep original file names", isOn: Binding(
-                    get: { model.export.keepOriginalName },
-                    set: { model.export.keepOriginalName = $0 }
-                ))
-                .font(.system(size: 11))
-                .toggleStyle(.switch)
+                Label("Uses the original file name · replaces prior output", systemImage: "text.badge.checkmark")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(Color.mintAccent)
             } else {
                 Toggle("Replace originals after success", isOn: Binding(
                     get: { model.export.replaceOriginal },
@@ -660,7 +663,7 @@ private struct ExportCard: View {
                 .font(.system(size: 11, weight: .medium))
                 .toggleStyle(.switch)
                 if model.export.replaceOriginal {
-                    Label("Uses a hidden staging file first", systemImage: "checkmark.shield")
+                    Label("Replaces the source only after the new file is finished", systemImage: "checkmark.shield")
                         .font(.system(size: 10))
                         .foregroundStyle(Color.mintAccent)
                 } else {

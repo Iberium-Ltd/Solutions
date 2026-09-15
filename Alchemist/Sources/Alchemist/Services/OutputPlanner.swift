@@ -12,13 +12,15 @@ enum OutputPlanner {
         let outputExtension = recipe.container.fileExtension(for: source)
         let sourceExtension = source.pathExtension.lowercased()
         let originalBase = source.deletingPathExtension().lastPathComponent
-        // A source-folder export cannot use the identical name until it replaces
-        // the source. Give the safe default an obvious, Finder-friendly suffix.
+        // A chosen export folder always mirrors the source filename. Re-running
+        // a batch replaces its previous output rather than adding a branding
+        // suffix or duplicate number. A same-folder export can only use the
+        // identical name when it atomically replaces the source.
         let base: String
         if options.mode == .sameFolder {
             base = "\(originalBase) · Alchemist"
         } else {
-            base = options.keepOriginalName ? originalBase : "\(originalBase) · Alchemist"
+            base = originalBase
         }
 
         if options.replaceOriginal {
@@ -75,6 +77,7 @@ enum OutputPlanner {
                         backupItemName: nil,
                         options: []
                     )
+                    revealInFinder(destination)
                     return destination
                 }
                 destination = incrementedURL(from: destination)
@@ -83,6 +86,10 @@ enum OutputPlanner {
 
             do {
                 try fileManager.moveItem(at: plan.stagingURL, to: destination)
+                // The staging filename begins with a dot, which makes macOS
+                // assign its hidden file flag. Moving it does not clear that
+                // flag, so explicitly make every completed export visible.
+                revealInFinder(destination)
                 return destination
             } catch {
                 // Another parallel job can claim the same base name between the
@@ -96,6 +103,13 @@ enum OutputPlanner {
     static func discardStagingFile(for plan: OutputPlan) {
         guard FileManager.default.fileExists(atPath: plan.stagingURL.path) else { return }
         try? FileManager.default.removeItem(at: plan.stagingURL)
+    }
+
+    private static func revealInFinder(_ url: URL) {
+        var values = URLResourceValues()
+        values.isHidden = false
+        var visibleURL = url
+        try? visibleURL.setResourceValues(values)
     }
 
     private static func incrementedURL(from initial: URL) -> URL {

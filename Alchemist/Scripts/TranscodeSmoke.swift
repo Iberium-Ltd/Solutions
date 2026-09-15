@@ -42,7 +42,11 @@ struct AlchemistSmoke {
 
             var chosenFolder = ExportOptions()
             chosenFolder.mode = .chosenFolder
-            chosenFolder.folderURL = root
+            let chosenExportFolder = root.appendingPathComponent("exports", isDirectory: true)
+            try FileManager.default.createDirectory(at: chosenExportFolder, withIntermediateDirectories: true)
+            chosenFolder.folderURL = chosenExportFolder
+            // The planner must ignore the legacy toggle and always use the
+            // source filename in a separate selected output folder.
             chosenFolder.keepOriginalName = false
 
             let firstUpdates = UpdateCapture()
@@ -55,6 +59,13 @@ struct AlchemistSmoke {
             let firstOutput = try await MediaProbe.inspect(firstResult.outputURL)
             guard FileManager.default.fileExists(atPath: firstResult.outputURL.path), firstResult.outputBytes > 0 else {
                 throw SmokeError.assertion("Chosen-folder output was not written")
+            }
+            guard firstResult.outputURL.lastPathComponent == source.lastPathComponent else {
+                throw SmokeError.assertion("Chosen-folder output did not retain the original filename")
+            }
+            let outputVisibility = try firstResult.outputURL.resourceValues(forKeys: [.isHiddenKey])
+            guard outputVisibility.isHidden != true else {
+                throw SmokeError.assertion("Completed output incorrectly retained the hidden staging-file flag")
             }
             guard firstOutput.width == 852, firstOutput.height == 480, firstOutput.codec == "HEVC", firstOutput.duration > 0.9 else {
                 throw SmokeError.assertion("HEVC resize result was not playable 852 × 480 video")
