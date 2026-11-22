@@ -12,6 +12,7 @@
 **/*.quarantine
 
 # Runtime personal data and secrets.
+vercel-recovery-codes-*.txt
 /.env
 /.env.*
 !/.env.example
